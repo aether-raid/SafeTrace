@@ -102,9 +102,22 @@ python main.py ui                        # http://localhost:8501
 
 ## Docker (GPU + offline)
 
-Build:
+Two Dockerfiles are provided:
+
+| File                                | Base                              | When to use                                                                 |
+|-------------------------------------|-----------------------------------|-----------------------------------------------------------------------------|
+| `docker/Dockerfile`                 | `pytorch/pytorch:2.2.0-cuda12.1`  | Default. CPU-safe; CUDA works on Ampere/Ada (sm_80–sm_89).                   |
+| `docker/Dockerfile.blackwell`       | `nvidia/cuda:12.8.0` + torch 2.7  | Required for **RTX 50-series / Blackwell (sm_120)** — the default image lacks kernels for those GPUs and will raise *"CUDA error: no kernel image is available for execution on the device"*. |
+
+Build the default image:
 ```bash
 docker build -f docker/Dockerfile -t safetrace:latest .
+```
+
+Build the Blackwell-capable image (RTX 50-series):
+```bash
+docker build -f docker/Dockerfile.blackwell -t safetrace:blackwell .
+# then change `image:` in docker-compose.yml and set SAFETRACE_DEVICE: "auto"
 ```
 
 Run with GPU and your local checkpoints / data mounted:
@@ -138,7 +151,7 @@ All settings live in `src/config.py` and accept environment overrides:
 
 | Env var                      | Default                                          | Purpose                          |
 |------------------------------|--------------------------------------------------|----------------------------------|
-| `SAFETRACE_DEVICE`           | `auto`                                           | `auto` / `cuda` / `cpu`          |
+| `SAFETRACE_DEVICE`           | `auto`                                           | `auto` / `cuda` / `cpu` (also switchable from the UI sidebar) |
 | `SAFETRACE_OFFLINE`          | `1`                                              | Force HF + transformers offline  |
 | `SAFETRACE_ENABLE_VLM`       | `0`                                              | Enable optional VLM explanations |
 | `SAFETRACE_FPS`              | `1.0`                                            | Frame sampling FPS               |
@@ -147,6 +160,19 @@ All settings live in `src/config.py` and accept environment overrides:
 | `SAFETRACE_YOLO_CKPT`        | `checkpoints/yolov9c-seg.pt`                     | Detector weights                 |
 | `SAFETRACE_MSAM_CKPT`        | `checkpoints/mobile_sam.pt`                      | MobileSAM weights                |
 | `SAFETRACE_VLM_DIR`          | `checkpoints/vlm_model`                          | Optional VLM dir                 |
+| `STREAMLIT_SERVER_MAX_UPLOAD_SIZE` | `51200`                                    | Per-file upload limit in **MB** (default 50 GB) |
+| `STREAMLIT_SERVER_MAX_MESSAGE_SIZE`| `51200`                                    | Streamlit websocket message cap in **MB**       |
+
+### Frontend controls
+
+The Streamlit sidebar exposes:
+- **Frame sampling FPS / Top-K / VLM toggle** — same semantics as the CLI flags.
+- **Compute › Device** — switch between `cpu`, `cuda`, and `auto` at runtime.
+  Changing the device transparently rebuilds the model cache. If `cuda` is
+  selected on an image without GPU kernels for your card, the UI warns and
+  falls back to CPU. For RTX 50-series GPUs use the Blackwell image (above).
+- **Uploads** — the server cap is lifted to 50 GB; tune via
+  `STREAMLIT_SERVER_MAX_UPLOAD_SIZE` (MB).
 
 ---
 

@@ -11,8 +11,18 @@ services:
       HF_HUB_OFFLINE: "1"
       TRANSFORMERS_OFFLINE: "1"
       SAFETRACE_OFFLINE: "1"
-      SAFETRACE_DEVICE: "auto"
+      # NOTE: the default Dockerfile ships PyTorch 2.2 + CUDA 12.1, whose kernels
+      # do NOT cover Blackwell (RTX 50-series, sm_120). On such GPUs you'll get
+      # "CUDA error: no kernel image is available for execution on the device".
+      # Either keep this on "cpu", or rebuild with docker/Dockerfile.blackwell
+      # and switch back to "auto"/"cuda". The frontend sidebar lets you flip
+      # between cpu / cuda / auto at runtime.
+      SAFETRACE_DEVICE: "cpu"
       SAFETRACE_ENABLE_VLM: "0"
+      # Lift Streamlit's default 200 MB upload/message caps. Values are MB;
+      # 51200 = 50 GB. Bound only by host disk / RAM after that.
+      STREAMLIT_SERVER_MAX_UPLOAD_SIZE: "51200"
+      STREAMLIT_SERVER_MAX_MESSAGE_SIZE: "51200"
       STREAMLIT_SERVER_ADDRESS: "0.0.0.0"
       STREAMLIT_SERVER_PORT: "8501"
     volumes:

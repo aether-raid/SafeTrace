@@ -2,7 +2,9 @@
 # torch / torchvision come from the base image — do not reinstall.
 
 # Vector search
-faiss-gpu==1.7.2
+# CPU build is the safe default; works regardless of host GPU / CUDA version.
+# Swap to `faiss-gpu-cu12` if you rebuild with a Blackwell-capable PyTorch.
+faiss-cpu==1.8.0.post1
 
 # Vision / ML
 transformers==4.41.2
