@@ -1,0 +1,24 @@
+# Pinned for offline GPU container build (CUDA 12.1 / PyTorch 2.2 base image).
+# torch / torchvision come from the base image — do not reinstall.
+
+# Vector search
+faiss-gpu==1.7.2
+
+# Vision / ML
+transformers==4.41.2
+accelerate==0.30.1
+sentencepiece==0.2.0
+ultralytics==8.2.50
+mobile-sam @ git+https://github.com/ChaoningZhang/MobileSAM.git@master
+timm==0.9.16
+
+# Image / video IO
+opencv-python-headless==4.10.0.84
+pillow==10.3.0
+numpy==1.26.4
+
+# Frontend
+streamlit==1.35.0
+
+# Misc
+pyyaml==6.0.1

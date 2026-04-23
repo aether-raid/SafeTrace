@@ -1,0 +1,16 @@
+.git/
+.venv/
+venv/
+__pycache__/
+*.pyc
+data/frames/*
+data/annotated/*
+data/embeddings.npy
+data/metadata.json
+data/index.faiss
+checkpoints/*
+!checkpoints/.gitkeep
+.vscode/
+.idea/
+*.md
+!README.md
