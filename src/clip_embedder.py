@@ -14,6 +14,7 @@ import torch
 from PIL import Image
 
 from .config import SETTINGS
+from .preprocessing import build_frame_windows, pool_window_embeddings
 from .utils import imread_rgb, resolve_device, write_json
 
 logger = logging.getLogger("safetrace.embedder")
@@ -100,21 +101,45 @@ class ClipEmbedder:
     # ------------------------------------------------------------------ #
     def build_corpus(
         self,
-        frame_paths: Sequence[Path],
+        frame_paths: Sequence[Path | dict],
         embeddings_path: Path | None = None,
         metadata_path: Path | None = None,
+        window_size: int | None = None,
+        window_stride: int | None = None,
     ) -> tuple[np.ndarray, list[dict]]:
-        """Embed every frame, persist embeddings + metadata to disk, return both."""
+        """Embed frames, mean-pool windows, persist embeddings + metadata."""
         embeddings_path = Path(embeddings_path or SETTINGS.embeddings_path)
         metadata_path = Path(metadata_path or SETTINGS.metadata_path)
+        window_size = window_size or SETTINGS.embed_window_size
+        window_stride = window_stride or SETTINGS.embed_window_stride
 
-        logger.info("Embedding %d frames", len(frame_paths))
-        embeddings = self.embed_images([str(p) for p in frame_paths])
+        frame_records: list[dict] = []
+        for i, item in enumerate(frame_paths):
+            if isinstance(item, dict):
+                record = dict(item)
+                record.setdefault("index", i)
+                record.setdefault("frame_id", Path(record["frame_path"]).stem)
+            else:
+                path = Path(item)
+                record = {
+                    "frame_id": path.stem,
+                    "frame_path": str(path),
+                    "index": i,
+                    "sample_index": i,
+                    "frame_index": i,
+                    "timestamp": 0.0,
+                }
+            frame_records.append(record)
 
-        metadata = [
-            {"frame_id": Path(p).stem, "frame_path": str(p), "index": i}
-            for i, p in enumerate(frame_paths)
-        ]
+        logger.info(
+            "Embedding %d frames into windows (size=%d, stride=%d)",
+            len(frame_records),
+            window_size,
+            window_stride,
+        )
+        frame_embeddings = self.embed_images([str(r["frame_path"]) for r in frame_records])
+        metadata = build_frame_windows(frame_records, window_size, window_stride)
+        embeddings = pool_window_embeddings(frame_embeddings, metadata)
 
         embeddings_path.parent.mkdir(parents=True, exist_ok=True)
         np.save(embeddings_path, embeddings)

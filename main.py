@@ -16,11 +16,13 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 import subprocess
 import sys
 from pathlib import Path
 
 from src.config import SETTINGS
+from src.jobs import REQUIRED_WORKER_ENV, JobStore
 from src.pipeline import SafeTracePipeline
 
 logging.basicConfig(
@@ -59,6 +61,28 @@ def cmd_ui(args: argparse.Namespace) -> int:
     return subprocess.call(cmd)
 
 
+def cmd_worker(args: argparse.Namespace) -> int:
+    for key, value in REQUIRED_WORKER_ENV.items():
+        os.environ.setdefault(key, value)
+    store = JobStore()
+    lock_already_held = os.environ.get("SAFETRACE_WORKER_LOCK_HELD") == "1"
+    store.worker_loop(
+        once=args.once,
+        poll_interval=args.poll_interval,
+        lock_already_held=lock_already_held,
+    )
+    return 0
+
+
+def cmd_job_status(args: argparse.Namespace) -> int:
+    store = JobStore()
+    if args.job_id:
+        print(json.dumps(store.get_job(args.job_id), indent=2))
+    else:
+        print(json.dumps(store.list_jobs(), indent=2))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="safetrace")
     sub = p.add_subparsers(dest="command", required=True)
@@ -78,6 +102,15 @@ def build_parser() -> argparse.ArgumentParser:
     pu.add_argument("--host", default="0.0.0.0")
     pu.add_argument("--port", type=int, default=8501)
     pu.set_defaults(func=cmd_ui)
+
+    pw = sub.add_parser("worker", help="Process queued SafeTrace jobs")
+    pw.add_argument("--once", action="store_true", help="Process at most one queued job")
+    pw.add_argument("--poll-interval", type=float, default=2.0)
+    pw.set_defaults(func=cmd_worker)
+
+    ps = sub.add_parser("job-status", help="Show queued/batch job status")
+    ps.add_argument("job_id", nargs="?")
+    ps.set_defaults(func=cmd_job_status)
 
     return p
 

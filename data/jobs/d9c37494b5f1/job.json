@@ -1,0 +1,50 @@
+{
+  "job_id": "d9c37494b5f1",
+  "batch_id": "d9c37494b5f1",
+  "status": "completed",
+  "stage": "completed",
+  "progress": 1.0,
+  "processed_frames": 33,
+  "error": null,
+  "query": "worker without helmet",
+  "settings": {
+    "fps": 1.0,
+    "top_k": 5,
+    "enable_vlm": false,
+    "device": "cpu",
+    "max_frames": 600
+  },
+  "media": [
+    {
+      "batch_id": "d9c37494b5f1",
+      "vehicle_id": "Vehicle A",
+      "original_relative_path": "test upload/Vehicle A/sample-5s-720p.mp4",
+      "filename": "sample-5s-720p.mp4",
+      "stored_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\d9c37494b5f1\\uploads\\bulk\\test upload\\Vehicle A\\sample-5s-720p.mp4",
+      "media_type": "video",
+      "status": "queued"
+    },
+    {
+      "batch_id": "d9c37494b5f1",
+      "vehicle_id": "Vehicle B",
+      "original_relative_path": "test upload/Vehicle B/sample-10s-720p.mp4",
+      "filename": "sample-10s-720p.mp4",
+      "stored_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\d9c37494b5f1\\uploads\\bulk\\test upload\\Vehicle B\\sample-10s-720p.mp4",
+      "media_type": "video",
+      "status": "queued"
+    },
+    {
+      "batch_id": "d9c37494b5f1",
+      "vehicle_id": "Vehicle B",
+      "original_relative_path": "test upload/Vehicle B/sample-15s-720p.mp4",
+      "filename": "sample-15s-720p.mp4",
+      "stored_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\d9c37494b5f1\\uploads\\bulk\\test upload\\Vehicle B\\sample-15s-720p.mp4",
+      "media_type": "video",
+      "status": "queued"
+    }
+  ],
+  "result_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\d9c37494b5f1\\outputs\\results.json",
+  "created_at": 1781682291.786081,
+  "updated_at": 1781682474.162459,
+  "total_frames": 33
+}

@@ -1,0 +1,2136 @@
+{
+  "job_id": "801fa525e8d8",
+  "batch_id": "801fa525e8d8",
+  "status": "completed",
+  "summaries": [
+    {
+      "video_id": "sample-5s-720p_000",
+      "vehicle_id": "Vehicle A",
+      "overall_status": "review_needed",
+      "overall_confidence": 1.0,
+      "summary": "Possible isolated violation evidence detected: helmet_missing.",
+      "violations": [
+        {
+          "type": "helmet_missing",
+          "status": "review_needed",
+          "confidence": 1.0,
+          "start_time": 4.0,
+          "end_time": 4.0,
+          "duration_seconds": 0.0,
+          "evidence_frame_count": 1,
+          "representative_frames": [
+            {
+              "frame_id": "Vehicle_A_sample-5s-720p_000_000004",
+              "timestamp": 4.0,
+              "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_A_sample-5s-720p_000_000004.jpg",
+              "annotated_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\annotated\\Vehicle_A_sample-5s-720p_000_000004_annotated.jpg"
+            }
+          ],
+          "reasoning": "Worker head detected without overlapping helmet. Evidence appears in only 1 sampled frame/window and needs review."
+        }
+      ],
+      "frame_level_evidence_available": true,
+      "frame_evidence_count": 2
+    },
+    {
+      "video_id": "sample-10s-720p_001",
+      "vehicle_id": "Vehicle B",
+      "overall_status": "clear",
+      "overall_confidence": 0.0,
+      "summary": "No sustained safety violations were detected in the sampled timeline.",
+      "violations": [],
+      "frame_level_evidence_available": true,
+      "frame_evidence_count": 0
+    },
+    {
+      "video_id": "sample-15s-720p_002",
+      "vehicle_id": "Vehicle B",
+      "overall_status": "review_needed",
+      "overall_confidence": 1.0,
+      "summary": "Possible isolated violation evidence detected: helmet_missing.",
+      "violations": [
+        {
+          "type": "helmet_missing",
+          "status": "review_needed",
+          "confidence": 1.0,
+          "start_time": 8.008,
+          "end_time": 11.011,
+          "duration_seconds": 3.003,
+          "evidence_frame_count": 2,
+          "representative_frames": [
+            {
+              "frame_id": "Vehicle_B_sample-15s-720p_002_000008",
+              "timestamp": 8.008000000000001,
+              "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000008.jpg",
+              "annotated_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\annotated\\Vehicle_B_sample-15s-720p_002_000008_annotated.jpg"
+            },
+            {
+              "frame_id": "Vehicle_B_sample-15s-720p_002_000011",
+              "timestamp": 11.011000000000001,
+              "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000011.jpg",
+              "annotated_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\annotated\\Vehicle_B_sample-15s-720p_002_000011_annotated.jpg"
+            }
+          ],
+          "reasoning": "Worker head detected without overlapping helmet. Evidence appears in only 2 sampled frame/window and needs review."
+        }
+      ],
+      "frame_level_evidence_available": true,
+      "frame_evidence_count": 4
+    }
+  ],
+  "frame_results": [
+    {
+      "frame_id": "Vehicle_A_sample-5s-720p_000_000000",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_A_sample-5s-720p_000_000000.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.8265917897224426,
+          "bbox": [
+            0.2389373779296875,
+            570.5908203125,
+            81.20118713378906,
+            645.2596435546875
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "bench",
+          "raw_label": "bench",
+          "confidence": 0.7787271738052368,
+          "bbox": [
+            607.0526123046875,
+            634.9374389648438,
+            789.2254638671875,
+            718.8534545898438
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.6270981431007385,
+          "bbox": [
+            225.35678100585938,
+            545.561279296875,
+            314.7417297363281,
+            590.6712646484375
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "truck",
+          "raw_label": "truck",
+          "confidence": 0.4891659915447235,
+          "bbox": [
+            6.247894287109375,
+            491.7835693359375,
+            225.56317138671875,
+            629.8087158203125
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "truck",
+          "raw_label": "truck",
+          "confidence": 0.35161086916923523,
+          "bbox": [
+            448.96661376953125,
+            494.59271240234375,
+            501.0941162109375,
+            568.7743530273438
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\annotated\\Vehicle_A_sample-5s-720p_000_000000_annotated.jpg",
+      "metadata": {
+        "frame_id": "Vehicle_A_sample-5s-720p_000_000000",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_A_sample-5s-720p_000_000000.jpg",
+        "sample_index": 0,
+        "frame_index": 0,
+        "timestamp": 0.0,
+        "source_fps": 30.0,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle A\\sample-5s-720p.mp4",
+        "filename": "sample-5s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle A",
+        "video_id": "sample-5s-720p_000",
+        "original_relative_path": "test upload/Vehicle A/sample-5s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 0.0,
+      "frame_index": 0,
+      "video_id": "sample-5s-720p_000",
+      "vehicle_id": "Vehicle A"
+    },
+    {
+      "frame_id": "Vehicle_A_sample-5s-720p_000_000001",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_A_sample-5s-720p_000_000001.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.7656058669090271,
+          "bbox": [
+            114.96440124511719,
+            549.7240600585938,
+            232.7611846923828,
+            610.0148315429688
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.6141237616539001,
+          "bbox": [
+            247.9564208984375,
+            546.4920654296875,
+            310.63934326171875,
+            585.4139404296875
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "bench",
+          "raw_label": "bench",
+          "confidence": 0.6111569404602051,
+          "bbox": [
+            584.7498779296875,
+            636.509033203125,
+            766.900146484375,
+            719.1182861328125
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "truck",
+          "raw_label": "truck",
+          "confidence": 0.5204220414161682,
+          "bbox": [
+            0.3065910339355469,
+            488.0008544921875,
+            56.55118942260742,
+            631.1177978515625
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\annotated\\Vehicle_A_sample-5s-720p_000_000001_annotated.jpg",
+      "metadata": {
+        "frame_id": "Vehicle_A_sample-5s-720p_000_000001",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_A_sample-5s-720p_000_000001.jpg",
+        "sample_index": 1,
+        "frame_index": 30,
+        "timestamp": 1.0,
+        "source_fps": 30.0,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle A\\sample-5s-720p.mp4",
+        "filename": "sample-5s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle A",
+        "video_id": "sample-5s-720p_000",
+        "original_relative_path": "test upload/Vehicle A/sample-5s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 1.0,
+      "frame_index": 30,
+      "video_id": "sample-5s-720p_000",
+      "vehicle_id": "Vehicle A"
+    },
+    {
+      "frame_id": "Vehicle_A_sample-5s-720p_000_000002",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_A_sample-5s-720p_000_000002.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.8593551516532898,
+          "bbox": [
+            27.5267333984375,
+            550.6912841796875,
+            184.4644775390625,
+            635.1644287109375
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.7405961155891418,
+          "bbox": [
+            208.10635375976562,
+            550.055419921875,
+            299.6712341308594,
+            594.403076171875
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "bench",
+          "raw_label": "bench",
+          "confidence": 0.7326416969299316,
+          "bbox": [
+            610.801513671875,
+            639.67431640625,
+            792.653076171875,
+            719.113525390625
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "bus",
+          "raw_label": "bus",
+          "confidence": 0.7108187079429626,
+          "bbox": [
+            1.22198486328125,
+            512.5716552734375,
+            280.21490478515625,
+            622.71337890625
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "traffic light",
+          "raw_label": "traffic light",
+          "confidence": 0.35665252804756165,
+          "bbox": [
+            13.142741203308105,
+            426.0574645996094,
+            29.919086456298828,
+            482.7499694824219
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\annotated\\Vehicle_A_sample-5s-720p_000_000002_annotated.jpg",
+      "metadata": {
+        "frame_id": "Vehicle_A_sample-5s-720p_000_000002",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_A_sample-5s-720p_000_000002.jpg",
+        "sample_index": 2,
+        "frame_index": 60,
+        "timestamp": 2.0,
+        "source_fps": 30.0,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle A\\sample-5s-720p.mp4",
+        "filename": "sample-5s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle A",
+        "video_id": "sample-5s-720p_000",
+        "original_relative_path": "test upload/Vehicle A/sample-5s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 2.0,
+      "frame_index": 60,
+      "video_id": "sample-5s-720p_000",
+      "vehicle_id": "Vehicle A"
+    },
+    {
+      "frame_id": "Vehicle_A_sample-5s-720p_000_000003",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_A_sample-5s-720p_000_000003.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.8609468340873718,
+          "bbox": [
+            138.82943725585938,
+            557.768798828125,
+            257.0594177246094,
+            613.41748046875
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.8445026874542236,
+          "bbox": [
+            0.2362213134765625,
+            562.488037109375,
+            71.05540466308594,
+            642.23095703125
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "bus",
+          "raw_label": "bus",
+          "confidence": 0.8363800048828125,
+          "bbox": [
+            0.8282470703125,
+            513.3577880859375,
+            240.76219177246094,
+            621.4971923828125
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.7366542816162109,
+          "bbox": [
+            299.357177734375,
+            548.33056640625,
+            362.16717529296875,
+            583.583251953125
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "bench",
+          "raw_label": "bench",
+          "confidence": 0.7292805910110474,
+          "bbox": [
+            629.0571899414062,
+            649.9998779296875,
+            808.3549194335938,
+            718.9957275390625
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "traffic light",
+          "raw_label": "traffic light",
+          "confidence": 0.2793595790863037,
+          "bbox": [
+            38.60070037841797,
+            427.3341064453125,
+            56.31482696533203,
+            483.9058837890625
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\annotated\\Vehicle_A_sample-5s-720p_000_000003_annotated.jpg",
+      "metadata": {
+        "frame_id": "Vehicle_A_sample-5s-720p_000_000003",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_A_sample-5s-720p_000_000003.jpg",
+        "sample_index": 3,
+        "frame_index": 90,
+        "timestamp": 3.0,
+        "source_fps": 30.0,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle A\\sample-5s-720p.mp4",
+        "filename": "sample-5s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle A",
+        "video_id": "sample-5s-720p_000",
+        "original_relative_path": "test upload/Vehicle A/sample-5s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 3.0,
+      "frame_index": 90,
+      "video_id": "sample-5s-720p_000",
+      "vehicle_id": "Vehicle A"
+    },
+    {
+      "frame_id": "Vehicle_A_sample-5s-720p_000_000004",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_A_sample-5s-720p_000_000004.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.7588083148002625,
+          "bbox": [
+            18.200164794921875,
+            561.4562377929688,
+            181.85177612304688,
+            638.4413452148438
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.6901916861534119,
+          "bbox": [
+            218.8402862548828,
+            554.7496337890625,
+            313.77691650390625,
+            601.7020263671875
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "bus",
+          "raw_label": "bus",
+          "confidence": 0.6519571542739868,
+          "bbox": [
+            0.871307373046875,
+            509.875,
+            170.63580322265625,
+            630.51513671875
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "bench",
+          "raw_label": "bench",
+          "confidence": 0.5503494143486023,
+          "bbox": [
+            635.9093627929688,
+            660.9121704101562,
+            815.6090698242188,
+            719.1699829101562
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.30369770526885986,
+          "bbox": [
+            205.23448181152344,
+            546.1680908203125,
+            221.0259552001953,
+            582.7003173828125
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.29314377903938293,
+          "bbox": [
+            337.80926513671875,
+            523.0441284179688,
+            416.82171630859375,
+            571.0160522460938
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "traffic light",
+          "raw_label": "traffic light",
+          "confidence": 0.28467872738838196,
+          "bbox": [
+            53.862709045410156,
+            423.1729431152344,
+            72.93510437011719,
+            481.9163513183594
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.2819480001926422,
+          "bbox": [
+            339.379150390625,
+            523.1756591796875,
+            532.9126586914062,
+            584.7489013671875
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\annotated\\Vehicle_A_sample-5s-720p_000_000004_annotated.jpg",
+      "metadata": {
+        "frame_id": "Vehicle_A_sample-5s-720p_000_000004",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_A_sample-5s-720p_000_000004.jpg",
+        "sample_index": 4,
+        "frame_index": 120,
+        "timestamp": 4.0,
+        "source_fps": 30.0,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle A\\sample-5s-720p.mp4",
+        "filename": "sample-5s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle A",
+        "video_id": "sample-5s-720p_000",
+        "original_relative_path": "test upload/Vehicle A/sample-5s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 4.0,
+      "frame_index": 120,
+      "video_id": "sample-5s-720p_000",
+      "vehicle_id": "Vehicle A"
+    },
+    {
+      "frame_id": "Vehicle_A_sample-5s-720p_000_000005",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_A_sample-5s-720p_000_000005.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.8495857119560242,
+          "bbox": [
+            109.72802734375,
+            574.9920043945312,
+            247.99386596679688,
+            645.4912719726562
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.8246364593505859,
+          "bbox": [
+            0.15605545043945312,
+            589.1365966796875,
+            42.03453063964844,
+            662.7735595703125
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "truck",
+          "raw_label": "truck",
+          "confidence": 0.327822744846344,
+          "bbox": [
+            308.07110595703125,
+            538.0658569335938,
+            404.74920654296875,
+            600.3870239257812
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\annotated\\Vehicle_A_sample-5s-720p_000_000005_annotated.jpg",
+      "metadata": {
+        "frame_id": "Vehicle_A_sample-5s-720p_000_000005",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_A_sample-5s-720p_000_000005.jpg",
+        "sample_index": 5,
+        "frame_index": 150,
+        "timestamp": 5.0,
+        "source_fps": 30.0,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle A\\sample-5s-720p.mp4",
+        "filename": "sample-5s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle A",
+        "video_id": "sample-5s-720p_000",
+        "original_relative_path": "test upload/Vehicle A/sample-5s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 5.0,
+      "frame_index": 150,
+      "video_id": "sample-5s-720p_000",
+      "vehicle_id": "Vehicle A"
+    },
+    {
+      "frame_id": "Vehicle_B_sample-10s-720p_001_000000",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-10s-720p_001_000000.jpg",
+      "score": 1.0,
+      "detections": [],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": null,
+      "metadata": {
+        "frame_id": "Vehicle_B_sample-10s-720p_001_000000",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-10s-720p_001_000000.jpg",
+        "sample_index": 0,
+        "frame_index": 0,
+        "timestamp": 0.0,
+        "source_fps": 29.97002997002997,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-10s-720p.mp4",
+        "filename": "sample-10s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle B",
+        "video_id": "sample-10s-720p_001",
+        "original_relative_path": "test upload/Vehicle B/sample-10s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 0.0,
+      "frame_index": 0,
+      "video_id": "sample-10s-720p_001",
+      "vehicle_id": "Vehicle B"
+    },
+    {
+      "frame_id": "Vehicle_B_sample-10s-720p_001_000001",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-10s-720p_001_000001.jpg",
+      "score": 1.0,
+      "detections": [],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": null,
+      "metadata": {
+        "frame_id": "Vehicle_B_sample-10s-720p_001_000001",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-10s-720p_001_000001.jpg",
+        "sample_index": 1,
+        "frame_index": 30,
+        "timestamp": 1.0010000000000001,
+        "source_fps": 29.97002997002997,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-10s-720p.mp4",
+        "filename": "sample-10s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle B",
+        "video_id": "sample-10s-720p_001",
+        "original_relative_path": "test upload/Vehicle B/sample-10s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 1.0010000000000001,
+      "frame_index": 30,
+      "video_id": "sample-10s-720p_001",
+      "vehicle_id": "Vehicle B"
+    },
+    {
+      "frame_id": "Vehicle_B_sample-10s-720p_001_000002",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-10s-720p_001_000002.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "train",
+          "raw_label": "train",
+          "confidence": 0.3448641300201416,
+          "bbox": [
+            564.4796142578125,
+            480.6495056152344,
+            908.8795166015625,
+            546.9627685546875
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\annotated\\Vehicle_B_sample-10s-720p_001_000002_annotated.jpg",
+      "metadata": {
+        "frame_id": "Vehicle_B_sample-10s-720p_001_000002",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-10s-720p_001_000002.jpg",
+        "sample_index": 2,
+        "frame_index": 60,
+        "timestamp": 2.0020000000000002,
+        "source_fps": 29.97002997002997,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-10s-720p.mp4",
+        "filename": "sample-10s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle B",
+        "video_id": "sample-10s-720p_001",
+        "original_relative_path": "test upload/Vehicle B/sample-10s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 2.0020000000000002,
+      "frame_index": 60,
+      "video_id": "sample-10s-720p_001",
+      "vehicle_id": "Vehicle B"
+    },
+    {
+      "frame_id": "Vehicle_B_sample-10s-720p_001_000003",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-10s-720p_001_000003.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "bus",
+          "raw_label": "bus",
+          "confidence": 0.7999976873397827,
+          "bbox": [
+            492.28167724609375,
+            490.264892578125,
+            668.4024047851562,
+            550.57861328125
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "bus",
+          "raw_label": "bus",
+          "confidence": 0.6179900169372559,
+          "bbox": [
+            118.72125244140625,
+            467.5899658203125,
+            399.7086181640625,
+            573.509033203125
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\annotated\\Vehicle_B_sample-10s-720p_001_000003_annotated.jpg",
+      "metadata": {
+        "frame_id": "Vehicle_B_sample-10s-720p_001_000003",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-10s-720p_001_000003.jpg",
+        "sample_index": 3,
+        "frame_index": 90,
+        "timestamp": 3.003,
+        "source_fps": 29.97002997002997,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-10s-720p.mp4",
+        "filename": "sample-10s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle B",
+        "video_id": "sample-10s-720p_001",
+        "original_relative_path": "test upload/Vehicle B/sample-10s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 3.003,
+      "frame_index": 90,
+      "video_id": "sample-10s-720p_001",
+      "vehicle_id": "Vehicle B"
+    },
+    {
+      "frame_id": "Vehicle_B_sample-10s-720p_001_000004",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-10s-720p_001_000004.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "bus",
+          "raw_label": "bus",
+          "confidence": 0.6587908864021301,
+          "bbox": [
+            335.84857177734375,
+            484.086181640625,
+            507.10406494140625,
+            566.515380859375
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\annotated\\Vehicle_B_sample-10s-720p_001_000004_annotated.jpg",
+      "metadata": {
+        "frame_id": "Vehicle_B_sample-10s-720p_001_000004",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-10s-720p_001_000004.jpg",
+        "sample_index": 4,
+        "frame_index": 120,
+        "timestamp": 4.0040000000000004,
+        "source_fps": 29.97002997002997,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-10s-720p.mp4",
+        "filename": "sample-10s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle B",
+        "video_id": "sample-10s-720p_001",
+        "original_relative_path": "test upload/Vehicle B/sample-10s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 4.0040000000000004,
+      "frame_index": 120,
+      "video_id": "sample-10s-720p_001",
+      "vehicle_id": "Vehicle B"
+    },
+    {
+      "frame_id": "Vehicle_B_sample-10s-720p_001_000005",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-10s-720p_001_000005.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "bus",
+          "raw_label": "bus",
+          "confidence": 0.6034629344940186,
+          "bbox": [
+            128.65438842773438,
+            469.9867858886719,
+            239.80218505859375,
+            569.6044921875
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\annotated\\Vehicle_B_sample-10s-720p_001_000005_annotated.jpg",
+      "metadata": {
+        "frame_id": "Vehicle_B_sample-10s-720p_001_000005",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-10s-720p_001_000005.jpg",
+        "sample_index": 5,
+        "frame_index": 150,
+        "timestamp": 5.005,
+        "source_fps": 29.97002997002997,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-10s-720p.mp4",
+        "filename": "sample-10s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle B",
+        "video_id": "sample-10s-720p_001",
+        "original_relative_path": "test upload/Vehicle B/sample-10s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 5.005,
+      "frame_index": 150,
+      "video_id": "sample-10s-720p_001",
+      "vehicle_id": "Vehicle B"
+    },
+    {
+      "frame_id": "Vehicle_B_sample-10s-720p_001_000006",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-10s-720p_001_000006.jpg",
+      "score": 1.0,
+      "detections": [],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": null,
+      "metadata": {
+        "frame_id": "Vehicle_B_sample-10s-720p_001_000006",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-10s-720p_001_000006.jpg",
+        "sample_index": 6,
+        "frame_index": 180,
+        "timestamp": 6.006,
+        "source_fps": 29.97002997002997,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-10s-720p.mp4",
+        "filename": "sample-10s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle B",
+        "video_id": "sample-10s-720p_001",
+        "original_relative_path": "test upload/Vehicle B/sample-10s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 6.006,
+      "frame_index": 180,
+      "video_id": "sample-10s-720p_001",
+      "vehicle_id": "Vehicle B"
+    },
+    {
+      "frame_id": "Vehicle_B_sample-10s-720p_001_000007",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-10s-720p_001_000007.jpg",
+      "score": 1.0,
+      "detections": [],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": null,
+      "metadata": {
+        "frame_id": "Vehicle_B_sample-10s-720p_001_000007",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-10s-720p_001_000007.jpg",
+        "sample_index": 7,
+        "frame_index": 210,
+        "timestamp": 7.007000000000001,
+        "source_fps": 29.97002997002997,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-10s-720p.mp4",
+        "filename": "sample-10s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle B",
+        "video_id": "sample-10s-720p_001",
+        "original_relative_path": "test upload/Vehicle B/sample-10s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 7.007000000000001,
+      "frame_index": 210,
+      "video_id": "sample-10s-720p_001",
+      "vehicle_id": "Vehicle B"
+    },
+    {
+      "frame_id": "Vehicle_B_sample-10s-720p_001_000008",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-10s-720p_001_000008.jpg",
+      "score": 1.0,
+      "detections": [],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": null,
+      "metadata": {
+        "frame_id": "Vehicle_B_sample-10s-720p_001_000008",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-10s-720p_001_000008.jpg",
+        "sample_index": 8,
+        "frame_index": 240,
+        "timestamp": 8.008000000000001,
+        "source_fps": 29.97002997002997,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-10s-720p.mp4",
+        "filename": "sample-10s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle B",
+        "video_id": "sample-10s-720p_001",
+        "original_relative_path": "test upload/Vehicle B/sample-10s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 8.008000000000001,
+      "frame_index": 240,
+      "video_id": "sample-10s-720p_001",
+      "vehicle_id": "Vehicle B"
+    },
+    {
+      "frame_id": "Vehicle_B_sample-10s-720p_001_000009",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-10s-720p_001_000009.jpg",
+      "score": 1.0,
+      "detections": [],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": null,
+      "metadata": {
+        "frame_id": "Vehicle_B_sample-10s-720p_001_000009",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-10s-720p_001_000009.jpg",
+        "sample_index": 9,
+        "frame_index": 270,
+        "timestamp": 9.009,
+        "source_fps": 29.97002997002997,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-10s-720p.mp4",
+        "filename": "sample-10s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle B",
+        "video_id": "sample-10s-720p_001",
+        "original_relative_path": "test upload/Vehicle B/sample-10s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 9.009,
+      "frame_index": 270,
+      "video_id": "sample-10s-720p_001",
+      "vehicle_id": "Vehicle B"
+    },
+    {
+      "frame_id": "Vehicle_B_sample-10s-720p_001_000010",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-10s-720p_001_000010.jpg",
+      "score": 1.0,
+      "detections": [],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": null,
+      "metadata": {
+        "frame_id": "Vehicle_B_sample-10s-720p_001_000010",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-10s-720p_001_000010.jpg",
+        "sample_index": 10,
+        "frame_index": 300,
+        "timestamp": 10.01,
+        "source_fps": 29.97002997002997,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-10s-720p.mp4",
+        "filename": "sample-10s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle B",
+        "video_id": "sample-10s-720p_001",
+        "original_relative_path": "test upload/Vehicle B/sample-10s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 10.01,
+      "frame_index": 300,
+      "video_id": "sample-10s-720p_001",
+      "vehicle_id": "Vehicle B"
+    },
+    {
+      "frame_id": "Vehicle_B_sample-15s-720p_002_000000",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000000.jpg",
+      "score": 1.0,
+      "detections": [],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": null,
+      "metadata": {
+        "frame_id": "Vehicle_B_sample-15s-720p_002_000000",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000000.jpg",
+        "sample_index": 0,
+        "frame_index": 0,
+        "timestamp": 0.0,
+        "source_fps": 29.97002997002997,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-15s-720p.mp4",
+        "filename": "sample-15s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle B",
+        "video_id": "sample-15s-720p_002",
+        "original_relative_path": "test upload/Vehicle B/sample-15s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 0.0,
+      "frame_index": 0,
+      "video_id": "sample-15s-720p_002",
+      "vehicle_id": "Vehicle B"
+    },
+    {
+      "frame_id": "Vehicle_B_sample-15s-720p_002_000001",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000001.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.4939174950122833,
+          "bbox": [
+            720.1539916992188,
+            428.038330078125,
+            822.2727661132812,
+            465.4521484375
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\annotated\\Vehicle_B_sample-15s-720p_002_000001_annotated.jpg",
+      "metadata": {
+        "frame_id": "Vehicle_B_sample-15s-720p_002_000001",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000001.jpg",
+        "sample_index": 1,
+        "frame_index": 30,
+        "timestamp": 1.0010000000000001,
+        "source_fps": 29.97002997002997,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-15s-720p.mp4",
+        "filename": "sample-15s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle B",
+        "video_id": "sample-15s-720p_002",
+        "original_relative_path": "test upload/Vehicle B/sample-15s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 1.0010000000000001,
+      "frame_index": 30,
+      "video_id": "sample-15s-720p_002",
+      "vehicle_id": "Vehicle B"
+    },
+    {
+      "frame_id": "Vehicle_B_sample-15s-720p_002_000002",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000002.jpg",
+      "score": 1.0,
+      "detections": [],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": null,
+      "metadata": {
+        "frame_id": "Vehicle_B_sample-15s-720p_002_000002",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000002.jpg",
+        "sample_index": 2,
+        "frame_index": 60,
+        "timestamp": 2.0020000000000002,
+        "source_fps": 29.97002997002997,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-15s-720p.mp4",
+        "filename": "sample-15s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle B",
+        "video_id": "sample-15s-720p_002",
+        "original_relative_path": "test upload/Vehicle B/sample-15s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 2.0020000000000002,
+      "frame_index": 60,
+      "video_id": "sample-15s-720p_002",
+      "vehicle_id": "Vehicle B"
+    },
+    {
+      "frame_id": "Vehicle_B_sample-15s-720p_002_000003",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000003.jpg",
+      "score": 1.0,
+      "detections": [],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": null,
+      "metadata": {
+        "frame_id": "Vehicle_B_sample-15s-720p_002_000003",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000003.jpg",
+        "sample_index": 3,
+        "frame_index": 90,
+        "timestamp": 3.003,
+        "source_fps": 29.97002997002997,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-15s-720p.mp4",
+        "filename": "sample-15s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle B",
+        "video_id": "sample-15s-720p_002",
+        "original_relative_path": "test upload/Vehicle B/sample-15s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 3.003,
+      "frame_index": 90,
+      "video_id": "sample-15s-720p_002",
+      "vehicle_id": "Vehicle B"
+    },
+    {
+      "frame_id": "Vehicle_B_sample-15s-720p_002_000004",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000004.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.5704376697540283,
+          "bbox": [
+            1049.8603515625,
+            400.0548095703125,
+            1161.75341796875,
+            425.41357421875
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\annotated\\Vehicle_B_sample-15s-720p_002_000004_annotated.jpg",
+      "metadata": {
+        "frame_id": "Vehicle_B_sample-15s-720p_002_000004",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000004.jpg",
+        "sample_index": 4,
+        "frame_index": 120,
+        "timestamp": 4.0040000000000004,
+        "source_fps": 29.97002997002997,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-15s-720p.mp4",
+        "filename": "sample-15s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle B",
+        "video_id": "sample-15s-720p_002",
+        "original_relative_path": "test upload/Vehicle B/sample-15s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 4.0040000000000004,
+      "frame_index": 120,
+      "video_id": "sample-15s-720p_002",
+      "vehicle_id": "Vehicle B"
+    },
+    {
+      "frame_id": "Vehicle_B_sample-15s-720p_002_000005",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000005.jpg",
+      "score": 1.0,
+      "detections": [],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": null,
+      "metadata": {
+        "frame_id": "Vehicle_B_sample-15s-720p_002_000005",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000005.jpg",
+        "sample_index": 5,
+        "frame_index": 150,
+        "timestamp": 5.005,
+        "source_fps": 29.97002997002997,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-15s-720p.mp4",
+        "filename": "sample-15s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle B",
+        "video_id": "sample-15s-720p_002",
+        "original_relative_path": "test upload/Vehicle B/sample-15s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 5.005,
+      "frame_index": 150,
+      "video_id": "sample-15s-720p_002",
+      "vehicle_id": "Vehicle B"
+    },
+    {
+      "frame_id": "Vehicle_B_sample-15s-720p_002_000006",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000006.jpg",
+      "score": 1.0,
+      "detections": [],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": null,
+      "metadata": {
+        "frame_id": "Vehicle_B_sample-15s-720p_002_000006",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000006.jpg",
+        "sample_index": 6,
+        "frame_index": 180,
+        "timestamp": 6.006,
+        "source_fps": 29.97002997002997,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-15s-720p.mp4",
+        "filename": "sample-15s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle B",
+        "video_id": "sample-15s-720p_002",
+        "original_relative_path": "test upload/Vehicle B/sample-15s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 6.006,
+      "frame_index": 180,
+      "video_id": "sample-15s-720p_002",
+      "vehicle_id": "Vehicle B"
+    },
+    {
+      "frame_id": "Vehicle_B_sample-15s-720p_002_000007",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000007.jpg",
+      "score": 1.0,
+      "detections": [],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": null,
+      "metadata": {
+        "frame_id": "Vehicle_B_sample-15s-720p_002_000007",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000007.jpg",
+        "sample_index": 7,
+        "frame_index": 210,
+        "timestamp": 7.007000000000001,
+        "source_fps": 29.97002997002997,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-15s-720p.mp4",
+        "filename": "sample-15s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle B",
+        "video_id": "sample-15s-720p_002",
+        "original_relative_path": "test upload/Vehicle B/sample-15s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 7.007000000000001,
+      "frame_index": 210,
+      "video_id": "sample-15s-720p_002",
+      "vehicle_id": "Vehicle B"
+    },
+    {
+      "frame_id": "Vehicle_B_sample-15s-720p_002_000008",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000008.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.5655288100242615,
+          "bbox": [
+            1060.1279296875,
+            376.81634521484375,
+            1159.07763671875,
+            400.77008056640625
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.2784798741340637,
+          "bbox": [
+            458.5038146972656,
+            394.8193359375,
+            483.9516296386719,
+            450.96600341796875
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\annotated\\Vehicle_B_sample-15s-720p_002_000008_annotated.jpg",
+      "metadata": {
+        "frame_id": "Vehicle_B_sample-15s-720p_002_000008",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000008.jpg",
+        "sample_index": 8,
+        "frame_index": 240,
+        "timestamp": 8.008000000000001,
+        "source_fps": 29.97002997002997,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-15s-720p.mp4",
+        "filename": "sample-15s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle B",
+        "video_id": "sample-15s-720p_002",
+        "original_relative_path": "test upload/Vehicle B/sample-15s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 8.008000000000001,
+      "frame_index": 240,
+      "video_id": "sample-15s-720p_002",
+      "vehicle_id": "Vehicle B"
+    },
+    {
+      "frame_id": "Vehicle_B_sample-15s-720p_002_000009",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000009.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.26599904894828796,
+          "bbox": [
+            776.598876953125,
+            386.69476318359375,
+            846.81396484375,
+            406.77935791015625
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\annotated\\Vehicle_B_sample-15s-720p_002_000009_annotated.jpg",
+      "metadata": {
+        "frame_id": "Vehicle_B_sample-15s-720p_002_000009",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000009.jpg",
+        "sample_index": 9,
+        "frame_index": 270,
+        "timestamp": 9.009,
+        "source_fps": 29.97002997002997,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-15s-720p.mp4",
+        "filename": "sample-15s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle B",
+        "video_id": "sample-15s-720p_002",
+        "original_relative_path": "test upload/Vehicle B/sample-15s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 9.009,
+      "frame_index": 270,
+      "video_id": "sample-15s-720p_002",
+      "vehicle_id": "Vehicle B"
+    },
+    {
+      "frame_id": "Vehicle_B_sample-15s-720p_002_000010",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000010.jpg",
+      "score": 1.0,
+      "detections": [],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": null,
+      "metadata": {
+        "frame_id": "Vehicle_B_sample-15s-720p_002_000010",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000010.jpg",
+        "sample_index": 10,
+        "frame_index": 300,
+        "timestamp": 10.01,
+        "source_fps": 29.97002997002997,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-15s-720p.mp4",
+        "filename": "sample-15s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle B",
+        "video_id": "sample-15s-720p_002",
+        "original_relative_path": "test upload/Vehicle B/sample-15s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 10.01,
+      "frame_index": 300,
+      "video_id": "sample-15s-720p_002",
+      "vehicle_id": "Vehicle B"
+    },
+    {
+      "frame_id": "Vehicle_B_sample-15s-720p_002_000011",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000011.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.5113968253135681,
+          "bbox": [
+            1142.662841796875,
+            379.12518310546875,
+            1256.708251953125,
+            402.68292236328125
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.322585791349411,
+          "bbox": [
+            520.4776611328125,
+            381.11016845703125,
+            547.2288818359375,
+            436.90045166015625
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\annotated\\Vehicle_B_sample-15s-720p_002_000011_annotated.jpg",
+      "metadata": {
+        "frame_id": "Vehicle_B_sample-15s-720p_002_000011",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000011.jpg",
+        "sample_index": 11,
+        "frame_index": 330,
+        "timestamp": 11.011000000000001,
+        "source_fps": 29.97002997002997,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-15s-720p.mp4",
+        "filename": "sample-15s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle B",
+        "video_id": "sample-15s-720p_002",
+        "original_relative_path": "test upload/Vehicle B/sample-15s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 11.011000000000001,
+      "frame_index": 330,
+      "video_id": "sample-15s-720p_002",
+      "vehicle_id": "Vehicle B"
+    },
+    {
+      "frame_id": "Vehicle_B_sample-15s-720p_002_000012",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000012.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.43068811297416687,
+          "bbox": [
+            812.3563232421875,
+            374.9874267578125,
+            871.1976318359375,
+            399.7967529296875
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.42484724521636963,
+          "bbox": [
+            874.345703125,
+            382.1085205078125,
+            932.8193359375,
+            398.8817138671875
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "potted plant",
+          "raw_label": "potted plant",
+          "confidence": 0.2954057455062866,
+          "bbox": [
+            756.8352661132812,
+            407.168701171875,
+            797.6148071289062,
+            439.8424072265625
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\annotated\\Vehicle_B_sample-15s-720p_002_000012_annotated.jpg",
+      "metadata": {
+        "frame_id": "Vehicle_B_sample-15s-720p_002_000012",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000012.jpg",
+        "sample_index": 12,
+        "frame_index": 360,
+        "timestamp": 12.012,
+        "source_fps": 29.97002997002997,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-15s-720p.mp4",
+        "filename": "sample-15s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle B",
+        "video_id": "sample-15s-720p_002",
+        "original_relative_path": "test upload/Vehicle B/sample-15s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 12.012,
+      "frame_index": 360,
+      "video_id": "sample-15s-720p_002",
+      "vehicle_id": "Vehicle B"
+    },
+    {
+      "frame_id": "Vehicle_B_sample-15s-720p_002_000013",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000013.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.6059058904647827,
+          "bbox": [
+            1227.4195556640625,
+            342.672607421875,
+            1279.5623779296875,
+            368.2977294921875
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\annotated\\Vehicle_B_sample-15s-720p_002_000013_annotated.jpg",
+      "metadata": {
+        "frame_id": "Vehicle_B_sample-15s-720p_002_000013",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000013.jpg",
+        "sample_index": 13,
+        "frame_index": 390,
+        "timestamp": 13.013,
+        "source_fps": 29.97002997002997,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-15s-720p.mp4",
+        "filename": "sample-15s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle B",
+        "video_id": "sample-15s-720p_002",
+        "original_relative_path": "test upload/Vehicle B/sample-15s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 13.013,
+      "frame_index": 390,
+      "video_id": "sample-15s-720p_002",
+      "vehicle_id": "Vehicle B"
+    },
+    {
+      "frame_id": "Vehicle_B_sample-15s-720p_002_000014",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000014.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.5177561640739441,
+          "bbox": [
+            1151.102294921875,
+            371.93817138671875,
+            1251.195556640625,
+            397.316162109375
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\annotated\\Vehicle_B_sample-15s-720p_002_000014_annotated.jpg",
+      "metadata": {
+        "frame_id": "Vehicle_B_sample-15s-720p_002_000014",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000014.jpg",
+        "sample_index": 14,
+        "frame_index": 420,
+        "timestamp": 14.014000000000001,
+        "source_fps": 29.97002997002997,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-15s-720p.mp4",
+        "filename": "sample-15s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle B",
+        "video_id": "sample-15s-720p_002",
+        "original_relative_path": "test upload/Vehicle B/sample-15s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 14.014000000000001,
+      "frame_index": 420,
+      "video_id": "sample-15s-720p_002",
+      "vehicle_id": "Vehicle B"
+    },
+    {
+      "frame_id": "Vehicle_B_sample-15s-720p_002_000015",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000015.jpg",
+      "score": 1.0,
+      "detections": [],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": null,
+      "metadata": {
+        "frame_id": "Vehicle_B_sample-15s-720p_002_000015",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000015.jpg",
+        "sample_index": 15,
+        "frame_index": 450,
+        "timestamp": 15.015,
+        "source_fps": 29.97002997002997,
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-15s-720p.mp4",
+        "filename": "sample-15s-720p.mp4",
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle B",
+        "video_id": "sample-15s-720p_002",
+        "original_relative_path": "test upload/Vehicle B/sample-15s-720p.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 15.015,
+      "frame_index": 450,
+      "video_id": "sample-15s-720p_002",
+      "vehicle_id": "Vehicle B"
+    }
+  ],
+  "search_results": [
+    {
+      "frame_id": "Vehicle_A_sample-5s-720p_000_000005",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_A_sample-5s-720p_000_000005.jpg",
+      "score": 0.023630615323781967,
+      "detections": [
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.8495857119560242,
+          "bbox": [
+            109.72802734375,
+            574.9920043945312,
+            247.99386596679688,
+            645.4912719726562
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.8246364593505859,
+          "bbox": [
+            0.15605545043945312,
+            589.1365966796875,
+            42.03453063964844,
+            662.7735595703125
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "truck",
+          "raw_label": "truck",
+          "confidence": 0.327822744846344,
+          "bbox": [
+            308.07110595703125,
+            538.0658569335938,
+            404.74920654296875,
+            600.3870239257812
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\annotated\\Vehicle_A_sample-5s-720p_000_000005_annotated.jpg",
+      "metadata": {
+        "frame_id": "Vehicle_A_sample-5s-720p_000_000005",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_A_sample-5s-720p_000_000005.jpg",
+        "index": 5,
+        "window_id": "sample-5s-720p_000_w000005",
+        "window_start_index": 5,
+        "window_end_index": 5,
+        "window_frame_indices": [
+          150
+        ],
+        "window_timestamps": [
+          5.0
+        ],
+        "timestamp": 5.0,
+        "start_time": 5.0,
+        "end_time": 5.0,
+        "representative_frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_A_sample-5s-720p_000_000005.jpg",
+        "representative_frame_id": "Vehicle_A_sample-5s-720p_000_000005",
+        "source_frame_paths": [
+          "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_A_sample-5s-720p_000_000005.jpg"
+        ],
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle A",
+        "video_id": "sample-5s-720p_000",
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle A\\sample-5s-720p.mp4",
+        "original_relative_path": "test upload/Vehicle A/sample-5s-720p.mp4",
+        "filename": "sample-5s-720p.mp4",
+        "score": 0.023630615323781967
+      },
+      "timestamp": 5.0,
+      "video_id": "sample-5s-720p_000",
+      "vehicle_id": "Vehicle A"
+    },
+    {
+      "frame_id": "Vehicle_B_sample-15s-720p_002_000007",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000007.jpg",
+      "score": 0.004364381544291973,
+      "detections": [],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": null,
+      "metadata": {
+        "frame_id": "Vehicle_B_sample-15s-720p_002_000007",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000007.jpg",
+        "index": 24,
+        "window_id": "sample-15s-720p_002_w000024",
+        "window_start_index": 24,
+        "window_end_index": 24,
+        "window_frame_indices": [
+          210
+        ],
+        "window_timestamps": [
+          7.007000000000001
+        ],
+        "timestamp": 7.007000000000001,
+        "start_time": 7.007000000000001,
+        "end_time": 7.007000000000001,
+        "representative_frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000007.jpg",
+        "representative_frame_id": "Vehicle_B_sample-15s-720p_002_000007",
+        "source_frame_paths": [
+          "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000007.jpg"
+        ],
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle B",
+        "video_id": "sample-15s-720p_002",
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-15s-720p.mp4",
+        "original_relative_path": "test upload/Vehicle B/sample-15s-720p.mp4",
+        "filename": "sample-15s-720p.mp4",
+        "score": 0.004364381544291973
+      },
+      "timestamp": 7.007000000000001,
+      "video_id": "sample-15s-720p_002",
+      "vehicle_id": "Vehicle B"
+    },
+    {
+      "frame_id": "Vehicle_A_sample-5s-720p_000_000003",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_A_sample-5s-720p_000_000003.jpg",
+      "score": 0.002356551820412278,
+      "detections": [
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.8609468340873718,
+          "bbox": [
+            138.82943725585938,
+            557.768798828125,
+            257.0594177246094,
+            613.41748046875
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.8445026874542236,
+          "bbox": [
+            0.2362213134765625,
+            562.488037109375,
+            71.05540466308594,
+            642.23095703125
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "bus",
+          "raw_label": "bus",
+          "confidence": 0.8363800048828125,
+          "bbox": [
+            0.8282470703125,
+            513.3577880859375,
+            240.76219177246094,
+            621.4971923828125
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.7366542816162109,
+          "bbox": [
+            299.357177734375,
+            548.33056640625,
+            362.16717529296875,
+            583.583251953125
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "bench",
+          "raw_label": "bench",
+          "confidence": 0.7292805910110474,
+          "bbox": [
+            629.0571899414062,
+            649.9998779296875,
+            808.3549194335938,
+            718.9957275390625
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "traffic light",
+          "raw_label": "traffic light",
+          "confidence": 0.2793595790863037,
+          "bbox": [
+            38.60070037841797,
+            427.3341064453125,
+            56.31482696533203,
+            483.9058837890625
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\annotated\\Vehicle_A_sample-5s-720p_000_000003_annotated.jpg",
+      "metadata": {
+        "frame_id": "Vehicle_A_sample-5s-720p_000_000003",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_A_sample-5s-720p_000_000003.jpg",
+        "index": 3,
+        "window_id": "sample-5s-720p_000_w000003",
+        "window_start_index": 3,
+        "window_end_index": 3,
+        "window_frame_indices": [
+          90
+        ],
+        "window_timestamps": [
+          3.0
+        ],
+        "timestamp": 3.0,
+        "start_time": 3.0,
+        "end_time": 3.0,
+        "representative_frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_A_sample-5s-720p_000_000003.jpg",
+        "representative_frame_id": "Vehicle_A_sample-5s-720p_000_000003",
+        "source_frame_paths": [
+          "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_A_sample-5s-720p_000_000003.jpg"
+        ],
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle A",
+        "video_id": "sample-5s-720p_000",
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle A\\sample-5s-720p.mp4",
+        "original_relative_path": "test upload/Vehicle A/sample-5s-720p.mp4",
+        "filename": "sample-5s-720p.mp4",
+        "score": 0.002356551820412278
+      },
+      "timestamp": 3.0,
+      "video_id": "sample-5s-720p_000",
+      "vehicle_id": "Vehicle A"
+    },
+    {
+      "frame_id": "Vehicle_A_sample-5s-720p_000_000004",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_A_sample-5s-720p_000_000004.jpg",
+      "score": 0.0016535399481654167,
+      "detections": [
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.7588083148002625,
+          "bbox": [
+            18.200164794921875,
+            561.4562377929688,
+            181.85177612304688,
+            638.4413452148438
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.6901916861534119,
+          "bbox": [
+            218.8402862548828,
+            554.7496337890625,
+            313.77691650390625,
+            601.7020263671875
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "bus",
+          "raw_label": "bus",
+          "confidence": 0.6519571542739868,
+          "bbox": [
+            0.871307373046875,
+            509.875,
+            170.63580322265625,
+            630.51513671875
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "bench",
+          "raw_label": "bench",
+          "confidence": 0.5503494143486023,
+          "bbox": [
+            635.9093627929688,
+            660.9121704101562,
+            815.6090698242188,
+            719.1699829101562
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.30369770526885986,
+          "bbox": [
+            205.23448181152344,
+            546.1680908203125,
+            221.0259552001953,
+            582.7003173828125
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.29314377903938293,
+          "bbox": [
+            337.80926513671875,
+            523.0441284179688,
+            416.82171630859375,
+            571.0160522460938
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "traffic light",
+          "raw_label": "traffic light",
+          "confidence": 0.28467872738838196,
+          "bbox": [
+            53.862709045410156,
+            423.1729431152344,
+            72.93510437011719,
+            481.9163513183594
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.2819480001926422,
+          "bbox": [
+            339.379150390625,
+            523.1756591796875,
+            532.9126586914062,
+            584.7489013671875
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\annotated\\Vehicle_A_sample-5s-720p_000_000004_annotated.jpg",
+      "metadata": {
+        "frame_id": "Vehicle_A_sample-5s-720p_000_000004",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_A_sample-5s-720p_000_000004.jpg",
+        "index": 4,
+        "window_id": "sample-5s-720p_000_w000004",
+        "window_start_index": 4,
+        "window_end_index": 4,
+        "window_frame_indices": [
+          120
+        ],
+        "window_timestamps": [
+          4.0
+        ],
+        "timestamp": 4.0,
+        "start_time": 4.0,
+        "end_time": 4.0,
+        "representative_frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_A_sample-5s-720p_000_000004.jpg",
+        "representative_frame_id": "Vehicle_A_sample-5s-720p_000_000004",
+        "source_frame_paths": [
+          "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_A_sample-5s-720p_000_000004.jpg"
+        ],
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle A",
+        "video_id": "sample-5s-720p_000",
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle A\\sample-5s-720p.mp4",
+        "original_relative_path": "test upload/Vehicle A/sample-5s-720p.mp4",
+        "filename": "sample-5s-720p.mp4",
+        "score": 0.0016535399481654167
+      },
+      "timestamp": 4.0,
+      "video_id": "sample-5s-720p_000",
+      "vehicle_id": "Vehicle A"
+    },
+    {
+      "frame_id": "Vehicle_B_sample-15s-720p_002_000006",
+      "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000006.jpg",
+      "score": 0.0011888332664966583,
+      "detections": [],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": null,
+      "metadata": {
+        "frame_id": "Vehicle_B_sample-15s-720p_002_000006",
+        "frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000006.jpg",
+        "index": 23,
+        "window_id": "sample-15s-720p_002_w000023",
+        "window_start_index": 23,
+        "window_end_index": 23,
+        "window_frame_indices": [
+          180
+        ],
+        "window_timestamps": [
+          6.006
+        ],
+        "timestamp": 6.006,
+        "start_time": 6.006,
+        "end_time": 6.006,
+        "representative_frame_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000006.jpg",
+        "representative_frame_id": "Vehicle_B_sample-15s-720p_002_000006",
+        "source_frame_paths": [
+          "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\outputs\\frames\\Vehicle_B_sample-15s-720p_002_000006.jpg"
+        ],
+        "batch_id": "801fa525e8d8",
+        "vehicle_id": "Vehicle B",
+        "video_id": "sample-15s-720p_002",
+        "source_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-15s-720p.mp4",
+        "original_relative_path": "test upload/Vehicle B/sample-15s-720p.mp4",
+        "filename": "sample-15s-720p.mp4",
+        "score": 0.0011888332664966583
+      },
+      "timestamp": 6.006,
+      "video_id": "sample-15s-720p_002",
+      "vehicle_id": "Vehicle B"
+    }
+  ],
+  "media": [
+    {
+      "batch_id": "801fa525e8d8",
+      "vehicle_id": "Vehicle A",
+      "original_relative_path": "test upload/Vehicle A/sample-5s-720p.mp4",
+      "filename": "sample-5s-720p.mp4",
+      "stored_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle A\\sample-5s-720p.mp4",
+      "media_type": "video",
+      "status": "completed"
+    },
+    {
+      "batch_id": "801fa525e8d8",
+      "vehicle_id": "Vehicle B",
+      "original_relative_path": "test upload/Vehicle B/sample-10s-720p.mp4",
+      "filename": "sample-10s-720p.mp4",
+      "stored_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-10s-720p.mp4",
+      "media_type": "video",
+      "status": "completed"
+    },
+    {
+      "batch_id": "801fa525e8d8",
+      "vehicle_id": "Vehicle B",
+      "original_relative_path": "test upload/Vehicle B/sample-15s-720p.mp4",
+      "filename": "sample-15s-720p.mp4",
+      "stored_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\801fa525e8d8\\uploads\\bulk\\test upload\\Vehicle B\\sample-15s-720p.mp4",
+      "media_type": "video",
+      "status": "completed"
+    }
+  ]
+}

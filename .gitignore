@@ -8,6 +8,7 @@ venv/
 # Data / models / outputs
 data/frames/*
 data/annotated/*
+data/test_tmp/
 data/embeddings.npy
 data/metadata.json
 data/index.faiss

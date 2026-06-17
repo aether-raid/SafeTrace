@@ -1,0 +1,51 @@
+{
+  "job_id": "20190b5e665e",
+  "batch_id": "20190b5e665e",
+  "status": "failed",
+  "stage": "failed",
+  "progress": 0.0,
+  "processed_frames": 5,
+  "error": "[WinError 5] Access is denied: 'C:\\\\Users\\\\shane\\\\Downloads\\\\SafeTrace\\\\data\\\\jobs\\\\20190b5e665e\\\\job.tmp' -> 'C:\\\\Users\\\\shane\\\\Downloads\\\\SafeTrace\\\\data\\\\jobs\\\\20190b5e665e\\\\job.json'",
+  "query": "worker without seltbelt",
+  "settings": {
+    "fps": 1.0,
+    "top_k": 5,
+    "enable_vlm": false,
+    "device": "cpu",
+    "max_frames": 600
+  },
+  "media": [
+    {
+      "batch_id": "20190b5e665e",
+      "vehicle_id": "Vehicle A",
+      "original_relative_path": "test upload/Vehicle A/sample-5s-720p.mp4",
+      "filename": "sample-5s-720p.mp4",
+      "stored_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\20190b5e665e\\uploads\\bulk\\test upload\\Vehicle A\\sample-5s-720p.mp4",
+      "media_type": "video",
+      "status": "failed"
+    },
+    {
+      "batch_id": "20190b5e665e",
+      "vehicle_id": "Vehicle B",
+      "original_relative_path": "test upload/Vehicle B/sample-10s-720p.mp4",
+      "filename": "sample-10s-720p.mp4",
+      "stored_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\20190b5e665e\\uploads\\bulk\\test upload\\Vehicle B\\sample-10s-720p.mp4",
+      "media_type": "video",
+      "status": "failed"
+    },
+    {
+      "batch_id": "20190b5e665e",
+      "vehicle_id": "Vehicle B",
+      "original_relative_path": "test upload/Vehicle B/sample-15s-720p.mp4",
+      "filename": "sample-15s-720p.mp4",
+      "stored_path": "C:\\Users\\shane\\Downloads\\SafeTrace\\data\\jobs\\20190b5e665e\\uploads\\bulk\\test upload\\Vehicle B\\sample-15s-720p.mp4",
+      "media_type": "video",
+      "status": "failed"
+    }
+  ],
+  "result_path": null,
+  "created_at": 1781683929.578696,
+  "updated_at": 1781684012.8806398,
+  "current_media": null,
+  "total_frames": 33
+}

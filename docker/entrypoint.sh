@@ -23,7 +23,7 @@ case "${1:-ui}" in
         --server.maxMessageSize "${STREAMLIT_SERVER_MAX_MESSAGE_SIZE:-51200}" \
         --server.headless true "$@"
     ;;
-  ingest|query)
+  ingest|query|worker|job-status)
     exec python main.py "$@"
     ;;
   bash|sh)

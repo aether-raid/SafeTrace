@@ -171,8 +171,9 @@ The Streamlit sidebar exposes:
   Changing the device transparently rebuilds the model cache. If `cuda` is
   selected on an image without GPU kernels for your card, the UI warns and
   falls back to CPU. For RTX 50-series GPUs use the Blackwell image (above).
-- **Uploads** — the server cap is lifted to 50 GB; tune via
-  `STREAMLIT_SERVER_MAX_UPLOAD_SIZE` (MB).
+- **Uploads** — local Streamlit runs default to the `.streamlit/config.toml`
+  cap, and Docker runs can be tuned via `STREAMLIT_SERVER_MAX_UPLOAD_SIZE`
+  (MB).
 
 ---
 
@@ -203,3 +204,180 @@ results = analyze_query("worker without helmet")
   pipeline degrades gracefully (YOLO masks only, deterministic explanations).
 - YOLO label spaces vary across checkpoints; `src/config.py` contains a
   configurable `CLASS_ALIASES` map normalizing labels for the rule engine.
+
+---
+
+## Queued jobs and bulk ZIP uploads
+
+The Streamlit UI now queues uploads instead of running heavy model inference
+inside the upload click. After queueing a job, the app automatically starts a
+background subprocess equivalent to:
+
+```bash
+python main.py worker --once
+```
+
+The UI returns immediately and reads job progress from `data/jobs`. The manual
+worker commands are still available for debugging or CLI use:
+
+```bash
+python main.py worker --once
+python main.py worker
+```
+
+Inspect queued/completed jobs:
+
+```bash
+python main.py job-status
+python main.py job-status JOB_ID
+```
+
+While a selected job is `queued` or `processing`, the Streamlit UI can
+auto-refresh every few seconds. The sidebar control **Auto-refresh while
+processing** is enabled by default. Results are loaded only after the job
+status becomes `completed`; until then the UI shows the current status, stage,
+progress, processed frames, and media records.
+
+Reviewer-facing confidence values are displayed as percentages in the UI
+(`87%`, `92.5%`). Internal JSON fields keep decimal confidence values for
+compatibility, with raw JSON available only inside optional expanders.
+
+Queued job state and isolated outputs are stored under:
+
+```text
+data/jobs/{job_id}/job.json
+data/jobs/{job_id}/outputs/index.faiss
+data/jobs/{job_id}/outputs/metadata.json
+data/jobs/{job_id}/outputs/results.json
+```
+
+The Streamlit uploader supports normal video files (`.mp4`, `.avi`, `.mov`,
+`.mkv`, `.webm`) and bulk `.zip` uploads. A normal video upload keeps the
+single-video queue flow. A ZIP upload is parsed as a batch and the ZIP file
+itself is not sent through video ingestion.
+
+Bulk upload ZIPs must contain top-level vehicle folders. The top-level folder
+name becomes `vehicle_id`.
+
+```text
+upload.zip
+  Vehicle_A/
+    video1.mp4
+  Vehicle_B/
+    video2.mp4
+```
+
+Non-video files inside the ZIP are ignored. Unsafe paths and videos at the ZIP
+root are rejected.
+
+If a ZIP contains exactly one outer wrapper folder and multiple vehicle folders
+inside it, SafeTrace treats the inner folders as vehicles:
+
+```text
+upload.zip
+  test upload/
+    Vehicle A/
+      a.mp4
+    Vehicle B/
+      b.mp4
+```
+
+This produces `vehicle_id` values `Vehicle A` and `Vehicle B`.
+
+Local Streamlit runs use `.streamlit/config.toml`, which sets:
+
+```toml
+[server]
+maxUploadSize = 1024
+```
+
+The value is in MB. Increase it if your ZIP/video files are larger. Docker runs
+still use the existing `STREAMLIT_SERVER_MAX_UPLOAD_SIZE` and
+`STREAMLIT_SERVER_MAX_MESSAGE_SIZE` environment variables, which are passed by
+`docker/entrypoint.sh`.
+
+On Windows/local ML runtimes, SafeTrace sets these compatibility variables for
+the auto-worker subprocess, so the user does not need to type them manually:
+
+```text
+TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1
+KMP_DUPLICATE_LIB_OK=TRUE
+OMP_NUM_THREADS=1
+```
+
+---
+
+## Custom detector configuration
+
+Place fine-tuned YOLO-compatible weights in `checkpoints/`, for example:
+
+```text
+checkpoints/driver-monitoring.pt
+checkpoints/driver_classes.json
+```
+
+Configure them with:
+
+```bash
+set SAFETRACE_DETECTOR_WEIGHTS=checkpoints/driver-monitoring.pt
+set SAFETRACE_DETECTOR_CLASSES_PATH=checkpoints/driver_classes.json
+set SAFETRACE_DETECTOR_CONF_THRESHOLD=0.25
+set SAFETRACE_DETECTOR_IOU_THRESHOLD=0.45
+```
+
+If `SAFETRACE_DETECTOR_WEIGHTS` is missing or points to a missing file,
+SafeTrace logs a warning and falls back to the default YOLO checkpoint.
+
+Runtime class mapping is JSON. Numeric keys map model class ids to canonical
+SafeTrace labels, and aliases add extra raw label spellings:
+
+```json
+{
+  "classes": {
+    "0": "seatbelt",
+    "1": "hand",
+    "2": "steering_wheel",
+    "3": "torso",
+    "4": "face"
+  },
+  "aliases": {
+    "seatbelt": ["seat belt", "safety belt"],
+    "steering_wheel": ["steering wheel"]
+  }
+}
+```
+
+For fine-tuning, keep using the standard YOLO dataset YAML format required by
+Ultralytics. The JSON file above is only the SafeTrace runtime mapping.
+
+---
+
+## Preprocessing and aggregation settings
+
+Additional environment settings:
+
+| Env var | Default | Purpose |
+|---------|---------|---------|
+| `SAFETRACE_TARGET_FPS` | `SAFETRACE_FPS` or `1.0` | Frame sampling rate |
+| `SAFETRACE_MAX_FRAMES` | `600` | Per-video sampled frame cap |
+| `SAFETRACE_FRAME_BATCH_SIZE` | `16` | Embedding batch size |
+| `SAFETRACE_EMBED_WINDOW_SIZE` | `1` | Frames per embedding window |
+| `SAFETRACE_EMBED_WINDOW_STRIDE` | `1` | Window stride |
+| `SAFETRACE_SEATBELT_GRACE_SECONDS` | `15` | Initial missing-seatbelt grace period |
+| `SAFETRACE_MAX_CONCURRENT_JOBS` | `1` | Documented local queue limit |
+| `SAFETRACE_VIDEO_BATCH_SIZE` | `1` | Reserved for video batching policy |
+| `SAFETRACE_MAX_UPLOAD_SIZE_MB` | `51200` | Upload size policy |
+| `SAFETRACE_JOB_TIMEOUT_SECONDS` | `0` | Reserved timeout setting |
+
+Video-level summaries aggregate all sampled frames/windows, not only top-k
+query results. Top-k search is still available in completed job reports.
+
+---
+
+## Tests
+
+Run the backend tests with:
+
+```bash
+python -m pytest
+```

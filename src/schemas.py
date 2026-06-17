@@ -55,9 +55,14 @@ class FrameAnalysis:
     violations: List[Violation] = field(default_factory=list)
     explanation: Optional[str] = None
     annotated_path: Optional[str] = None
+    timestamp: Optional[float] = None
+    frame_index: Optional[int] = None
+    video_id: Optional[str] = None
+    vehicle_id: Optional[str] = None
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        payload = {
             "frame_id": self.frame_id,
             "frame_path": self.frame_path,
             "score": float(self.score),
@@ -65,4 +70,14 @@ class FrameAnalysis:
             "violations": [v.to_dict() for v in self.violations],
             "explanation": self.explanation,
             "annotated_path": self.annotated_path,
+            "metadata": self.metadata,
         }
+        if self.timestamp is not None:
+            payload["timestamp"] = float(self.timestamp)
+        if self.frame_index is not None:
+            payload["frame_index"] = int(self.frame_index)
+        if self.video_id is not None:
+            payload["video_id"] = self.video_id
+        if self.vehicle_id is not None:
+            payload["vehicle_id"] = self.vehicle_id
+        return payload

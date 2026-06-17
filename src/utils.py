@@ -9,6 +9,8 @@ from typing import Iterable, List, Optional, Tuple
 import cv2
 import numpy as np
 
+from .preprocessing import sampling_step
+
 logger = logging.getLogger("safetrace.utils")
 
 
@@ -80,6 +82,20 @@ def extract_frames(
 
     Returns the list of written frame paths in capture order.
     """
+    return [
+        Path(record["frame_path"])
+        for record in extract_frame_records(video_path, out_dir, fps, max_frames, prefix)
+    ]
+
+
+def extract_frame_records(
+    video_path: str | Path,
+    out_dir: str | Path,
+    fps: float = 1.0,
+    max_frames: int = 600,
+    prefix: Optional[str] = None,
+) -> List[dict]:
+    """Sample frames and return paths plus source frame/timestamp metadata."""
     video_path = Path(video_path)
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -89,10 +105,10 @@ def extract_frames(
         raise RuntimeError(f"Could not open video: {video_path}")
 
     src_fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
-    step = max(int(round(src_fps / max(fps, 1e-6))), 1)
+    step = sampling_step(src_fps, fps)
     prefix = prefix or video_path.stem
 
-    saved: List[Path] = []
+    records: List[dict] = []
     idx = 0
     sampled = 0
     while True:
@@ -102,14 +118,25 @@ def extract_frames(
         if idx % step == 0:
             out_path = out_dir / f"{prefix}_{sampled:06d}.jpg"
             cv2.imwrite(str(out_path), frame)
-            saved.append(out_path)
+            records.append(
+                {
+                    "frame_id": out_path.stem,
+                    "frame_path": str(out_path),
+                    "sample_index": sampled,
+                    "frame_index": idx,
+                    "timestamp": float(idx / src_fps) if src_fps else 0.0,
+                    "source_fps": float(src_fps),
+                    "source_path": str(video_path),
+                    "filename": video_path.name,
+                }
+            )
             sampled += 1
             if sampled >= max_frames:
                 break
         idx += 1
     cap.release()
-    logger.info("Extracted %d frames from %s", len(saved), video_path.name)
-    return saved
+    logger.info("Extracted %d frames from %s", len(records), video_path.name)
+    return records
 
 
 def collect_inputs(paths: Iterable[str | Path]) -> Tuple[List[Path], List[Path]]:

@@ -65,10 +65,14 @@ class FaissIndex:
         self.metadata = read_json(self.metadata_path)
         logger.info("Loaded FAISS index with %d vectors", self.index.ntotal)
 
-    def build_from_frames(self, frame_paths: Sequence[Path]) -> None:
+    def build_from_frames(self, frame_paths: Sequence[Path | dict]) -> None:
         if self._embedder is None:
             self._embedder = ClipEmbedder()
-        embs, meta = self._embedder.build_corpus(frame_paths)
+        embs, meta = self._embedder.build_corpus(
+            frame_paths,
+            embeddings_path=self.embeddings_path,
+            metadata_path=self.metadata_path,
+        )
         self.build(embs, meta)
         self.save()
 

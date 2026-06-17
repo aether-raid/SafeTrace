@@ -5,6 +5,7 @@ __pycache__/
 *.pyc
 data/frames/*
 data/annotated/*
+data/test_tmp/
 data/embeddings.npy
 data/metadata.json
 data/index.faiss

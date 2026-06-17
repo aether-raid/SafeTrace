@@ -14,6 +14,7 @@ import cv2
 import numpy as np
 
 from .config import SETTINGS, normalize_label
+from .detector_utils import resolve_detector_checkpoint
 from .schemas import Detection
 from .utils import imread_rgb, resolve_device
 
@@ -35,19 +36,12 @@ class YoloDetector:
         self.conf = conf if conf is not None else SETTINGS.yolo_conf_threshold
         self.iou = iou if iou is not None else SETTINGS.yolo_iou_threshold
 
-        ckpt = Path(checkpoint or SETTINGS.yolo_checkpoint)
-        fallback = Path(fallback_checkpoint or SETTINGS.yolo_fallback_checkpoint)
-
-        if ckpt.exists():
-            chosen = ckpt
-        elif fallback.exists():
-            logger.warning("YOLO ckpt %s missing; falling back to %s", ckpt, fallback)
-            chosen = fallback
-        else:
-            raise FileNotFoundError(
-                f"No YOLO checkpoint found at {ckpt} or {fallback}. "
-                "Place a *-seg.pt checkpoint in the checkpoints/ folder."
-            )
+        custom = None if checkpoint is not None else SETTINGS.custom_detector_weights
+        chosen = resolve_detector_checkpoint(
+            custom_checkpoint=custom,
+            default_checkpoint=checkpoint or SETTINGS.yolo_checkpoint,
+            fallback_checkpoint=fallback_checkpoint or SETTINGS.yolo_fallback_checkpoint,
+        )
 
         logger.info("Loading YOLO model %s on %s", chosen, self.device)
         self.model = YOLO(str(chosen))
@@ -93,7 +87,7 @@ class YoloDetector:
         detections: List[Detection] = []
         for i in range(len(xyxy)):
             raw = str(names.get(int(cls_ids[i]), str(cls_ids[i])))
-            canonical = normalize_label(raw)
+            canonical = normalize_label(raw, class_id=int(cls_ids[i]))
             label = canonical or raw
 
             coarse: Optional[np.ndarray] = None
