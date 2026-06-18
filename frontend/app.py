@@ -23,6 +23,9 @@ from src.config import SETTINGS  # noqa: E402
 from src.pipeline import SafeTracePipeline  # noqa: E402
 from src.utils import imread_rgb, resolve_device  # noqa: E402
 
+# New components 
+from frontend.components.video_sidebar import render_video_sidebar
+
 st.set_page_config(page_title="SafeTrace", layout="wide", page_icon="🦺")
 
 
@@ -154,37 +157,43 @@ with st.sidebar:
 
 
 # --------------------------------------------------------------------------- #
-# Header
+# Layout: main content + right-side upload panel
 # --------------------------------------------------------------------------- #
-st.title("Safety Violation Detection")
-st.write(
-    "Upload a **video** or one or more **images**, type a natural-language "
-    "query (e.g. *worker without helmet*), and click **Analyze**."
-)
+main_col, right_col = st.columns([3, 1], gap="large")
 
-uploaded = st.file_uploader(
-    "Upload media",
-    type=["jpg", "jpeg", "png", "bmp", "webp", "mp4", "mov", "avi", "mkv", "webm"],
-    accept_multiple_files=True,
-)
+with main_col:
+    st.title("Safety Violation Detection")
+    st.write(
+        "Upload a **video** or one or more **images**, type a natural-language "
+        "query (e.g. *worker without helmet*), and click **Analyze**."
+    )
 
-query = st.text_input(
-    "Query",
-    value="worker without helmet",
-    help="Used by FAISS to retrieve the most relevant frames before detection.",
-)
+    # uploaded = st.file_uploader(
+    #     "Upload media",
+    #     type=["jpg", "jpeg", "png", "bmp", "webp", "mp4", "mov", "avi", "mkv", "webm"],
+    #     accept_multiple_files=True,
+    # )
 
-col_a, col_b = st.columns([1, 5])
-analyze = col_a.button("🚀 Analyze", type="primary", use_container_width=True)
-reset = col_b.button("Reset session", use_container_width=False)
+    query = st.text_input(
+        "Query",
+        value="worker without helmet",
+        help="Used by FAISS to retrieve the most relevant frames before detection.",
+    )
 
-if reset:
-    st.session_state.clear()
-    st.rerun()
+    col_a, col_b = st.columns([1, 5])
+    analyze = col_a.button("🚀 Analyze", type="primary", use_container_width=True)
+    reset = col_b.button("Reset session", use_container_width=False)
+
+    if reset:
+        st.session_state.clear()
+        st.rerun()
+
+with right_col:
+    uploaded = render_video_sidebar()
 
 
 # --------------------------------------------------------------------------- #
-# Analysis
+# Analysis 
 # --------------------------------------------------------------------------- #
 def _persist_uploads(files) -> List[Path]:
     out: List[Path] = []
@@ -197,91 +206,101 @@ def _persist_uploads(files) -> List[Path]:
     return out
 
 
-if analyze:
-    if not uploaded:
-        st.warning("Please upload at least one image or video.")
-    elif not query.strip():
-        st.warning("Please enter a query.")
-    else:
-        SETTINGS.enable_vlm = enable_vlm  # propagate UI toggle
-        SETTINGS.frame_fps = float(fps)
-        SETTINGS.top_k = int(top_k)
+with main_col:
+    if "results_dict" not in st.session_state:
+        st.session_state["results_dict"] = {}
 
-        pipeline = get_pipeline(resolved_device)
-        pipeline.vlm.enabled = enable_vlm and pipeline.vlm._loaded
+    if analyze:
+        if not uploaded:
+            st.warning("Please upload at least one image or video.")
+        elif not query.strip():
+            st.warning("Please enter a query.")
+        else:
+            SETTINGS.enable_vlm = enable_vlm
+            SETTINGS.frame_fps = float(fps)
+            SETTINGS.top_k = int(top_k)
 
-        with st.status("Running pipeline…", expanded=True) as status:
-            st.write("• Saving uploads")
-            files = _persist_uploads(uploaded)
+            pipeline = get_pipeline(resolved_device)
+            pipeline.vlm.enabled = enable_vlm and pipeline.vlm._loaded
 
-            st.write("• Extracting frames + building FAISS index")
-            try:
-                pipeline.ingest(files, fps=fps)
-            except Exception as exc:
-                status.update(label="Ingestion failed", state="error")
-                st.exception(exc)
-                st.stop()
+            with st.status("Running pipeline…", expanded=True) as status:
+                st.write("• Saving uploads")
+                files = _persist_uploads(uploaded)
 
-            st.write(f"• Retrieving top-{top_k} frames for query: *{query}*")
-            try:
-                results = pipeline.analyze_query(query, k=top_k)
-            except Exception as exc:
-                status.update(label="Analysis failed", state="error")
-                st.exception(exc)
-                st.stop()
+                st.write("• Extracting frames + building FAISS index")
+                try:
+                    pipeline.ingest(files, fps=fps)
+                except Exception as exc:
+                    status.update(label="Ingestion failed", state="error")
+                    st.exception(exc)
+                    st.stop()
 
-            status.update(label=f"Done — {len(results)} frames analyzed", state="complete")
+                st.write(f"• Retrieving top-{top_k} frames for query: *{query}*")
+                try:
+                    results = pipeline.analyze_query(query, k=top_k)
+                except Exception as exc:
+                    status.update(label="Analysis failed", state="error")
+                    st.exception(exc)
+                    st.stop()
 
-        st.session_state["results"] = results
-        st.session_state["query"] = query
+                status.update(label=f"Done — {len(results)} frames analyzed", state="complete")
+
+            selected_name = st.session_state["video_library"][st.session_state["selected_video_idx"]]["name"]
+            st.session_state["results_dict"][selected_name] = results
+            st.session_state["query"] = query
 
 
-# --------------------------------------------------------------------------- #
-# Results display
-# --------------------------------------------------------------------------- #
-results = st.session_state.get("results")
-if results:
-    st.subheader(f"Results for: *{st.session_state.get('query', '')}*")
-
-    report_bytes = json.dumps(results, indent=2).encode("utf-8")
-    st.download_button(
-        "⬇️ Download JSON report",
-        data=report_bytes,
-        file_name="safetrace_report.json",
-        mime="application/json",
+    # --------------------------------------------------------------------------- #
+    # Results display
+    # --------------------------------------------------------------------------- #
+    cur_video = (
+        st.session_state["video_library"][st.session_state["selected_video_idx"]]["name"]
+        if st.session_state.get("video_library")
+        else None
     )
+    results = st.session_state.get("results_dict", {}).get(cur_video) if cur_video else None
+    if results:
+        st.subheader(f"Results for: *{cur_video}*  —  query: *{st.session_state.get('query', '')}*")
 
-    for idx, frame in enumerate(results, start=1):
-        st.markdown(f"### Frame {idx} — `{frame['frame_id']}`  (score `{frame['score']:.3f}`)")
+        report_bytes = json.dumps(results, indent=2).encode("utf-8")
+        st.download_button(
+            "⬇️ Download JSON report",
+            data=report_bytes,
+            file_name="safetrace_report.json",
+            mime="application/json",
+        )
 
-        c_img, c_meta = st.columns([2, 1], gap="large")
-        with c_img:
-            img_path = frame.get("annotated_path") or frame.get("frame_path")
-            if img_path and Path(img_path).exists():
-                st.image(imread_rgb(img_path), caption=Path(img_path).name,
-                         use_column_width=True)
+        for idx, frame in enumerate(results, start=1):
+            st.markdown(f"### Frame {idx} — `{frame['frame_id']}`  (score `{frame['score']:.3f}`)")
 
-        with c_meta:
-            violations = frame.get("violations", [])
-            if violations:
-                st.error(f"{len(violations)} violation(s) detected")
-                for v in violations:
-                    st.markdown(
-                        f"**{v['name']}** ({v['severity']})  \n"
-                        f"{v['description']}  \n"
-                        f"Confidence: `{v['confidence']:.2f}`"
-                    )
-                    st.json(v["evidence"])
-            else:
-                st.success("No violations detected")
+            c_img, c_meta = st.columns([2, 1], gap="large")
+            with c_img:
+                img_path = frame.get("annotated_path") or frame.get("frame_path")
+                if img_path and Path(img_path).exists():
+                    st.image(imread_rgb(img_path), caption=Path(img_path).name,
+                             use_column_width=True)
 
-            if frame.get("explanation"):
-                st.markdown("**Explanation**")
-                st.write(frame["explanation"])
+            with c_meta:
+                violations = frame.get("violations", [])
+                if violations:
+                    st.error(f"{len(violations)} violation(s) detected")
+                    for v in violations:
+                        st.markdown(
+                            f"**{v['name']}** ({v['severity']})  \n"
+                            f"{v['description']}  \n"
+                            f"Confidence: `{v['confidence']:.2f}`"
+                        )
+                        st.json(v["evidence"])
+                else:
+                    st.success("No violations detected")
 
-            with st.expander("Detections"):
-                st.json(frame.get("detections", []))
+                if frame.get("explanation"):
+                    st.markdown("**Explanation**")
+                    st.write(frame["explanation"])
 
-        st.divider()
-else:
-    st.info("Upload media and click **Analyze** to begin.")
+                with st.expander("Detections"):
+                    st.json(frame.get("detections", []))
+
+            st.divider()
+    else:
+        st.info("Upload media and click **Analyze** to begin.")
