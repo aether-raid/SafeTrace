@@ -10,23 +10,21 @@ type EvidenceFrameVisualProps = {
 
 function getBoxClasses(label: string) {
   const normalized = label.toLowerCase();
-
   if (normalized.includes('restricted') || normalized.includes('zone')) {
     return 'border-blue-300 bg-blue-400/10 text-blue-50';
   }
-
   if (normalized.includes('helmet') || normalized.includes('seatbelt') || normalized.includes('vest')) {
     return 'border-emerald-300 bg-emerald-400/10 text-emerald-50';
   }
-
   if (normalized.includes('head') || normalized.includes('torso') || normalized.includes('technician')) {
     return 'border-amber-300 bg-amber-400/10 text-amber-50';
   }
-
   return 'border-red-300 bg-red-400/10 text-red-50';
 }
 
-function getVariantDetails(variant: FrameResult['visualVariant']) {
+type VariantType = 'worksite' | 'loading-bay' | 'maintenance';
+
+function getVariantDetails(variant: VariantType) {
   if (variant === 'loading-bay') {
     return {
       label: 'Loading bay camera',
@@ -40,7 +38,6 @@ function getVariantDetails(variant: FrameResult['visualVariant']) {
       ),
     };
   }
-
   if (variant === 'maintenance') {
     return {
       label: 'Maintenance camera',
@@ -54,7 +51,6 @@ function getVariantDetails(variant: FrameResult['visualVariant']) {
       ),
     };
   }
-
   return {
     label: 'Worksite camera',
     accent: 'bg-red-400',
@@ -90,7 +86,7 @@ function DetectionOverlay({ detection }: { detection: Detection }) {
 }
 
 function SampleEvidenceVisual({ frame }: EvidenceFrameVisualProps) {
-  const variant = getVariantDetails(frame.visualVariant);
+  const variant = getVariantDetails((frame as any).visualVariant || 'worksite');
   const topDetectionConfidence = Math.max(...frame.detections.map((detection) => detection.confidence));
 
   return (
@@ -135,14 +131,14 @@ export function EvidenceFrameVisual({ frame }: EvidenceFrameVisualProps) {
         <img
           className="h-full w-full object-contain"
           src={frame.imageUrl}
-          alt={`Annotated evidence frame ${frame.frameNumber} at ${frame.timestamp}`}
+          alt={`Annotated evidence frame ${frame.frameIndex} at ${frame.timestamp}`}
           onError={() => setImageFailed(true)}
         />
       </div>
       <figcaption className="flex flex-wrap items-center gap-2 border-t border-white/10 bg-slate-950 px-3 py-2 text-xs font-semibold text-slate-100">
         <ImageIcon className="h-4 w-4" aria-hidden="true" />
         Annotated evidence
-        <span className="rounded bg-white/10 px-1.5 py-0.5">Frame {frame.frameNumber}</span>
+        <span className="rounded bg-white/10 px-1.5 py-0.5">Frame {frame.frameIndex}</span>
       </figcaption>
     </figure>
   );

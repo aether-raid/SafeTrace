@@ -1,0 +1,129 @@
+import { Clock, Eye, Edit3, Trash2, HardDrive, Upload, CheckCircle2, LoaderCircle, AlertCircle, FileVideo, FileImage } from 'lucide-react';
+import type { MediaItem, MediaStatus } from '../types/analysis';
+import { formatDateTime } from '../utils/formatters';
+
+type VideoQueueProps = {
+  mediaLibrary: MediaItem[];
+  selectedMedia: MediaItem;
+  onSelectMedia: (media: MediaItem) => void;
+  onDeleteMedia?: (mediaId: string) => void;
+  onPreviewMedia?: (media: MediaItem) => void;
+};
+
+function StatusIcon({ status }: { status: MediaStatus }) {
+  switch (status) {
+    case 'completed':
+      return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
+    case 'processing':
+      return <LoaderCircle className="h-4 w-4 animate-spin text-blue-500" />;
+    case 'error':
+      return <AlertCircle className="h-4 w-4 text-red-500" />;
+    default:
+      return <Clock className="h-4 w-4 text-slate-400" />;
+  }
+}
+
+function StatusBadgeVideo({ status }: { status: MediaStatus }) {
+  const styles: Record<MediaStatus, string> = {
+    ready: 'bg-slate-100 text-slate-700 border-slate-200',
+    processing: 'bg-blue-50 text-blue-700 border-blue-200',
+    completed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    error: 'bg-red-50 text-red-700 border-red-200',
+  };
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase ${styles[status]}`}>
+      <StatusIcon status={status} />
+      {status}
+    </span>
+  );
+}
+
+export function VideoQueue({ mediaLibrary, selectedMedia, onSelectMedia, onDeleteMedia, onPreviewMedia }: VideoQueueProps) {
+  return (
+    <div className="flex h-full flex-col gap-4 overflow-auto p-5">
+      <div className="flex items-center gap-2">
+        <HardDrive className="h-5 w-5 text-safety-blue" />
+        <div>
+          <p className="text-sm font-bold text-slate-950">Video Queue</p>
+          <p className="text-xs text-slate-500">{mediaLibrary.length} media item{mediaLibrary.length !== 1 ? 's' : ''}</p>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        {mediaLibrary.map((media) => {
+          const isSelected = media.id === selectedMedia.id;
+          const Icon = media.type === 'video' ? FileVideo : FileImage;
+
+          return (
+            <div
+              key={media.id}
+              className={`rounded-lg border-2 transition ${
+                isSelected ? 'border-safety-blue bg-blue-50' : 'border-slate-200 bg-white hover:border-slate-300'
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => onSelectMedia(media)}
+                className="w-full p-3 text-left"
+              >
+                <div className="flex items-start gap-3">
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
+                    isSelected ? 'bg-white text-safety-blue shadow-insetLine' : 'bg-slate-100 text-slate-600'
+                  }`}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-slate-950">{media.filename}</p>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <StatusBadgeVideo status={media.status} />
+                      <span className="text-[10px] font-medium text-slate-500">{media.sizeLabel}</span>
+                      {media.duration && (
+                        <span className="text-[10px] font-medium text-slate-500">{media.duration}</span>
+                      )}
+                    </div>
+                    {media.uploadedAt && (
+                      <p className="mt-1 text-[10px] text-slate-400">{formatDateTime(media.uploadedAt)}</p>
+                    )}
+                  </div>
+                </div>
+              </button>
+
+              <div className="flex items-center gap-1 border-t border-slate-100 px-3 py-2">
+                {onPreviewMedia && media.previewUrl && (
+                  <button
+                    type="button"
+                    onClick={() => onPreviewMedia(media)}
+                    className="focus-ring inline-flex items-center gap-1 rounded px-2 py-1 text-[11px] font-semibold text-slate-600 transition hover:bg-slate-100"
+                  >
+                    <Eye className="h-3.5 w-3.5" /> Preview
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="focus-ring inline-flex items-center gap-1 rounded px-2 py-1 text-[11px] font-semibold text-slate-600 transition hover:bg-slate-100"
+                >
+                  <Edit3 className="h-3.5 w-3.5" /> Edit
+                </button>
+                {onDeleteMedia && (
+                  <button
+                    type="button"
+                    onClick={() => onDeleteMedia(media.id)}
+                    className="focus-ring ml-auto inline-flex items-center gap-1 rounded px-2 py-1 text-[11px] font-semibold text-red-600 transition hover:bg-red-50"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" /> Delete
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-auto rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4 text-center">
+        <Upload className="mx-auto h-6 w-6 text-slate-400" />
+        <p className="mt-2 text-xs font-semibold text-slate-600">Upload new media</p>
+        <p className="mt-1 text-[10px] text-slate-400">Drop files or use the upload panel</p>
+      </div>
+    </div>
+  );
+}

@@ -8,14 +8,13 @@ type TechnicalDetailsProps = {
 export function TechnicalDetails({ frame }: TechnicalDetailsProps) {
   const technicalPayload = {
     internalFilename: frame.internalFilename,
-    queryRelevanceScore: frame.queryRelevanceScore,
+    score: frame.score,
     detections: frame.detections,
     violations: frame.violations.map((violation) => ({
       type: violation.type,
       confidence: violation.confidence,
       evidence: violation.evidence,
     })),
-    technicalEvidence: frame.technicalEvidence,
   };
 
   return (

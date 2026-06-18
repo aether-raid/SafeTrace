@@ -1,0 +1,33 @@
+{
+  "job_id": "e98ff389b908",
+  "batch_id": "e98ff389b908",
+  "status": "completed",
+  "stage": "completed",
+  "progress": 1.0,
+  "processed_frames": 49,
+  "error": null,
+  "query": "driver hand not on steering wheel",
+  "settings": {
+    "fps": 1.0,
+    "top_k": 5,
+    "enable_vlm": true,
+    "device": "cuda",
+    "max_frames": 600
+  },
+  "media": [
+    {
+      "batch_id": "e98ff389b908",
+      "vehicle_id": null,
+      "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+      "filename": "video_2026-06-17_19-10-40.mp4",
+      "stored_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+      "media_type": "video",
+      "status": "completed"
+    }
+  ],
+  "result_path": "/app/data/jobs/e98ff389b908/outputs/results.json",
+  "created_at": 1781694745.9865067,
+  "updated_at": 1781694824.235479,
+  "current_media": null,
+  "total_frames": 49
+}

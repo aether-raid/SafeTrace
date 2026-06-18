@@ -28,9 +28,9 @@ export function FrameEvidenceCard({ frame, showExplanation, isHighlighted = fals
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h3 className="text-base font-bold text-slate-950">
-              Frame {frame.frameNumber} - {frame.timestamp}
+              Frame {frame.frameIndex} - {frame.timestamp}
             </h3>
-            <p className="mt-1 text-sm text-slate-500">Query relevance: {formatQueryRelevance(frame.queryRelevanceScore)}</p>
+            <p className="mt-1 text-sm text-slate-500">Query relevance: {formatQueryRelevance(frame.score)}</p>
           </div>
           <StatusBadge
             label={hasViolations ? 'Violations detected' : 'No violations detected'}

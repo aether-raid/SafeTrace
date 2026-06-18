@@ -1,0 +1,33 @@
+{
+  "job_id": "437be460e9ca",
+  "batch_id": "437be460e9ca",
+  "status": "completed",
+  "stage": "completed",
+  "progress": 1.0,
+  "processed_frames": 28,
+  "error": null,
+  "query": "drunk driver",
+  "settings": {
+    "fps": 1.0,
+    "top_k": 5,
+    "enable_vlm": true,
+    "device": "cuda",
+    "max_frames": 600
+  },
+  "media": [
+    {
+      "batch_id": "437be460e9ca",
+      "vehicle_id": null,
+      "original_relative_path": "133696-757782416_medium.mp4",
+      "filename": "133696-757782416_medium.mp4",
+      "stored_path": "/app/data/jobs/437be460e9ca/uploads/133696-757782416_medium.mp4",
+      "media_type": "video",
+      "status": "completed"
+    }
+  ],
+  "result_path": "/app/data/jobs/437be460e9ca/outputs/results.json",
+  "created_at": 1781694361.046681,
+  "updated_at": 1781694460.0914495,
+  "current_media": null,
+  "total_frames": 28
+}

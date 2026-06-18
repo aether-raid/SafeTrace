@@ -34,7 +34,7 @@ function getSummaryFindings(result: AnalysisResult): SummaryFinding[] {
         frames: [],
         confidences: [],
       };
-      current.frames.push(`Frame ${frame.frameNumber} at ${frame.timestamp}`);
+      current.frames.push(`Frame ${frame.frameIndex} at ${frame.timestamp}`);
       current.confidences.push(violation.confidence);
       findings.set(violation.type, current);
     });

@@ -1,0 +1,786 @@
+[
+  {
+    "frame_id": "133696-757782416_medium_000_000000",
+    "frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000000.jpg",
+    "index": 0,
+    "window_id": "133696-757782416_medium_000_w000000",
+    "window_start_index": 0,
+    "window_end_index": 0,
+    "window_frame_indices": [
+      0
+    ],
+    "window_timestamps": [
+      0.0
+    ],
+    "timestamp": 0.0,
+    "start_time": 0.0,
+    "end_time": 0.0,
+    "representative_frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000000.jpg",
+    "representative_frame_id": "133696-757782416_medium_000_000000",
+    "source_frame_paths": [
+      "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000000.jpg"
+    ],
+    "batch_id": "437be460e9ca",
+    "vehicle_id": null,
+    "video_id": "133696-757782416_medium_000",
+    "source_path": "/app/data/jobs/437be460e9ca/uploads/133696-757782416_medium.mp4",
+    "original_relative_path": "133696-757782416_medium.mp4",
+    "filename": "133696-757782416_medium.mp4"
+  },
+  {
+    "frame_id": "133696-757782416_medium_000_000001",
+    "frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000001.jpg",
+    "index": 1,
+    "window_id": "133696-757782416_medium_000_w000001",
+    "window_start_index": 1,
+    "window_end_index": 1,
+    "window_frame_indices": [
+      25
+    ],
+    "window_timestamps": [
+      1.0
+    ],
+    "timestamp": 1.0,
+    "start_time": 1.0,
+    "end_time": 1.0,
+    "representative_frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000001.jpg",
+    "representative_frame_id": "133696-757782416_medium_000_000001",
+    "source_frame_paths": [
+      "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000001.jpg"
+    ],
+    "batch_id": "437be460e9ca",
+    "vehicle_id": null,
+    "video_id": "133696-757782416_medium_000",
+    "source_path": "/app/data/jobs/437be460e9ca/uploads/133696-757782416_medium.mp4",
+    "original_relative_path": "133696-757782416_medium.mp4",
+    "filename": "133696-757782416_medium.mp4"
+  },
+  {
+    "frame_id": "133696-757782416_medium_000_000002",
+    "frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000002.jpg",
+    "index": 2,
+    "window_id": "133696-757782416_medium_000_w000002",
+    "window_start_index": 2,
+    "window_end_index": 2,
+    "window_frame_indices": [
+      50
+    ],
+    "window_timestamps": [
+      2.0
+    ],
+    "timestamp": 2.0,
+    "start_time": 2.0,
+    "end_time": 2.0,
+    "representative_frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000002.jpg",
+    "representative_frame_id": "133696-757782416_medium_000_000002",
+    "source_frame_paths": [
+      "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000002.jpg"
+    ],
+    "batch_id": "437be460e9ca",
+    "vehicle_id": null,
+    "video_id": "133696-757782416_medium_000",
+    "source_path": "/app/data/jobs/437be460e9ca/uploads/133696-757782416_medium.mp4",
+    "original_relative_path": "133696-757782416_medium.mp4",
+    "filename": "133696-757782416_medium.mp4"
+  },
+  {
+    "frame_id": "133696-757782416_medium_000_000003",
+    "frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000003.jpg",
+    "index": 3,
+    "window_id": "133696-757782416_medium_000_w000003",
+    "window_start_index": 3,
+    "window_end_index": 3,
+    "window_frame_indices": [
+      75
+    ],
+    "window_timestamps": [
+      3.0
+    ],
+    "timestamp": 3.0,
+    "start_time": 3.0,
+    "end_time": 3.0,
+    "representative_frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000003.jpg",
+    "representative_frame_id": "133696-757782416_medium_000_000003",
+    "source_frame_paths": [
+      "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000003.jpg"
+    ],
+    "batch_id": "437be460e9ca",
+    "vehicle_id": null,
+    "video_id": "133696-757782416_medium_000",
+    "source_path": "/app/data/jobs/437be460e9ca/uploads/133696-757782416_medium.mp4",
+    "original_relative_path": "133696-757782416_medium.mp4",
+    "filename": "133696-757782416_medium.mp4"
+  },
+  {
+    "frame_id": "133696-757782416_medium_000_000004",
+    "frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000004.jpg",
+    "index": 4,
+    "window_id": "133696-757782416_medium_000_w000004",
+    "window_start_index": 4,
+    "window_end_index": 4,
+    "window_frame_indices": [
+      100
+    ],
+    "window_timestamps": [
+      4.0
+    ],
+    "timestamp": 4.0,
+    "start_time": 4.0,
+    "end_time": 4.0,
+    "representative_frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000004.jpg",
+    "representative_frame_id": "133696-757782416_medium_000_000004",
+    "source_frame_paths": [
+      "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000004.jpg"
+    ],
+    "batch_id": "437be460e9ca",
+    "vehicle_id": null,
+    "video_id": "133696-757782416_medium_000",
+    "source_path": "/app/data/jobs/437be460e9ca/uploads/133696-757782416_medium.mp4",
+    "original_relative_path": "133696-757782416_medium.mp4",
+    "filename": "133696-757782416_medium.mp4"
+  },
+  {
+    "frame_id": "133696-757782416_medium_000_000005",
+    "frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000005.jpg",
+    "index": 5,
+    "window_id": "133696-757782416_medium_000_w000005",
+    "window_start_index": 5,
+    "window_end_index": 5,
+    "window_frame_indices": [
+      125
+    ],
+    "window_timestamps": [
+      5.0
+    ],
+    "timestamp": 5.0,
+    "start_time": 5.0,
+    "end_time": 5.0,
+    "representative_frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000005.jpg",
+    "representative_frame_id": "133696-757782416_medium_000_000005",
+    "source_frame_paths": [
+      "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000005.jpg"
+    ],
+    "batch_id": "437be460e9ca",
+    "vehicle_id": null,
+    "video_id": "133696-757782416_medium_000",
+    "source_path": "/app/data/jobs/437be460e9ca/uploads/133696-757782416_medium.mp4",
+    "original_relative_path": "133696-757782416_medium.mp4",
+    "filename": "133696-757782416_medium.mp4"
+  },
+  {
+    "frame_id": "133696-757782416_medium_000_000006",
+    "frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000006.jpg",
+    "index": 6,
+    "window_id": "133696-757782416_medium_000_w000006",
+    "window_start_index": 6,
+    "window_end_index": 6,
+    "window_frame_indices": [
+      150
+    ],
+    "window_timestamps": [
+      6.0
+    ],
+    "timestamp": 6.0,
+    "start_time": 6.0,
+    "end_time": 6.0,
+    "representative_frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000006.jpg",
+    "representative_frame_id": "133696-757782416_medium_000_000006",
+    "source_frame_paths": [
+      "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000006.jpg"
+    ],
+    "batch_id": "437be460e9ca",
+    "vehicle_id": null,
+    "video_id": "133696-757782416_medium_000",
+    "source_path": "/app/data/jobs/437be460e9ca/uploads/133696-757782416_medium.mp4",
+    "original_relative_path": "133696-757782416_medium.mp4",
+    "filename": "133696-757782416_medium.mp4"
+  },
+  {
+    "frame_id": "133696-757782416_medium_000_000007",
+    "frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000007.jpg",
+    "index": 7,
+    "window_id": "133696-757782416_medium_000_w000007",
+    "window_start_index": 7,
+    "window_end_index": 7,
+    "window_frame_indices": [
+      175
+    ],
+    "window_timestamps": [
+      7.0
+    ],
+    "timestamp": 7.0,
+    "start_time": 7.0,
+    "end_time": 7.0,
+    "representative_frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000007.jpg",
+    "representative_frame_id": "133696-757782416_medium_000_000007",
+    "source_frame_paths": [
+      "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000007.jpg"
+    ],
+    "batch_id": "437be460e9ca",
+    "vehicle_id": null,
+    "video_id": "133696-757782416_medium_000",
+    "source_path": "/app/data/jobs/437be460e9ca/uploads/133696-757782416_medium.mp4",
+    "original_relative_path": "133696-757782416_medium.mp4",
+    "filename": "133696-757782416_medium.mp4"
+  },
+  {
+    "frame_id": "133696-757782416_medium_000_000008",
+    "frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000008.jpg",
+    "index": 8,
+    "window_id": "133696-757782416_medium_000_w000008",
+    "window_start_index": 8,
+    "window_end_index": 8,
+    "window_frame_indices": [
+      200
+    ],
+    "window_timestamps": [
+      8.0
+    ],
+    "timestamp": 8.0,
+    "start_time": 8.0,
+    "end_time": 8.0,
+    "representative_frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000008.jpg",
+    "representative_frame_id": "133696-757782416_medium_000_000008",
+    "source_frame_paths": [
+      "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000008.jpg"
+    ],
+    "batch_id": "437be460e9ca",
+    "vehicle_id": null,
+    "video_id": "133696-757782416_medium_000",
+    "source_path": "/app/data/jobs/437be460e9ca/uploads/133696-757782416_medium.mp4",
+    "original_relative_path": "133696-757782416_medium.mp4",
+    "filename": "133696-757782416_medium.mp4"
+  },
+  {
+    "frame_id": "133696-757782416_medium_000_000009",
+    "frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000009.jpg",
+    "index": 9,
+    "window_id": "133696-757782416_medium_000_w000009",
+    "window_start_index": 9,
+    "window_end_index": 9,
+    "window_frame_indices": [
+      225
+    ],
+    "window_timestamps": [
+      9.0
+    ],
+    "timestamp": 9.0,
+    "start_time": 9.0,
+    "end_time": 9.0,
+    "representative_frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000009.jpg",
+    "representative_frame_id": "133696-757782416_medium_000_000009",
+    "source_frame_paths": [
+      "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000009.jpg"
+    ],
+    "batch_id": "437be460e9ca",
+    "vehicle_id": null,
+    "video_id": "133696-757782416_medium_000",
+    "source_path": "/app/data/jobs/437be460e9ca/uploads/133696-757782416_medium.mp4",
+    "original_relative_path": "133696-757782416_medium.mp4",
+    "filename": "133696-757782416_medium.mp4"
+  },
+  {
+    "frame_id": "133696-757782416_medium_000_000010",
+    "frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000010.jpg",
+    "index": 10,
+    "window_id": "133696-757782416_medium_000_w000010",
+    "window_start_index": 10,
+    "window_end_index": 10,
+    "window_frame_indices": [
+      250
+    ],
+    "window_timestamps": [
+      10.0
+    ],
+    "timestamp": 10.0,
+    "start_time": 10.0,
+    "end_time": 10.0,
+    "representative_frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000010.jpg",
+    "representative_frame_id": "133696-757782416_medium_000_000010",
+    "source_frame_paths": [
+      "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000010.jpg"
+    ],
+    "batch_id": "437be460e9ca",
+    "vehicle_id": null,
+    "video_id": "133696-757782416_medium_000",
+    "source_path": "/app/data/jobs/437be460e9ca/uploads/133696-757782416_medium.mp4",
+    "original_relative_path": "133696-757782416_medium.mp4",
+    "filename": "133696-757782416_medium.mp4"
+  },
+  {
+    "frame_id": "133696-757782416_medium_000_000011",
+    "frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000011.jpg",
+    "index": 11,
+    "window_id": "133696-757782416_medium_000_w000011",
+    "window_start_index": 11,
+    "window_end_index": 11,
+    "window_frame_indices": [
+      275
+    ],
+    "window_timestamps": [
+      11.0
+    ],
+    "timestamp": 11.0,
+    "start_time": 11.0,
+    "end_time": 11.0,
+    "representative_frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000011.jpg",
+    "representative_frame_id": "133696-757782416_medium_000_000011",
+    "source_frame_paths": [
+      "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000011.jpg"
+    ],
+    "batch_id": "437be460e9ca",
+    "vehicle_id": null,
+    "video_id": "133696-757782416_medium_000",
+    "source_path": "/app/data/jobs/437be460e9ca/uploads/133696-757782416_medium.mp4",
+    "original_relative_path": "133696-757782416_medium.mp4",
+    "filename": "133696-757782416_medium.mp4"
+  },
+  {
+    "frame_id": "133696-757782416_medium_000_000012",
+    "frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000012.jpg",
+    "index": 12,
+    "window_id": "133696-757782416_medium_000_w000012",
+    "window_start_index": 12,
+    "window_end_index": 12,
+    "window_frame_indices": [
+      300
+    ],
+    "window_timestamps": [
+      12.0
+    ],
+    "timestamp": 12.0,
+    "start_time": 12.0,
+    "end_time": 12.0,
+    "representative_frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000012.jpg",
+    "representative_frame_id": "133696-757782416_medium_000_000012",
+    "source_frame_paths": [
+      "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000012.jpg"
+    ],
+    "batch_id": "437be460e9ca",
+    "vehicle_id": null,
+    "video_id": "133696-757782416_medium_000",
+    "source_path": "/app/data/jobs/437be460e9ca/uploads/133696-757782416_medium.mp4",
+    "original_relative_path": "133696-757782416_medium.mp4",
+    "filename": "133696-757782416_medium.mp4"
+  },
+  {
+    "frame_id": "133696-757782416_medium_000_000013",
+    "frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000013.jpg",
+    "index": 13,
+    "window_id": "133696-757782416_medium_000_w000013",
+    "window_start_index": 13,
+    "window_end_index": 13,
+    "window_frame_indices": [
+      325
+    ],
+    "window_timestamps": [
+      13.0
+    ],
+    "timestamp": 13.0,
+    "start_time": 13.0,
+    "end_time": 13.0,
+    "representative_frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000013.jpg",
+    "representative_frame_id": "133696-757782416_medium_000_000013",
+    "source_frame_paths": [
+      "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000013.jpg"
+    ],
+    "batch_id": "437be460e9ca",
+    "vehicle_id": null,
+    "video_id": "133696-757782416_medium_000",
+    "source_path": "/app/data/jobs/437be460e9ca/uploads/133696-757782416_medium.mp4",
+    "original_relative_path": "133696-757782416_medium.mp4",
+    "filename": "133696-757782416_medium.mp4"
+  },
+  {
+    "frame_id": "133696-757782416_medium_000_000014",
+    "frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000014.jpg",
+    "index": 14,
+    "window_id": "133696-757782416_medium_000_w000014",
+    "window_start_index": 14,
+    "window_end_index": 14,
+    "window_frame_indices": [
+      350
+    ],
+    "window_timestamps": [
+      14.0
+    ],
+    "timestamp": 14.0,
+    "start_time": 14.0,
+    "end_time": 14.0,
+    "representative_frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000014.jpg",
+    "representative_frame_id": "133696-757782416_medium_000_000014",
+    "source_frame_paths": [
+      "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000014.jpg"
+    ],
+    "batch_id": "437be460e9ca",
+    "vehicle_id": null,
+    "video_id": "133696-757782416_medium_000",
+    "source_path": "/app/data/jobs/437be460e9ca/uploads/133696-757782416_medium.mp4",
+    "original_relative_path": "133696-757782416_medium.mp4",
+    "filename": "133696-757782416_medium.mp4"
+  },
+  {
+    "frame_id": "133696-757782416_medium_000_000015",
+    "frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000015.jpg",
+    "index": 15,
+    "window_id": "133696-757782416_medium_000_w000015",
+    "window_start_index": 15,
+    "window_end_index": 15,
+    "window_frame_indices": [
+      375
+    ],
+    "window_timestamps": [
+      15.0
+    ],
+    "timestamp": 15.0,
+    "start_time": 15.0,
+    "end_time": 15.0,
+    "representative_frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000015.jpg",
+    "representative_frame_id": "133696-757782416_medium_000_000015",
+    "source_frame_paths": [
+      "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000015.jpg"
+    ],
+    "batch_id": "437be460e9ca",
+    "vehicle_id": null,
+    "video_id": "133696-757782416_medium_000",
+    "source_path": "/app/data/jobs/437be460e9ca/uploads/133696-757782416_medium.mp4",
+    "original_relative_path": "133696-757782416_medium.mp4",
+    "filename": "133696-757782416_medium.mp4"
+  },
+  {
+    "frame_id": "133696-757782416_medium_000_000016",
+    "frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000016.jpg",
+    "index": 16,
+    "window_id": "133696-757782416_medium_000_w000016",
+    "window_start_index": 16,
+    "window_end_index": 16,
+    "window_frame_indices": [
+      400
+    ],
+    "window_timestamps": [
+      16.0
+    ],
+    "timestamp": 16.0,
+    "start_time": 16.0,
+    "end_time": 16.0,
+    "representative_frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000016.jpg",
+    "representative_frame_id": "133696-757782416_medium_000_000016",
+    "source_frame_paths": [
+      "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000016.jpg"
+    ],
+    "batch_id": "437be460e9ca",
+    "vehicle_id": null,
+    "video_id": "133696-757782416_medium_000",
+    "source_path": "/app/data/jobs/437be460e9ca/uploads/133696-757782416_medium.mp4",
+    "original_relative_path": "133696-757782416_medium.mp4",
+    "filename": "133696-757782416_medium.mp4"
+  },
+  {
+    "frame_id": "133696-757782416_medium_000_000017",
+    "frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000017.jpg",
+    "index": 17,
+    "window_id": "133696-757782416_medium_000_w000017",
+    "window_start_index": 17,
+    "window_end_index": 17,
+    "window_frame_indices": [
+      425
+    ],
+    "window_timestamps": [
+      17.0
+    ],
+    "timestamp": 17.0,
+    "start_time": 17.0,
+    "end_time": 17.0,
+    "representative_frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000017.jpg",
+    "representative_frame_id": "133696-757782416_medium_000_000017",
+    "source_frame_paths": [
+      "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000017.jpg"
+    ],
+    "batch_id": "437be460e9ca",
+    "vehicle_id": null,
+    "video_id": "133696-757782416_medium_000",
+    "source_path": "/app/data/jobs/437be460e9ca/uploads/133696-757782416_medium.mp4",
+    "original_relative_path": "133696-757782416_medium.mp4",
+    "filename": "133696-757782416_medium.mp4"
+  },
+  {
+    "frame_id": "133696-757782416_medium_000_000018",
+    "frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000018.jpg",
+    "index": 18,
+    "window_id": "133696-757782416_medium_000_w000018",
+    "window_start_index": 18,
+    "window_end_index": 18,
+    "window_frame_indices": [
+      450
+    ],
+    "window_timestamps": [
+      18.0
+    ],
+    "timestamp": 18.0,
+    "start_time": 18.0,
+    "end_time": 18.0,
+    "representative_frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000018.jpg",
+    "representative_frame_id": "133696-757782416_medium_000_000018",
+    "source_frame_paths": [
+      "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000018.jpg"
+    ],
+    "batch_id": "437be460e9ca",
+    "vehicle_id": null,
+    "video_id": "133696-757782416_medium_000",
+    "source_path": "/app/data/jobs/437be460e9ca/uploads/133696-757782416_medium.mp4",
+    "original_relative_path": "133696-757782416_medium.mp4",
+    "filename": "133696-757782416_medium.mp4"
+  },
+  {
+    "frame_id": "133696-757782416_medium_000_000019",
+    "frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000019.jpg",
+    "index": 19,
+    "window_id": "133696-757782416_medium_000_w000019",
+    "window_start_index": 19,
+    "window_end_index": 19,
+    "window_frame_indices": [
+      475
+    ],
+    "window_timestamps": [
+      19.0
+    ],
+    "timestamp": 19.0,
+    "start_time": 19.0,
+    "end_time": 19.0,
+    "representative_frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000019.jpg",
+    "representative_frame_id": "133696-757782416_medium_000_000019",
+    "source_frame_paths": [
+      "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000019.jpg"
+    ],
+    "batch_id": "437be460e9ca",
+    "vehicle_id": null,
+    "video_id": "133696-757782416_medium_000",
+    "source_path": "/app/data/jobs/437be460e9ca/uploads/133696-757782416_medium.mp4",
+    "original_relative_path": "133696-757782416_medium.mp4",
+    "filename": "133696-757782416_medium.mp4"
+  },
+  {
+    "frame_id": "133696-757782416_medium_000_000020",
+    "frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000020.jpg",
+    "index": 20,
+    "window_id": "133696-757782416_medium_000_w000020",
+    "window_start_index": 20,
+    "window_end_index": 20,
+    "window_frame_indices": [
+      500
+    ],
+    "window_timestamps": [
+      20.0
+    ],
+    "timestamp": 20.0,
+    "start_time": 20.0,
+    "end_time": 20.0,
+    "representative_frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000020.jpg",
+    "representative_frame_id": "133696-757782416_medium_000_000020",
+    "source_frame_paths": [
+      "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000020.jpg"
+    ],
+    "batch_id": "437be460e9ca",
+    "vehicle_id": null,
+    "video_id": "133696-757782416_medium_000",
+    "source_path": "/app/data/jobs/437be460e9ca/uploads/133696-757782416_medium.mp4",
+    "original_relative_path": "133696-757782416_medium.mp4",
+    "filename": "133696-757782416_medium.mp4"
+  },
+  {
+    "frame_id": "133696-757782416_medium_000_000021",
+    "frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000021.jpg",
+    "index": 21,
+    "window_id": "133696-757782416_medium_000_w000021",
+    "window_start_index": 21,
+    "window_end_index": 21,
+    "window_frame_indices": [
+      525
+    ],
+    "window_timestamps": [
+      21.0
+    ],
+    "timestamp": 21.0,
+    "start_time": 21.0,
+    "end_time": 21.0,
+    "representative_frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000021.jpg",
+    "representative_frame_id": "133696-757782416_medium_000_000021",
+    "source_frame_paths": [
+      "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000021.jpg"
+    ],
+    "batch_id": "437be460e9ca",
+    "vehicle_id": null,
+    "video_id": "133696-757782416_medium_000",
+    "source_path": "/app/data/jobs/437be460e9ca/uploads/133696-757782416_medium.mp4",
+    "original_relative_path": "133696-757782416_medium.mp4",
+    "filename": "133696-757782416_medium.mp4"
+  },
+  {
+    "frame_id": "133696-757782416_medium_000_000022",
+    "frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000022.jpg",
+    "index": 22,
+    "window_id": "133696-757782416_medium_000_w000022",
+    "window_start_index": 22,
+    "window_end_index": 22,
+    "window_frame_indices": [
+      550
+    ],
+    "window_timestamps": [
+      22.0
+    ],
+    "timestamp": 22.0,
+    "start_time": 22.0,
+    "end_time": 22.0,
+    "representative_frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000022.jpg",
+    "representative_frame_id": "133696-757782416_medium_000_000022",
+    "source_frame_paths": [
+      "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000022.jpg"
+    ],
+    "batch_id": "437be460e9ca",
+    "vehicle_id": null,
+    "video_id": "133696-757782416_medium_000",
+    "source_path": "/app/data/jobs/437be460e9ca/uploads/133696-757782416_medium.mp4",
+    "original_relative_path": "133696-757782416_medium.mp4",
+    "filename": "133696-757782416_medium.mp4"
+  },
+  {
+    "frame_id": "133696-757782416_medium_000_000023",
+    "frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000023.jpg",
+    "index": 23,
+    "window_id": "133696-757782416_medium_000_w000023",
+    "window_start_index": 23,
+    "window_end_index": 23,
+    "window_frame_indices": [
+      575
+    ],
+    "window_timestamps": [
+      23.0
+    ],
+    "timestamp": 23.0,
+    "start_time": 23.0,
+    "end_time": 23.0,
+    "representative_frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000023.jpg",
+    "representative_frame_id": "133696-757782416_medium_000_000023",
+    "source_frame_paths": [
+      "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000023.jpg"
+    ],
+    "batch_id": "437be460e9ca",
+    "vehicle_id": null,
+    "video_id": "133696-757782416_medium_000",
+    "source_path": "/app/data/jobs/437be460e9ca/uploads/133696-757782416_medium.mp4",
+    "original_relative_path": "133696-757782416_medium.mp4",
+    "filename": "133696-757782416_medium.mp4"
+  },
+  {
+    "frame_id": "133696-757782416_medium_000_000024",
+    "frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000024.jpg",
+    "index": 24,
+    "window_id": "133696-757782416_medium_000_w000024",
+    "window_start_index": 24,
+    "window_end_index": 24,
+    "window_frame_indices": [
+      600
+    ],
+    "window_timestamps": [
+      24.0
+    ],
+    "timestamp": 24.0,
+    "start_time": 24.0,
+    "end_time": 24.0,
+    "representative_frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000024.jpg",
+    "representative_frame_id": "133696-757782416_medium_000_000024",
+    "source_frame_paths": [
+      "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000024.jpg"
+    ],
+    "batch_id": "437be460e9ca",
+    "vehicle_id": null,
+    "video_id": "133696-757782416_medium_000",
+    "source_path": "/app/data/jobs/437be460e9ca/uploads/133696-757782416_medium.mp4",
+    "original_relative_path": "133696-757782416_medium.mp4",
+    "filename": "133696-757782416_medium.mp4"
+  },
+  {
+    "frame_id": "133696-757782416_medium_000_000025",
+    "frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000025.jpg",
+    "index": 25,
+    "window_id": "133696-757782416_medium_000_w000025",
+    "window_start_index": 25,
+    "window_end_index": 25,
+    "window_frame_indices": [
+      625
+    ],
+    "window_timestamps": [
+      25.0
+    ],
+    "timestamp": 25.0,
+    "start_time": 25.0,
+    "end_time": 25.0,
+    "representative_frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000025.jpg",
+    "representative_frame_id": "133696-757782416_medium_000_000025",
+    "source_frame_paths": [
+      "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000025.jpg"
+    ],
+    "batch_id": "437be460e9ca",
+    "vehicle_id": null,
+    "video_id": "133696-757782416_medium_000",
+    "source_path": "/app/data/jobs/437be460e9ca/uploads/133696-757782416_medium.mp4",
+    "original_relative_path": "133696-757782416_medium.mp4",
+    "filename": "133696-757782416_medium.mp4"
+  },
+  {
+    "frame_id": "133696-757782416_medium_000_000026",
+    "frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000026.jpg",
+    "index": 26,
+    "window_id": "133696-757782416_medium_000_w000026",
+    "window_start_index": 26,
+    "window_end_index": 26,
+    "window_frame_indices": [
+      650
+    ],
+    "window_timestamps": [
+      26.0
+    ],
+    "timestamp": 26.0,
+    "start_time": 26.0,
+    "end_time": 26.0,
+    "representative_frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000026.jpg",
+    "representative_frame_id": "133696-757782416_medium_000_000026",
+    "source_frame_paths": [
+      "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000026.jpg"
+    ],
+    "batch_id": "437be460e9ca",
+    "vehicle_id": null,
+    "video_id": "133696-757782416_medium_000",
+    "source_path": "/app/data/jobs/437be460e9ca/uploads/133696-757782416_medium.mp4",
+    "original_relative_path": "133696-757782416_medium.mp4",
+    "filename": "133696-757782416_medium.mp4"
+  },
+  {
+    "frame_id": "133696-757782416_medium_000_000027",
+    "frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000027.jpg",
+    "index": 27,
+    "window_id": "133696-757782416_medium_000_w000027",
+    "window_start_index": 27,
+    "window_end_index": 27,
+    "window_frame_indices": [
+      675
+    ],
+    "window_timestamps": [
+      27.0
+    ],
+    "timestamp": 27.0,
+    "start_time": 27.0,
+    "end_time": 27.0,
+    "representative_frame_path": "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000027.jpg",
+    "representative_frame_id": "133696-757782416_medium_000_000027",
+    "source_frame_paths": [
+      "/app/data/jobs/437be460e9ca/outputs/frames/133696-757782416_medium_000_000027.jpg"
+    ],
+    "batch_id": "437be460e9ca",
+    "vehicle_id": null,
+    "video_id": "133696-757782416_medium_000",
+    "source_path": "/app/data/jobs/437be460e9ca/uploads/133696-757782416_medium.mp4",
+    "original_relative_path": "133696-757782416_medium.mp4",
+    "filename": "133696-757782416_medium.mp4"
+  }
+]

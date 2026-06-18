@@ -1,0 +1,4667 @@
+{
+  "job_id": "e98ff389b908",
+  "batch_id": "e98ff389b908",
+  "status": "completed",
+  "summaries": [
+    {
+      "video_id": "video_2026-06-17_19-10-40_000",
+      "vehicle_id": null,
+      "overall_status": "violation_likely",
+      "overall_confidence": 1.0,
+      "summary": "Potential sustained violation detected: helmet_missing, seatbelt_missing.",
+      "violations": [
+        {
+          "type": "helmet_missing",
+          "status": "violation_likely",
+          "confidence": 1.0,
+          "start_time": 1.0,
+          "end_time": 48.0,
+          "duration_seconds": 47.0,
+          "evidence_frame_count": 45,
+          "representative_frames": [
+            {
+              "frame_id": "video_2026-06-17_19-10-40_000_000001",
+              "timestamp": 1.0,
+              "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000001.jpg",
+              "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000001_annotated.jpg"
+            },
+            {
+              "frame_id": "video_2026-06-17_19-10-40_000_000002",
+              "timestamp": 2.0,
+              "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000002.jpg",
+              "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000002_annotated.jpg"
+            },
+            {
+              "frame_id": "video_2026-06-17_19-10-40_000_000003",
+              "timestamp": 3.0,
+              "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000003.jpg",
+              "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000003_annotated.jpg"
+            }
+          ],
+          "reasoning": "Worker head detected without overlapping helmet. Evidence appears in 45 sampled frames/windows."
+        },
+        {
+          "type": "seatbelt_missing",
+          "status": "violation_likely",
+          "confidence": 1.0,
+          "start_time": 15.0,
+          "end_time": 48.0,
+          "duration_seconds": 33.0,
+          "evidence_frame_count": 32,
+          "representative_frames": [
+            {
+              "frame_id": "video_2026-06-17_19-10-40_000_000015",
+              "timestamp": 15.0,
+              "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000015.jpg",
+              "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000015_annotated.jpg"
+            },
+            {
+              "frame_id": "video_2026-06-17_19-10-40_000_000016",
+              "timestamp": 16.0,
+              "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000016.jpg",
+              "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000016_annotated.jpg"
+            },
+            {
+              "frame_id": "video_2026-06-17_19-10-40_000_000017",
+              "timestamp": 17.0,
+              "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000017.jpg",
+              "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000017_annotated.jpg"
+            }
+          ],
+          "reasoning": "Person torso detected without an overlapping seatbelt. Evidence appears in 32 sampled frames/windows."
+        }
+      ],
+      "frame_level_evidence_available": true,
+      "frame_evidence_count": 90
+    }
+  ],
+  "frame_results": [
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000000",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000000.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.5164418816566467,
+          "bbox": [
+            283.3997802734375,
+            158.7642059326172,
+            623.0186767578125,
+            415.47027587890625
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.49018487334251404,
+          "bbox": [
+            167.07232666015625,
+            57.79493713378906,
+            251.18853759765625,
+            110.29010009765625
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.25014638900756836,
+          "bbox": [
+            223.31625366210938,
+            40.620643615722656,
+            264.3206787109375,
+            74.0601806640625
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000000_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000000",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000000.jpg",
+        "sample_index": 0,
+        "frame_index": 0,
+        "timestamp": 0.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 0.0,
+      "frame_index": 0,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000001",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000001.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.6347301006317139,
+          "bbox": [
+            210.4224395751953,
+            0.01975250244140625,
+            328.27496337890625,
+            109.48993682861328
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.4050246477127075,
+          "bbox": [
+            306.77972412109375,
+            158.88427734375,
+            616.1092529296875,
+            387.4376220703125
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000001_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000001",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000001.jpg",
+        "sample_index": 1,
+        "frame_index": 30,
+        "timestamp": 1.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 1.0,
+      "frame_index": 30,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000002",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000002.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.8266437649726868,
+          "bbox": [
+            175.55325317382812,
+            0.197479248046875,
+            332.2625427246094,
+            141.6478271484375
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000002_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000002",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000002.jpg",
+        "sample_index": 2,
+        "frame_index": 60,
+        "timestamp": 2.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 2.0,
+      "frame_index": 60,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000003",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000003.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.8012807965278625,
+          "bbox": [
+            181.89149475097656,
+            0.01025390625,
+            332.8848876953125,
+            143.39431762695312
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "laptop",
+          "raw_label": "laptop",
+          "confidence": 0.2704252600669861,
+          "bbox": [
+            338.92657470703125,
+            161.1070556640625,
+            453.73736572265625,
+            221.135498046875
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000003_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000003",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000003.jpg",
+        "sample_index": 3,
+        "frame_index": 90,
+        "timestamp": 3.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 3.0,
+      "frame_index": 90,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000004",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000004.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.5642176270484924,
+          "bbox": [
+            285.58612060546875,
+            158.7050018310547,
+            630.3566284179688,
+            415.36688232421875
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.4998158812522888,
+          "bbox": [
+            220.9863739013672,
+            0.33447265625,
+            333.70477294921875,
+            145.72283935546875
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.4093738794326782,
+          "bbox": [
+            400.77545166015625,
+            67.68881225585938,
+            477.501708984375,
+            133.12649536132812
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.28674253821372986,
+          "bbox": [
+            164.85092163085938,
+            56.789833068847656,
+            271.8310852050781,
+            124.62093353271484
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000004_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000004",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000004.jpg",
+        "sample_index": 4,
+        "frame_index": 120,
+        "timestamp": 4.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 4.0,
+      "frame_index": 120,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000005",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000005.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.7077437043190002,
+          "bbox": [
+            171.21929931640625,
+            0.2194976806640625,
+            333.8117980957031,
+            144.29428100585938
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.6870858669281006,
+          "bbox": [
+            333.4671630859375,
+            158.85279846191406,
+            604.4656982421875,
+            377.8076171875
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.3473861813545227,
+          "bbox": [
+            91.44464111328125,
+            118.34173583984375,
+            356.09637451171875,
+            415.44482421875
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.2695983648300171,
+          "bbox": [
+            400.394287109375,
+            71.71812438964844,
+            472.4027099609375,
+            132.9886932373047
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000005_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000005",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000005.jpg",
+        "sample_index": 5,
+        "frame_index": 150,
+        "timestamp": 5.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 5.0,
+      "frame_index": 150,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000006",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000006.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.6323561072349548,
+          "bbox": [
+            227.8808135986328,
+            0.012481689453125,
+            338.09112548828125,
+            132.83421325683594
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.45563408732414246,
+          "bbox": [
+            285.7052001953125,
+            155.89344787597656,
+            631.93212890625,
+            415.303955078125
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.361288845539093,
+          "bbox": [
+            165.441650390625,
+            56.93764877319336,
+            240.40869140625,
+            110.529296875
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000006_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000006",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000006.jpg",
+        "sample_index": 6,
+        "frame_index": 180,
+        "timestamp": 6.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 6.0,
+      "frame_index": 180,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000007",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000007.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.5173682570457458,
+          "bbox": [
+            221.12355041503906,
+            0.0889739990234375,
+            326.299072265625,
+            105.06190490722656
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.3041510581970215,
+          "bbox": [
+            164.12234497070312,
+            56.72597885131836,
+            270.95751953125,
+            127.20904541015625
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.2844292223453522,
+          "bbox": [
+            280.10723876953125,
+            157.9468994140625,
+            634.570068359375,
+            415.67071533203125
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000007_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000007",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000007.jpg",
+        "sample_index": 7,
+        "frame_index": 210,
+        "timestamp": 7.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 7.0,
+      "frame_index": 210,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000008",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000008.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.4788306951522827,
+          "bbox": [
+            168.44085693359375,
+            0.0,
+            332.68682861328125,
+            128.40634155273438
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.3431929647922516,
+          "bbox": [
+            166.45877075195312,
+            62.95970153808594,
+            274.9595947265625,
+            125.71298217773438
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.31642723083496094,
+          "bbox": [
+            308.5579833984375,
+            46.23834228515625,
+            637.6195068359375,
+            407.863037109375
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000008_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000008",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000008.jpg",
+        "sample_index": 8,
+        "frame_index": 240,
+        "timestamp": 8.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 8.0,
+      "frame_index": 240,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000009",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000009.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.483880877494812,
+          "bbox": [
+            187.74932861328125,
+            0.11127471923828125,
+            337.7093505859375,
+            90.1458511352539
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.37623676657676697,
+          "bbox": [
+            280.09393310546875,
+            44.7403564453125,
+            636.5855712890625,
+            415.1337890625
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.3315260410308838,
+          "bbox": [
+            333.31414794921875,
+            159.31640625,
+            602.35595703125,
+            379.42657470703125
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.25168919563293457,
+          "bbox": [
+            93.13470458984375,
+            107.80494689941406,
+            356.340576171875,
+            415.4150390625
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000009_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000009",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000009.jpg",
+        "sample_index": 9,
+        "frame_index": 270,
+        "timestamp": 9.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 9.0,
+      "frame_index": 270,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000010",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000010.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.4679614007472992,
+          "bbox": [
+            284.5703125,
+            45.79205322265625,
+            637.8070068359375,
+            414.350830078125
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000010_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000010",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000010.jpg",
+        "sample_index": 10,
+        "frame_index": 300,
+        "timestamp": 10.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 10.0,
+      "frame_index": 300,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000011",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000011.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.3301442265510559,
+          "bbox": [
+            175.4923095703125,
+            0.15064239501953125,
+            331.5560607910156,
+            90.56336212158203
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000011_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000011",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000011.jpg",
+        "sample_index": 11,
+        "frame_index": 330,
+        "timestamp": 11.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 11.0,
+      "frame_index": 330,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000012",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000012.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.6122264266014099,
+          "bbox": [
+            178.3369140625,
+            0.18471527099609375,
+            330.19598388671875,
+            95.43856048583984
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000012_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000012",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000012.jpg",
+        "sample_index": 12,
+        "frame_index": 360,
+        "timestamp": 12.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 12.0,
+      "frame_index": 360,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000013",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000013.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.4483642280101776,
+          "bbox": [
+            173.6673583984375,
+            0.170440673828125,
+            330.70318603515625,
+            88.80229187011719
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.3989688754081726,
+          "bbox": [
+            337.47418212890625,
+            47.133941650390625,
+            637.1439819335938,
+            380.04632568359375
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000013_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000013",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000013.jpg",
+        "sample_index": 13,
+        "frame_index": 390,
+        "timestamp": 13.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 13.0,
+      "frame_index": 390,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000014",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000014.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.4868796467781067,
+          "bbox": [
+            212.71339416503906,
+            0.09699249267578125,
+            333.6961669921875,
+            101.70406341552734
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.44590437412261963,
+          "bbox": [
+            283.89117431640625,
+            43.131591796875,
+            637.3255615234375,
+            415.53753662109375
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.3932589292526245,
+          "bbox": [
+            166.1800537109375,
+            57.216522216796875,
+            269.34136962890625,
+            128.20579528808594
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.27374330163002014,
+          "bbox": [
+            401.4417724609375,
+            65.59764099121094,
+            488.5162353515625,
+            130.89068603515625
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000014_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000014",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000014.jpg",
+        "sample_index": 14,
+        "frame_index": 420,
+        "timestamp": 14.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 14.0,
+      "frame_index": 420,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000015",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000015.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.6351982951164246,
+          "bbox": [
+            274.58154296875,
+            159.0473175048828,
+            574.2301635742188,
+            415.07830810546875
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.6029249429702759,
+          "bbox": [
+            208.639404296875,
+            0.16153717041015625,
+            331.7061767578125,
+            114.6864242553711
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.4371342062950134,
+          "bbox": [
+            402.54791259765625,
+            65.52226257324219,
+            489.463134765625,
+            123.93199157714844
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.3229764401912689,
+          "bbox": [
+            420.947021484375,
+            46.6375732421875,
+            637.55859375,
+            266.5875244140625
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.310478538274765,
+          "bbox": [
+            165.52761840820312,
+            58.132080078125,
+            259.51275634765625,
+            120.04679870605469
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000015_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000015",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000015.jpg",
+        "sample_index": 15,
+        "frame_index": 450,
+        "timestamp": 15.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 15.0,
+      "frame_index": 450,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000016",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000016.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.6963114142417908,
+          "bbox": [
+            210.29037475585938,
+            0.07511138916015625,
+            336.7942199707031,
+            123.78730773925781
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.4113410413265228,
+          "bbox": [
+            166.12744140625,
+            57.78399658203125,
+            258.6880798339844,
+            108.75068664550781
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.26248443126678467,
+          "bbox": [
+            331.0902099609375,
+            158.9437255859375,
+            595.4744873046875,
+            380.186279296875
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.254721999168396,
+          "bbox": [
+            401.5646057128906,
+            65.57655334472656,
+            489.0079650878906,
+            124.08927917480469
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000016_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000016",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000016.jpg",
+        "sample_index": 16,
+        "frame_index": 480,
+        "timestamp": 16.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 16.0,
+      "frame_index": 480,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000017",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000017.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.5637912750244141,
+          "bbox": [
+            200.66290283203125,
+            0.2261505126953125,
+            412.09149169921875,
+            138.14671325683594
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.5133918523788452,
+          "bbox": [
+            165.84915161132812,
+            57.67767333984375,
+            260.1473693847656,
+            107.47776794433594
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.27853381633758545,
+          "bbox": [
+            398.97552490234375,
+            66.0010757446289,
+            489.13140869140625,
+            123.2944107055664
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000017_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000017",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000017.jpg",
+        "sample_index": 17,
+        "frame_index": 510,
+        "timestamp": 17.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 17.0,
+      "frame_index": 510,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000018",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000018.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.6195846199989319,
+          "bbox": [
+            166.64495849609375,
+            0.0,
+            330.95941162109375,
+            127.00377655029297
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000018_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000018",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000018.jpg",
+        "sample_index": 18,
+        "frame_index": 540,
+        "timestamp": 18.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 18.0,
+      "frame_index": 540,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000019",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000019.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.8208792805671692,
+          "bbox": [
+            180.73382568359375,
+            0.18451690673828125,
+            330.6373291015625,
+            121.27052307128906
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.4034036695957184,
+          "bbox": [
+            76.28323364257812,
+            96.21859741210938,
+            359.5048828125,
+            415.4292297363281
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000019_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000019",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000019.jpg",
+        "sample_index": 19,
+        "frame_index": 570,
+        "timestamp": 19.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 19.0,
+      "frame_index": 570,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000020",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000020.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.6698432564735413,
+          "bbox": [
+            167.89627075195312,
+            0.04144287109375,
+            334.11395263671875,
+            110.80459594726562
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.5932484865188599,
+          "bbox": [
+            166.4473876953125,
+            58.662254333496094,
+            277.0323181152344,
+            126.5525894165039
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.30650031566619873,
+          "bbox": [
+            335.07501220703125,
+            159.88995361328125,
+            599.2305908203125,
+            380.50848388671875
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000020_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000020",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000020.jpg",
+        "sample_index": 20,
+        "frame_index": 600,
+        "timestamp": 20.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 20.0,
+      "frame_index": 600,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000021",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000021.jpg",
+      "score": 1.0,
+      "detections": [],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": null,
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000021",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000021.jpg",
+        "sample_index": 21,
+        "frame_index": 630,
+        "timestamp": 21.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 21.0,
+      "frame_index": 630,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000022",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000022.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.7375534772872925,
+          "bbox": [
+            201.92529296875,
+            0.0,
+            348.12579345703125,
+            130.27984619140625
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000022_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000022",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000022.jpg",
+        "sample_index": 22,
+        "frame_index": 660,
+        "timestamp": 22.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 22.0,
+      "frame_index": 660,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000023",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000023.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.505403995513916,
+          "bbox": [
+            165.3853759765625,
+            59.75954055786133,
+            266.49945068359375,
+            128.2965850830078
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.29479750990867615,
+          "bbox": [
+            281.58160400390625,
+            44.356781005859375,
+            638.3333129882812,
+            415.4089660644531
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [],
+      "explanation": null,
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000023_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000023",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000023.jpg",
+        "sample_index": 23,
+        "frame_index": 690,
+        "timestamp": 23.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 23.0,
+      "frame_index": 690,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000024",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000024.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.6560284495353699,
+          "bbox": [
+            327.2581787109375,
+            160.89410400390625,
+            595.4959716796875,
+            379.5
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.6391619443893433,
+          "bbox": [
+            251.62608337402344,
+            0.0401458740234375,
+            345.787353515625,
+            129.82818603515625
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.41424334049224854,
+          "bbox": [
+            399.8127136230469,
+            65.20761108398438,
+            491.2598571777344,
+            124.06742858886719
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.3732672333717346,
+          "bbox": [
+            0.25168800354003906,
+            0.06304168701171875,
+            64.22900390625,
+            76.31450653076172
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.35797423124313354,
+          "bbox": [
+            166.26611328125,
+            57.99980926513672,
+            265.23638916015625,
+            126.86682891845703
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.2551957368850708,
+          "bbox": [
+            422.9053955078125,
+            47.451332092285156,
+            637.3892822265625,
+            303.2583923339844
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000024_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000024",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000024.jpg",
+        "sample_index": 24,
+        "frame_index": 720,
+        "timestamp": 24.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 24.0,
+      "frame_index": 720,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000025",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000025.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.6983593106269836,
+          "bbox": [
+            176.4421844482422,
+            0.0,
+            352.78863525390625,
+            116.8765869140625
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.41711869835853577,
+          "bbox": [
+            399.74041748046875,
+            65.48634338378906,
+            489.23284912109375,
+            126.27909851074219
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.3425438404083252,
+          "bbox": [
+            327.91644287109375,
+            46.392608642578125,
+            638.38330078125,
+            389.5290832519531
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.28531378507614136,
+          "bbox": [
+            166.53424072265625,
+            57.05180358886719,
+            277.5523681640625,
+            127.86416625976562
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000025_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000025",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000025.jpg",
+        "sample_index": 25,
+        "frame_index": 750,
+        "timestamp": 25.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 25.0,
+      "frame_index": 750,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000026",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000026.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.6524738073348999,
+          "bbox": [
+            171.96905517578125,
+            0.1125335693359375,
+            334.76519775390625,
+            90.8365249633789
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.4338415861129761,
+          "bbox": [
+            270.55718994140625,
+            45.5003662109375,
+            636.9567260742188,
+            415.4908752441406
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.3546358048915863,
+          "bbox": [
+            399.99761962890625,
+            64.90446472167969,
+            488.78265380859375,
+            128.97637939453125
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.35007286071777344,
+          "bbox": [
+            165.6085205078125,
+            59.47749328613281,
+            262.45806884765625,
+            118.11811828613281
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000026_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000026",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000026.jpg",
+        "sample_index": 26,
+        "frame_index": 780,
+        "timestamp": 26.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 26.0,
+      "frame_index": 780,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000027",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000027.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.54779052734375,
+          "bbox": [
+            221.02490234375,
+            0.04538726806640625,
+            334.9498291015625,
+            90.93933868408203
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.3993460237979889,
+          "bbox": [
+            166.30487060546875,
+            57.510040283203125,
+            233.79757690429688,
+            111.80485534667969
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.3429202139377594,
+          "bbox": [
+            334.98944091796875,
+            46.178955078125,
+            638.0551147460938,
+            414.47161865234375
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000027_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000027",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000027.jpg",
+        "sample_index": 27,
+        "frame_index": 810,
+        "timestamp": 27.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 27.0,
+      "frame_index": 810,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000028",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000028.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.5799131393432617,
+          "bbox": [
+            172.05874633789062,
+            0.0,
+            343.8194885253906,
+            130.69566345214844
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.3759961724281311,
+          "bbox": [
+            165.40936279296875,
+            60.59907150268555,
+            270.118408203125,
+            121.92741394042969
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000028_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000028",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000028.jpg",
+        "sample_index": 28,
+        "frame_index": 840,
+        "timestamp": 28.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 28.0,
+      "frame_index": 840,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000029",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000029.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.780096173286438,
+          "bbox": [
+            180.7184600830078,
+            0.0339508056640625,
+            331.89837646484375,
+            116.80282592773438
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.364518404006958,
+          "bbox": [
+            336.990966796875,
+            46.08251953125,
+            638.1397705078125,
+            408.34063720703125
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000029_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000029",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000029.jpg",
+        "sample_index": 29,
+        "frame_index": 870,
+        "timestamp": 29.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 29.0,
+      "frame_index": 870,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000030",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000030.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.7552947998046875,
+          "bbox": [
+            182.2331085205078,
+            0.05095672607421875,
+            333.23394775390625,
+            116.10871887207031
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.3969593346118927,
+          "bbox": [
+            270.5833740234375,
+            46.70263671875,
+            636.833740234375,
+            415.5912780761719
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.3681834042072296,
+          "bbox": [
+            332.4095458984375,
+            160.5853271484375,
+            598.54931640625,
+            378.264892578125
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000030_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000030",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000030.jpg",
+        "sample_index": 30,
+        "frame_index": 900,
+        "timestamp": 30.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 30.0,
+      "frame_index": 900,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000031",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000031.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.7414198517799377,
+          "bbox": [
+            186.0017547607422,
+            0.0,
+            331.67303466796875,
+            123.10232543945312
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.6750918030738831,
+          "bbox": [
+            277.67706298828125,
+            45.398040771484375,
+            637.200927734375,
+            415.5582275390625
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.26609739661216736,
+          "bbox": [
+            165.86614990234375,
+            58.263877868652344,
+            230.9405517578125,
+            111.7543716430664
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000031_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000031",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000031.jpg",
+        "sample_index": 31,
+        "frame_index": 930,
+        "timestamp": 31.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 31.0,
+      "frame_index": 930,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000032",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000032.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.5257590413093567,
+          "bbox": [
+            201.83071899414062,
+            0.0,
+            327.9690856933594,
+            116.6381607055664
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.4817488491535187,
+          "bbox": [
+            336.4666748046875,
+            160.72540283203125,
+            592.05908203125,
+            379.29376220703125
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.25383877754211426,
+          "bbox": [
+            166.36880493164062,
+            59.89497756958008,
+            228.81781005859375,
+            112.07514953613281
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000032_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000032",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000032.jpg",
+        "sample_index": 32,
+        "frame_index": 960,
+        "timestamp": 32.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 32.0,
+      "frame_index": 960,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000033",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000033.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.6517131328582764,
+          "bbox": [
+            184.11314392089844,
+            0.13616180419921875,
+            332.0927734375,
+            118.94901275634766
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.3944093585014343,
+          "bbox": [
+            283.78466796875,
+            46.462371826171875,
+            637.94873046875,
+            415.3873291015625
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.2701079547405243,
+          "bbox": [
+            166.00892639160156,
+            57.528564453125,
+            230.6627655029297,
+            112.71183776855469
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000033_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000033",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000033.jpg",
+        "sample_index": 33,
+        "frame_index": 990,
+        "timestamp": 33.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 33.0,
+      "frame_index": 990,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000034",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000034.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.5942489504814148,
+          "bbox": [
+            215.0491485595703,
+            0.0,
+            328.75518798828125,
+            107.86802673339844
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.25050756335258484,
+          "bbox": [
+            165.9700469970703,
+            55.49086380004883,
+            229.7347869873047,
+            112.14494323730469
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000034_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000034",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000034.jpg",
+        "sample_index": 34,
+        "frame_index": 1020,
+        "timestamp": 34.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 34.0,
+      "frame_index": 1020,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000035",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000035.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.6474360823631287,
+          "bbox": [
+            192.10940551757812,
+            0.02228546142578125,
+            327.2057800292969,
+            123.78470611572266
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.25154176354408264,
+          "bbox": [
+            167.01333618164062,
+            58.25674819946289,
+            229.40768432617188,
+            112.88369750976562
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000035_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000035",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000035.jpg",
+        "sample_index": 35,
+        "frame_index": 1050,
+        "timestamp": 35.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 35.0,
+      "frame_index": 1050,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000036",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000036.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.4869515895843506,
+          "bbox": [
+            190.7488250732422,
+            0.0721282958984375,
+            328.10345458984375,
+            125.21600341796875
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000036_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000036",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000036.jpg",
+        "sample_index": 36,
+        "frame_index": 1080,
+        "timestamp": 36.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 36.0,
+      "frame_index": 1080,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000037",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000037.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.7362041473388672,
+          "bbox": [
+            190.86920166015625,
+            0.0,
+            331.3602294921875,
+            127.48554229736328
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.2569313943386078,
+          "bbox": [
+            277.11639404296875,
+            38.411224365234375,
+            637.3645629882812,
+            415.0631103515625
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000037_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000037",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000037.jpg",
+        "sample_index": 37,
+        "frame_index": 1110,
+        "timestamp": 37.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 37.0,
+      "frame_index": 1110,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000038",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000038.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.6829313039779663,
+          "bbox": [
+            189.5595703125,
+            0.0,
+            353.33795166015625,
+            133.96121215820312
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.47872400283813477,
+          "bbox": [
+            164.80172729492188,
+            57.62321090698242,
+            270.34039306640625,
+            124.73753356933594
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.368692010641098,
+          "bbox": [
+            86.06417846679688,
+            79.88250732421875,
+            356.78363037109375,
+            415.3348388671875
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000038_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000038",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000038.jpg",
+        "sample_index": 38,
+        "frame_index": 1140,
+        "timestamp": 38.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 38.0,
+      "frame_index": 1140,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000039",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000039.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.6531699299812317,
+          "bbox": [
+            239.9210205078125,
+            0.13776397705078125,
+            367.72918701171875,
+            111.87895202636719
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.41760173439979553,
+          "bbox": [
+            276.41339111328125,
+            44.7698974609375,
+            637.98291015625,
+            415.30755615234375
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.32050469517707825,
+          "bbox": [
+            221.41888427734375,
+            37.95830535888672,
+            275.6858215332031,
+            74.54029083251953
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.2720598578453064,
+          "bbox": [
+            334.24603271484375,
+            159.505859375,
+            597.3233032226562,
+            376.79931640625
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000039_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000039",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000039.jpg",
+        "sample_index": 39,
+        "frame_index": 1170,
+        "timestamp": 39.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 39.0,
+      "frame_index": 1170,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000040",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000040.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.5340838432312012,
+          "bbox": [
+            299.540771484375,
+            160.42742919921875,
+            605.7619018554688,
+            402.878662109375
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.433503657579422,
+          "bbox": [
+            231.23138427734375,
+            93.1836929321289,
+            433.9169921875,
+            228.89804077148438
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.3479619324207306,
+          "bbox": [
+            164.44671630859375,
+            56.79212951660156,
+            266.3743591308594,
+            122.77223205566406
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.2518968880176544,
+          "bbox": [
+            306.64288330078125,
+            0.1403656005859375,
+            413.23028564453125,
+            94.24331665039062
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000040_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000040",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000040.jpg",
+        "sample_index": 40,
+        "frame_index": 1200,
+        "timestamp": 40.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 40.0,
+      "frame_index": 1200,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000041",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000041.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.7074119448661804,
+          "bbox": [
+            229.3971405029297,
+            0.0421295166015625,
+            350.04644775390625,
+            126.4607925415039
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "laptop",
+          "raw_label": "laptop",
+          "confidence": 0.31695181131362915,
+          "bbox": [
+            338.3845520019531,
+            161.55239868164062,
+            454.0817565917969,
+            221.876220703125
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000041_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000041",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000041.jpg",
+        "sample_index": 41,
+        "frame_index": 1230,
+        "timestamp": 41.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 41.0,
+      "frame_index": 1230,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000042",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000042.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.6788400411605835,
+          "bbox": [
+            236.6554718017578,
+            0.0,
+            332.63299560546875,
+            138.42697143554688
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.2671324908733368,
+          "bbox": [
+            163.9566650390625,
+            56.36387252807617,
+            282.74603271484375,
+            121.14414978027344
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000042_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000042",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000042.jpg",
+        "sample_index": 42,
+        "frame_index": 1260,
+        "timestamp": 42.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 42.0,
+      "frame_index": 1260,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000043",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000043.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.7192063927650452,
+          "bbox": [
+            233.91946411132812,
+            0.164337158203125,
+            318.1162414550781,
+            145.1663360595703
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.5140701532363892,
+          "bbox": [
+            291.34368896484375,
+            157.75933837890625,
+            594.396240234375,
+            408.46142578125
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.46699798107147217,
+          "bbox": [
+            245.0057830810547,
+            93.80451202392578,
+            432.35125732421875,
+            227.2596435546875
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.45877203345298767,
+          "bbox": [
+            165.57315063476562,
+            57.12114715576172,
+            264.5694274902344,
+            113.8547592163086
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000043_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000043",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000043.jpg",
+        "sample_index": 43,
+        "frame_index": 1290,
+        "timestamp": 43.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 43.0,
+      "frame_index": 1290,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000044",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000044.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.5408729314804077,
+          "bbox": [
+            248.93125915527344,
+            0.083099365234375,
+            344.3060302734375,
+            136.2318572998047
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.26076871156692505,
+          "bbox": [
+            401.3138427734375,
+            72.80531311035156,
+            468.4407958984375,
+            120.5626220703125
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.25687676668167114,
+          "bbox": [
+            218.757568359375,
+            39.304962158203125,
+            267.3991394042969,
+            81.46932983398438
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000044_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000044",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000044.jpg",
+        "sample_index": 44,
+        "frame_index": 1320,
+        "timestamp": 44.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 44.0,
+      "frame_index": 1320,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000045",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000045.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.5784727334976196,
+          "bbox": [
+            249.7315216064453,
+            0.06278228759765625,
+            355.36529541015625,
+            111.50444030761719
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.522273063659668,
+          "bbox": [
+            280.64520263671875,
+            158.070556640625,
+            625.2216796875,
+            415.51092529296875
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000045_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000045",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000045.jpg",
+        "sample_index": 45,
+        "frame_index": 1350,
+        "timestamp": 45.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 45.0,
+      "frame_index": 1350,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000046",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000046.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.3774290382862091,
+          "bbox": [
+            165.43875122070312,
+            57.65019989013672,
+            262.24334716796875,
+            127.1667251586914
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.370181143283844,
+          "bbox": [
+            273.3824462890625,
+            0.20302581787109375,
+            406.8316650390625,
+            116.43941497802734
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.29343828558921814,
+          "bbox": [
+            223.23489379882812,
+            38.10374450683594,
+            278.46160888671875,
+            81.7336196899414
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000046_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000046",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000046.jpg",
+        "sample_index": 46,
+        "frame_index": 1380,
+        "timestamp": 46.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 46.0,
+      "frame_index": 1380,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000047",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000047.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.6545565128326416,
+          "bbox": [
+            254.60528564453125,
+            0.0817413330078125,
+            388.40692138671875,
+            103.03102111816406
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.3025771975517273,
+          "bbox": [
+            290.0509033203125,
+            158.7113494873047,
+            570.245361328125,
+            408.64532470703125
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000047_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000047",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000047.jpg",
+        "sample_index": 47,
+        "frame_index": 1410,
+        "timestamp": 47.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 47.0,
+      "frame_index": 1410,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000048",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000048.jpg",
+      "score": 1.0,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.5294490456581116,
+          "bbox": [
+            251.1962432861328,
+            0.0049591064453125,
+            366.28387451171875,
+            96.23857116699219
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.5008432865142822,
+          "bbox": [
+            281.27362060546875,
+            157.179443359375,
+            633.7032470703125,
+            415.565185546875
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.4254271388053894,
+          "bbox": [
+            236.81866455078125,
+            95.14617919921875,
+            433.7567138671875,
+            239.06576538085938
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.3543117642402649,
+          "bbox": [
+            401.92877197265625,
+            72.71603393554688,
+            472.10125732421875,
+            133.99134826660156
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000048_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000048",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000048.jpg",
+        "sample_index": 48,
+        "frame_index": 1440,
+        "timestamp": 48.0,
+        "source_fps": 30.0,
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "media_type": "video"
+      },
+      "timestamp": 48.0,
+      "frame_index": 1440,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    }
+  ],
+  "search_results": [
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000015",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000015.jpg",
+      "score": 0.07533519715070724,
+      "detections": [
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.6351982951164246,
+          "bbox": [
+            274.58154296875,
+            159.0473175048828,
+            574.2301635742188,
+            415.07830810546875
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.6029249429702759,
+          "bbox": [
+            208.639404296875,
+            0.16153717041015625,
+            331.7061767578125,
+            114.6864242553711
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.4371342062950134,
+          "bbox": [
+            402.54791259765625,
+            65.52226257324219,
+            489.463134765625,
+            123.93199157714844
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.3229764401912689,
+          "bbox": [
+            420.947021484375,
+            46.6375732421875,
+            637.55859375,
+            266.5875244140625
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.310478538274765,
+          "bbox": [
+            165.52761840820312,
+            58.132080078125,
+            259.51275634765625,
+            120.04679870605469
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000015_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000015",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000015.jpg",
+        "index": 15,
+        "window_id": "video_2026-06-17_19-10-40_000_w000015",
+        "window_start_index": 15,
+        "window_end_index": 15,
+        "window_frame_indices": [
+          450
+        ],
+        "window_timestamps": [
+          15.0
+        ],
+        "timestamp": 15.0,
+        "start_time": 15.0,
+        "end_time": 15.0,
+        "representative_frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000015.jpg",
+        "representative_frame_id": "video_2026-06-17_19-10-40_000_000015",
+        "source_frame_paths": [
+          "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000015.jpg"
+        ],
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "score": 0.07533519715070724
+      },
+      "timestamp": 15.0,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000017",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000017.jpg",
+      "score": 0.07455314695835114,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.5637912750244141,
+          "bbox": [
+            200.66290283203125,
+            0.2261505126953125,
+            412.09149169921875,
+            138.14671325683594
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.5133918523788452,
+          "bbox": [
+            165.84915161132812,
+            57.67767333984375,
+            260.1473693847656,
+            107.47776794433594
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.27853381633758545,
+          "bbox": [
+            398.97552490234375,
+            66.0010757446289,
+            489.13140869140625,
+            123.2944107055664
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000017_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000017",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000017.jpg",
+        "index": 17,
+        "window_id": "video_2026-06-17_19-10-40_000_w000017",
+        "window_start_index": 17,
+        "window_end_index": 17,
+        "window_frame_indices": [
+          510
+        ],
+        "window_timestamps": [
+          17.0
+        ],
+        "timestamp": 17.0,
+        "start_time": 17.0,
+        "end_time": 17.0,
+        "representative_frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000017.jpg",
+        "representative_frame_id": "video_2026-06-17_19-10-40_000_000017",
+        "source_frame_paths": [
+          "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000017.jpg"
+        ],
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "score": 0.07455314695835114
+      },
+      "timestamp": 17.0,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000016",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000016.jpg",
+      "score": 0.07271862030029297,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.6963114142417908,
+          "bbox": [
+            210.29037475585938,
+            0.07511138916015625,
+            336.7942199707031,
+            123.78730773925781
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.4113410413265228,
+          "bbox": [
+            166.12744140625,
+            57.78399658203125,
+            258.6880798339844,
+            108.75068664550781
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.26248443126678467,
+          "bbox": [
+            331.0902099609375,
+            158.9437255859375,
+            595.4744873046875,
+            380.186279296875
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.254721999168396,
+          "bbox": [
+            401.5646057128906,
+            65.57655334472656,
+            489.0079650878906,
+            124.08927917480469
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000016_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000016",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000016.jpg",
+        "index": 16,
+        "window_id": "video_2026-06-17_19-10-40_000_w000016",
+        "window_start_index": 16,
+        "window_end_index": 16,
+        "window_frame_indices": [
+          480
+        ],
+        "window_timestamps": [
+          16.0
+        ],
+        "timestamp": 16.0,
+        "start_time": 16.0,
+        "end_time": 16.0,
+        "representative_frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000016.jpg",
+        "representative_frame_id": "video_2026-06-17_19-10-40_000_000016",
+        "source_frame_paths": [
+          "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000016.jpg"
+        ],
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "score": 0.07271862030029297
+      },
+      "timestamp": 16.0,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000014",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000014.jpg",
+      "score": 0.07214122265577316,
+      "detections": [
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.4868796467781067,
+          "bbox": [
+            212.71339416503906,
+            0.09699249267578125,
+            333.6961669921875,
+            101.70406341552734
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.44590437412261963,
+          "bbox": [
+            283.89117431640625,
+            43.131591796875,
+            637.3255615234375,
+            415.53753662109375
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.3932589292526245,
+          "bbox": [
+            166.1800537109375,
+            57.216522216796875,
+            269.34136962890625,
+            128.20579528808594
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.27374330163002014,
+          "bbox": [
+            401.4417724609375,
+            65.59764099121094,
+            488.5162353515625,
+            130.89068603515625
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000014_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000014",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000014.jpg",
+        "index": 14,
+        "window_id": "video_2026-06-17_19-10-40_000_w000014",
+        "window_start_index": 14,
+        "window_end_index": 14,
+        "window_frame_indices": [
+          420
+        ],
+        "window_timestamps": [
+          14.0
+        ],
+        "timestamp": 14.0,
+        "start_time": 14.0,
+        "end_time": 14.0,
+        "representative_frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000014.jpg",
+        "representative_frame_id": "video_2026-06-17_19-10-40_000_000014",
+        "source_frame_paths": [
+          "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000014.jpg"
+        ],
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "score": 0.07214122265577316
+      },
+      "timestamp": 14.0,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    },
+    {
+      "frame_id": "video_2026-06-17_19-10-40_000_000024",
+      "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000024.jpg",
+      "score": 0.07190489023923874,
+      "detections": [
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.6560284495353699,
+          "bbox": [
+            327.2581787109375,
+            160.89410400390625,
+            595.4959716796875,
+            379.5
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "person",
+          "raw_label": "person",
+          "confidence": 0.6391619443893433,
+          "bbox": [
+            251.62608337402344,
+            0.0401458740234375,
+            345.787353515625,
+            129.82818603515625
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.41424334049224854,
+          "bbox": [
+            399.8127136230469,
+            65.20761108398438,
+            491.2598571777344,
+            124.06742858886719
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "car",
+          "raw_label": "car",
+          "confidence": 0.3732672333717346,
+          "bbox": [
+            0.25168800354003906,
+            0.06304168701171875,
+            64.22900390625,
+            76.31450653076172
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.35797423124313354,
+          "bbox": [
+            166.26611328125,
+            57.99980926513672,
+            265.23638916015625,
+            126.86682891845703
+          ],
+          "has_refined_mask": true
+        },
+        {
+          "label": "suitcase",
+          "raw_label": "suitcase",
+          "confidence": 0.2551957368850708,
+          "bbox": [
+            422.9053955078125,
+            47.451332092285156,
+            637.3892822265625,
+            303.2583923339844
+          ],
+          "has_refined_mask": true
+        }
+      ],
+      "violations": [
+        {
+          "name": "helmet_missing",
+          "description": "Worker head detected without overlapping helmet.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "head_helmet_iou": 0.0,
+            "threshold": 0.2,
+            "helmet_count": 0
+          }
+        },
+        {
+          "name": "seatbelt_missing",
+          "description": "Person torso detected without an overlapping seatbelt.",
+          "severity": "high",
+          "confidence": 1.0,
+          "evidence": {
+            "seatbelt_torso_iou": 0.0,
+            "threshold": 0.2,
+            "seatbelt_count": 0
+          }
+        }
+      ],
+      "explanation": "Detected violations:\n- helmet_missing (high): Worker head detected without overlapping helmet. [head_helmet_iou=0.0, threshold=0.2, helmet_count=0]\n- seatbelt_missing (high): Person torso detected without an overlapping seatbelt. [seatbelt_torso_iou=0.0, threshold=0.2, seatbelt_count=0]",
+      "annotated_path": "/app/data/jobs/e98ff389b908/outputs/annotated/video_2026-06-17_19-10-40_000_000024_annotated.jpg",
+      "metadata": {
+        "frame_id": "video_2026-06-17_19-10-40_000_000024",
+        "frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000024.jpg",
+        "index": 24,
+        "window_id": "video_2026-06-17_19-10-40_000_w000024",
+        "window_start_index": 24,
+        "window_end_index": 24,
+        "window_frame_indices": [
+          720
+        ],
+        "window_timestamps": [
+          24.0
+        ],
+        "timestamp": 24.0,
+        "start_time": 24.0,
+        "end_time": 24.0,
+        "representative_frame_path": "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000024.jpg",
+        "representative_frame_id": "video_2026-06-17_19-10-40_000_000024",
+        "source_frame_paths": [
+          "/app/data/jobs/e98ff389b908/outputs/frames/video_2026-06-17_19-10-40_000_000024.jpg"
+        ],
+        "batch_id": "e98ff389b908",
+        "vehicle_id": null,
+        "video_id": "video_2026-06-17_19-10-40_000",
+        "source_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+        "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+        "filename": "video_2026-06-17_19-10-40.mp4",
+        "score": 0.07190489023923874
+      },
+      "timestamp": 24.0,
+      "video_id": "video_2026-06-17_19-10-40_000"
+    }
+  ],
+  "media": [
+    {
+      "batch_id": "e98ff389b908",
+      "vehicle_id": null,
+      "original_relative_path": "video_2026-06-17_19-10-40.mp4",
+      "filename": "video_2026-06-17_19-10-40.mp4",
+      "stored_path": "/app/data/jobs/e98ff389b908/uploads/video_2026-06-17_19-10-40.mp4",
+      "media_type": "video",
+      "status": "completed"
+    }
+  ]
+}
