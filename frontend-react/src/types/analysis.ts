@@ -33,17 +33,17 @@ export type Detection = {
 
 export type FrameResult = {
   id: string;
-  frameIndex: number;
+  frameNumber: number;
   timestamp: string;
-  timestampSeconds?: number;
   internalFilename: string;
-  score: number;
+  queryRelevanceScore: number;
   imageUrl?: string;
   evidenceImageRequired?: boolean;
   visualVariant?: 'worksite' | 'loading-bay' | 'maintenance';
   explanation?: string;
   violations: Violation[];
   detections: Detection[];
+  technicalEvidence: Record<string, unknown>;
 };
 
 export type MediaItem = {
@@ -52,12 +52,10 @@ export type MediaItem = {
   type: MediaType;
   sizeLabel: string;
   duration?: string;
-  durationSeconds?: number;
   uploadedAt: string;
   status: MediaStatus;
   source?: 'sample' | 'local';
   previewUrl?: string;
-  fps?: number;
 };
 
 export type AnalysisResult = {
@@ -69,25 +67,4 @@ export type AnalysisResult = {
   summaryText?: string;
   settings?: AnalysisSettings;
   frames: FrameResult[];
-  totalDurationSeconds?: number;
 };
-
-export type Annotation = {
-  id: string;
-  mediaId: string;
-  type: 'bbox' | 'note';
-  label?: string;
-  bbox?: [number, number, number, number];
-  note?: string;
-  color?: string;
-  createdAt: string;
-};
-
-export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
-
-export enum QueryTab {
-  SearchVideo = 'search-video',
-  SearchEvent = 'search-event',
-  SearchPerson = 'search-person',
-  SearchObject = 'search-object',
-}

@@ -29,7 +29,7 @@ function groupViolations(result: AnalysisResult): GroupedViolation[] {
       const existing = groups.get(violation.type);
       const affectedFrame = {
         frameId: frame.id,
-        frameNumber: frame.frameIndex,
+        frameNumber: frame.frameNumber,
         timestamp: frame.timestamp,
       };
 

@@ -5,6 +5,9 @@ type TimelineVisualizationProps = {
   result: AnalysisResult;
   onFrameSelect: (frameId: string) => void;
   selectedFrameId?: string | null;
+  highlightedFrameId?: string | null;
+  hoveredFrameId?: string | null;
+  onHover: (frameId: string | null) => void;
 };
 
 function getSeverityColor(frame: FrameResult): string {
@@ -23,8 +26,17 @@ function getSeverityDotColor(frame: FrameResult): string {
   return 'bg-emerald-500 ring-emerald-200';
 }
 
-export function TimelineVisualization({ result, onFrameSelect, selectedFrameId }: TimelineVisualizationProps) {
-  const duration = result.totalDurationSeconds || result.media.durationSeconds || 65;
+function getSeconds(timeString?: string): number {
+  if (!timeString) return 0;
+  const parts = timeString.split(':').map(Number);
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  if (parts.length === 2) return parts[0] * 60 + parts[1];
+  return parts[0] || 0;
+}
+
+export function TimelineVisualization({ result, onFrameSelect, selectedFrameId, hoveredFrameId, onHover }: TimelineVisualizationProps) {
+  // const duration = result.totalDurationSeconds || result.media.durationSeconds || 65;
+  const duration = getSeconds(result.media.duration) || 65; // Modified for mock data
   if (duration <= 0 || result.frames.length === 0) return null;
 
   return (
@@ -40,32 +52,41 @@ export function TimelineVisualization({ result, onFrameSelect, selectedFrameId }
       </div>
 
       <div className="relative">
-        <div className="mb-1 flex justify-between text-xs text-slate-500">
+        <div className="mb-1 flex items-center justify-between text-xs text-slate-500">
           <span>00:00</span>
+          <span className="hidden sm:block text-[10px] italic text-slate-400">
+            Hover over markers to display exact timeframe
+          </span>
           <span>{result.media.duration || '00:00'}</span>
         </div>
 
         <div className="relative h-8 w-full rounded-full bg-slate-100">
           {result.frames.map((frame) => {
-            const pct = duration > 0 ? (frame.timestampSeconds || 0) / duration * 100 : 0;
-            const isSelected = frame.id === selectedFrameId;
+            const pct = duration > 0 ? (getSeconds(frame.timestamp) / duration) * 100 : 0; // Modified for mock data
+            const isSelected = frame.id === selectedFrameId; // Modified for mock data
+            // const pct = duration > 0 ? (frame.timestampSeconds || 0) / duration * 100 : 0;
+            // const isSelected = frame.id === selectedFrameId;
             const hasViolations = frame.violations.length > 0;
 
             return (
               <div
                 key={frame.id}
-                className="absolute top-1/2 -translate-y-1/2"
+                className={`group absolute top-1/2 -translate-y-1/2 ${isSelected ? 'z-20' : 'z-10 hover:z-20'}`}
                 style={{ left: `${Math.min(pct, 100)}%` }}
+                // The hover state is handled here on the wrapper
+                onMouseEnter={() => onHover(frame.id)} 
+                onMouseLeave={() => onHover(null)}
               >
                 <button
                   type="button"
                   onClick={() => onFrameSelect(frame.id)}
                   title={`Frame at ${frame.timestamp}${hasViolations ? ` - ${frame.violations.length} violation(s)` : ' - No violations'}`}
+                  // Apply the color string returned by getSeverityDotColor
                   className={`relative flex h-6 w-6 -translate-x-1/2 items-center justify-center rounded-full ring-2 transition hover:scale-125 ${
                     hasViolations
-                      ? getSeverityDotColor(frame)
+                      ? getSeverityDotColor(frame) 
                       : 'bg-slate-400 ring-slate-200'
-                  } ${isSelected ? 'scale-125 ring-safety-blue' : ''}`}
+                  } ${isSelected || frame.id === hoveredFrameId ? 'scale-125 ring-safety-blue' : ''}`}
                 >
                   {hasViolations ? (
                     <AlertTriangle className="h-3 w-3 text-white" />
@@ -73,7 +94,11 @@ export function TimelineVisualization({ result, onFrameSelect, selectedFrameId }
                     <Info className="h-3 w-3 text-white" />
                   )}
                 </button>
-                <span className="absolute left-1/2 top-7 -translate-x-1/2 whitespace-nowrap text-[10px] font-medium text-slate-600">
+                <span className={`absolute left-1/2 top-7 -translate-x-1/2 whitespace-nowrap text-[10px] font-medium transition-all duration-200 ${
+                  isSelected || frame.id === hoveredFrameId
+                    ? 'opacity-100 text-safety-blue font-bold' 
+                    : 'opacity-0 group-hover:opacity-100 text-slate-600'
+                  }`}>
                   {frame.timestamp}
                 </span>
               </div>
@@ -101,14 +126,19 @@ export function TimelineVisualization({ result, onFrameSelect, selectedFrameId }
       {result.frames.some((f) => f.imageUrl) && (
         <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5">
           {result.frames.map((frame) => {
-            const pct = duration > 0 ? (frame.timestampSeconds || 0) / duration * 100 : 0;
+            // const pct = duration > 0 ? (frame.timestampSeconds || 0) / duration * 100 : 0;
+            const pct = duration > 0 ? (getSeconds(frame.timestamp) / duration) * 100 : 0; // Modified for mock data
             return (
               <button
                 key={frame.id}
                 type="button"
                 onClick={() => onFrameSelect(frame.id)}
+                onMouseEnter={() => onHover(frame.id)} 
+                onMouseLeave={() => onHover(null)}
                 className={`group relative overflow-hidden rounded-lg border-2 transition ${
-                  frame.id === selectedFrameId ? 'border-safety-blue ring-2 ring-blue-100' : 'border-slate-200 hover:border-slate-300'
+                  frame.id === selectedFrameId || frame.id === hoveredFrameId
+                    ? 'border-safety-blue ring-2 ring-blue-100' 
+                    : 'border-slate-200 hover:border-slate-300'
                 }`}
               >
                 {frame.imageUrl ? (

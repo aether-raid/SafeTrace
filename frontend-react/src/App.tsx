@@ -16,8 +16,7 @@ import { VideoQueue } from './components/VideoQueue';
 import { ViolationSummary } from './components/ViolationSummary';
 import { sampleMedia } from './data/mockAnalysis';
 import { buildMockAnalysisResult, getMockMediaLibrary, runMockAnalysis } from './services/analysisService';
-import type { AnalysisResult, AnalysisSettings, MediaItem, SaveStatus } from './types/analysis';
-import { QueryTab } from './types/analysis';
+import type { AnalysisResult, AnalysisSettings, MediaItem } from './types/analysis';
 import { formatFileSize } from './utils/formatters';
 import { SelectedMediaViewer } from './components/SelectedMediaViewer';
 
@@ -57,9 +56,9 @@ function App() {
   const [highlightedFrameId, setHighlightedFrameId] = useState<string | null>(null);
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [showAnnotation, setShowAnnotation] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [hoveredFrameId, setHoveredFrameId] = useState<string | null>(null);
 
 
   useEffect(() => {
@@ -200,20 +199,6 @@ function App() {
               Upload safety footage, describe what to check for, and review evidence-backed violation findings.
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            {saveStatus === 'saving' && (
-              <span className="flex items-center gap-1 text-xs text-blue-600">
-                <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-blue-500" />
-                Saving changes...
-              </span>
-            )}
-            {saveStatus === 'saved' && (
-              <span className="flex items-center gap-1 text-xs text-emerald-600">
-                <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
-                All changes saved locally
-              </span>
-            )}
-          </div>
         </div>
       </header>
 
@@ -237,7 +222,6 @@ function App() {
         <>
           <AnalysisSummary result={analysisResult} showExplanations={settings.vlmExplanations} />
           
-          {/* Your new tabbed component handles the List, Timeline, and Statistics! */}
           <ViolationSummary 
             result={analysisResult} 
             onFrameSelect={handleFrameSelect} 
@@ -246,6 +230,8 @@ function App() {
                 result={analysisResult} 
                 onFrameSelect={handleFrameSelect}
                 selectedFrameId={highlightedFrameId}
+                hoveredFrameId={hoveredFrameId}
+                onHover={setHoveredFrameId}
               />
             } 
             statisticsComponent={<StatisticsPanel result={analysisResult} />} 
