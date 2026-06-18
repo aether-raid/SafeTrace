@@ -236,31 +236,21 @@ function App() {
       {analysisResult && !isLoading ? (
         <>
           <AnalysisSummary result={analysisResult} showExplanations={settings.vlmExplanations} />
-          <ViolationSummary result={analysisResult} onFrameSelect={handleFrameSelect} />
-          <div className="mb-6 flex flex-wrap items-center gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-soft">
-            <span className="text-xs font-semibold text-slate-600">Toggle sections:</span>
-            <label className="flex items-center gap-1.5 text-xs text-slate-600">
-              <input type="checkbox" checked={showTimeline} onChange={(e) => setShowTimeline(e.target.checked)} className="rounded" />
-              Timeline
-            </label>
-            <label className="flex items-center gap-1.5 text-xs text-slate-600">
-              <input type="checkbox" checked={showStatistics} onChange={(e) => setShowStatistics(e.target.checked)} className="rounded" />
-              Statistics
-            </label>
-            {/* todo: manual anotation tool */}
-            {/* <label className="flex items-center gap-1.5 text-xs text-slate-600">
-              <input type="checkbox" checked={showAnnotation} onChange={(e) => setShowAnnotation(e.target.checked)} className="rounded" />
-              Annotation Tool
-            </label> */}
-          </div>
-          {showStatistics && <StatisticsPanel result={analysisResult} />}
-          {showTimeline && (
-            <TimelineVisualization
-              result={analysisResult}
-              onFrameSelect={handleFrameSelect}
-              selectedFrameId={highlightedFrameId}
-            />
-          )}
+          
+          {/* Your new tabbed component handles the List, Timeline, and Statistics! */}
+          <ViolationSummary 
+            result={analysisResult} 
+            onFrameSelect={handleFrameSelect} 
+            timelineComponent={
+              <TimelineVisualization 
+                result={analysisResult} 
+                onFrameSelect={handleFrameSelect}
+                selectedFrameId={highlightedFrameId}
+              />
+            } 
+            statisticsComponent={<StatisticsPanel result={analysisResult} />} 
+          />
+          
           <EvidenceFrames
             frames={analysisResult.frames}
             showExplanations={settings.vlmExplanations}
@@ -274,8 +264,8 @@ function App() {
               mediaType={analysisResult.media.type}
             />
           )}
+          
           <ReportActions result={analysisResult} />
-
         </>
       ) : null}
     </AppShell>
