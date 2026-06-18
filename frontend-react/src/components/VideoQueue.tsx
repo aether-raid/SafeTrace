@@ -8,6 +8,7 @@ type VideoQueueProps = {
   onSelectMedia: (media: MediaItem) => void;
   onDeleteMedia?: (mediaId: string) => void;
   onPreviewMedia?: (media: MediaItem) => void;
+  onUploadClick?: () => void; 
 };
 
 function StatusIcon({ status }: { status: MediaStatus }) {
@@ -38,7 +39,7 @@ function StatusBadgeVideo({ status }: { status: MediaStatus }) {
   );
 }
 
-export function VideoQueue({ mediaLibrary, selectedMedia, onSelectMedia, onDeleteMedia, onPreviewMedia }: VideoQueueProps) {
+export function VideoQueue({ mediaLibrary, selectedMedia, onSelectMedia, onDeleteMedia, onPreviewMedia, onUploadClick }: VideoQueueProps) {
   return (
     <div className="flex h-full flex-col gap-4 overflow-auto p-5">
       <div className="flex items-center gap-2">
@@ -47,6 +48,16 @@ export function VideoQueue({ mediaLibrary, selectedMedia, onSelectMedia, onDelet
           <p className="text-sm font-bold text-slate-950">Video Queue</p>
           <p className="text-xs text-slate-500">{mediaLibrary.length} media item{mediaLibrary.length !== 1 ? 's' : ''}</p>
         </div>
+
+        <button
+          type="button"
+          onClick={onUploadClick}
+          title="Ingest new video"
+          className="ml-auto flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-indigo-700 transition hover:bg-indigo-200 hover:text-indigo-800"
+        >
+          <Upload className="h-4 w-4" />
+        </button>
+        
       </div>
 
       <div className="space-y-3">
@@ -117,12 +128,6 @@ export function VideoQueue({ mediaLibrary, selectedMedia, onSelectMedia, onDelet
             </div>
           );
         })}
-      </div>
-
-      <div className="mt-auto rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4 text-center">
-        <Upload className="mx-auto h-6 w-6 text-slate-400" />
-        <p className="mt-2 text-xs font-semibold text-slate-600">Upload new media</p>
-        <p className="mt-1 text-[10px] text-slate-400">Drop files or use the upload panel</p>
       </div>
     </div>
   );

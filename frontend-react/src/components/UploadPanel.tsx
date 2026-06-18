@@ -34,39 +34,10 @@ export function UploadPanel({ media, onFileSelected }: UploadPanelProps) {
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-soft">
       <div className="mb-4 flex items-center justify-between gap-3">
-        <div>
           <h2 className="text-sm font-semibold text-slate-950">Selected media</h2>
-          <p className="mt-1 text-sm text-slate-500">Choose sample media or select a local file for analysis preview.</p>
-        </div>
-        <StatusBadge label={media.source === 'local' ? 'Local file selected' : 'Ready for analysis'} tone="success" />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
-        <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-          <div className="flex items-start gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-safety-blue text-white">
-              <Icon className="h-5 w-5" aria-hidden="true" />
-            </div>
-            <div className="min-w-0">
-              <p className="break-words text-sm font-semibold text-slate-950">{media.filename}</p>
-              <div className="mt-3 grid gap-2 text-sm text-slate-600 sm:grid-cols-3">
-                <span>Type: {getMediaTypeLabel(media)}</span>
-                <span>Size: {media.sizeLabel}</span>
-                <span>{media.duration ? `Duration: ${media.duration}` : 'Single frame'}</span>
-              </div>
-              {media.previewUrl ? (
-                <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white">
-                  {media.type === 'video' ? (
-                    <video className="h-40 w-full bg-slate-950 object-cover" src={media.previewUrl} controls muted />
-                  ) : (
-                    <img className="h-40 w-full object-cover" src={media.previewUrl} alt="" />
-                  )}
-                </div>
-              ) : null}
-            </div>
-          </div>
-        </div>
-
+      <div className="mx-auto w-full max-w-2xl">
         <div
           className={clsx(
             'flex min-h-32 flex-col items-center justify-center rounded-lg border border-dashed px-4 py-5 text-center transition',
@@ -103,10 +74,7 @@ export function UploadPanel({ media, onFileSelected }: UploadPanelProps) {
         </div>
       </div>
 
-      <div className="mt-4 flex items-center gap-2 text-xs text-slate-500">
-        <HardDrive className="h-4 w-4" aria-hidden="true" />
-        Selected media is ready for local analysis preview.
-      </div>
+
     </section>
   );
 }

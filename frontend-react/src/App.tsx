@@ -19,6 +19,7 @@ import { buildMockAnalysisResult, getMockMediaLibrary, runMockAnalysis } from '.
 import type { AnalysisResult, AnalysisSettings, MediaItem, SaveStatus } from './types/analysis';
 import { QueryTab } from './types/analysis';
 import { formatFileSize } from './utils/formatters';
+import { SelectedMediaViewer } from './components/SelectedMediaViewer';
 
 const DEFAULT_QUERY = 'worker without helmet';
 const ANALYSIS_STEPS = [
@@ -57,11 +58,9 @@ function App() {
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
-  const [showTimeline, setShowTimeline] = useState(true);
-  const [showStatistics, setShowStatistics] = useState(true);
   const [showAnnotation, setShowAnnotation] = useState(false);
-  const [showChatbot, setShowChatbot] = useState(true);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+
 
   useEffect(() => {
     let isMounted = true;
@@ -186,6 +185,7 @@ function App() {
           selectedMedia={selectedMedia}
           onSelectMedia={handleSelectMedia}
           onDeleteMedia={handleDeleteMedia}
+          onUploadClick={() => setIsUploadModalOpen(true)}
         />
       }
     >
@@ -217,7 +217,7 @@ function App() {
         </div>
       </header>
 
-      <UploadPanel media={selectedMedia} onFileSelected={handleFileSelected} />
+      <SelectedMediaViewer media={selectedMedia} />
 
       <QueryTabs
         query={query}
@@ -268,6 +268,25 @@ function App() {
           <ReportActions result={analysisResult} />
         </>
       ) : null}
+
+      {isUploadModalOpen && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
+      <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl relative">
+         <button 
+           onClick={() => setIsUploadModalOpen(false)}
+           className="absolute right-4 top-4 text-slate-400 hover:text-slate-600"
+         >
+           Close
+         </button>
+         <h2 className="text-lg font-bold mb-4">Upload More Videos</h2>
+         {/* Insert your UploadPanel component here instead of the main view */}
+         <UploadPanel media={selectedMedia} onFileSelected={(file) => {
+            handleFileSelected(file);
+            setIsUploadModalOpen(false); // Close modal after upload
+         }} />
+      </div>
+    </div>
+  )}
     </AppShell>
   );
 }
