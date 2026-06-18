@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { ImageIcon } from 'lucide-react';
+import { AlertTriangle, ImageIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { Detection, FrameResult } from '../types/analysis';
 import { formatConfidence } from '../utils/formatters';
@@ -104,7 +104,7 @@ function SampleEvidenceVisual({ frame }: EvidenceFrameVisualProps) {
 
       <div className="absolute bottom-3 left-3 inline-flex max-w-[calc(100%-1.5rem)] flex-wrap items-center gap-2 rounded-lg bg-slate-950/80 px-3 py-2 text-xs font-semibold text-white">
         <ImageIcon className="h-4 w-4" aria-hidden="true" />
-        Sample evidence visual
+        Local analysis preview
         <span className="rounded bg-white/10 px-1.5 py-0.5">
           Top detection {formatConfidence(topDetectionConfidence)}
         </span>
@@ -116,10 +116,28 @@ function SampleEvidenceVisual({ frame }: EvidenceFrameVisualProps) {
 export function EvidenceFrameVisual({ frame }: EvidenceFrameVisualProps) {
   const [imageFailed, setImageFailed] = useState(false);
   const showImage = Boolean(frame.imageUrl && !imageFailed);
+  const shouldBlockFallback = Boolean(frame.imageUrl && frame.evidenceImageRequired && imageFailed);
 
   useEffect(() => {
     setImageFailed(false);
   }, [frame.imageUrl]);
+
+  if (shouldBlockFallback) {
+    return (
+      <div className="flex aspect-video min-h-0 flex-col justify-center rounded-lg border border-amber-300 bg-amber-50 p-5 text-amber-950">
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
+          <div>
+            <p className="text-sm font-bold">Evidence image unavailable</p>
+            <p className="mt-2 break-all text-sm leading-6">Expected file: {frame.imageUrl}</p>
+            <p className="mt-2 text-sm leading-6">
+              Add annotated frame images to frontend-react/public/sample-evidence/.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!showImage) {
     return <SampleEvidenceVisual frame={frame} />;
@@ -137,8 +155,8 @@ export function EvidenceFrameVisual({ frame }: EvidenceFrameVisualProps) {
       </div>
       <figcaption className="flex flex-wrap items-center gap-2 border-t border-white/10 bg-slate-950 px-3 py-2 text-xs font-semibold text-slate-100">
         <ImageIcon className="h-4 w-4" aria-hidden="true" />
-        Annotated evidence
-        <span className="rounded bg-white/10 px-1.5 py-0.5">Frame {frame.frameIndex}</span>
+        Annotated evidence frame
+        <span className="rounded bg-white/10 px-1.5 py-0.5">Frame {frame.frameNumber}</span>
       </figcaption>
     </figure>
   );

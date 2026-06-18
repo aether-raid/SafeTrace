@@ -39,7 +39,8 @@ export type FrameResult = {
   internalFilename: string;
   score: number;
   imageUrl?: string;
-  annotatedUrl?: string;
+  evidenceImageRequired?: boolean;
+  visualVariant?: 'worksite' | 'loading-bay' | 'maintenance';
   explanation?: string;
   violations: Violation[];
   detections: Detection[];

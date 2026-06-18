@@ -111,6 +111,8 @@ const worksiteFrames: FrameResult[] = [
     internalFilename: 'tmp_frames/video_2026-06-18_11-38-42_frame_00046.jpg',
     score: 0.059,
     imageUrl: '/sample-evidence/video_2026-06-18_11-38-42_000046_annotated.jpg',
+    evidenceImageRequired: true,
+    visualVariant: 'worksite',
     explanation: 'Visual evidence shows a worker in the active area with head and torso regions detected, but no matching helmet or seatbelt overlap.',
     violations: [createSafetyViolation(46, 'helmet_missing', 1), createSafetyViolation(46, 'seatbelt_missing', 1)],
     detections: [
@@ -127,6 +129,8 @@ const worksiteFrames: FrameResult[] = [
     internalFilename: 'tmp_frames/video_2026-06-18_11-38-42_frame_00016.jpg',
     score: 0.056,
     imageUrl: '/sample-evidence/video_2026-06-18_11-38-42_000016_annotated.jpg',
+    evidenceImageRequired: true,
+    visualVariant: 'worksite',
     explanation: 'The selected frame contains a relevant worker pose and repeated missing protective equipment indicators.',
     violations: [createSafetyViolation(16, 'helmet_missing', 0.93), createSafetyViolation(16, 'seatbelt_missing', 0.96)],
     detections: [
@@ -143,6 +147,8 @@ const worksiteFrames: FrameResult[] = [
     internalFilename: 'tmp_frames/video_2026-06-18_11-38-42_frame_00019.jpg',
     score: 0.052,
     imageUrl: '/sample-evidence/video_2026-06-18_11-38-42_000019_annotated.jpg',
+    evidenceImageRequired: true,
+    visualVariant: 'worksite',
     explanation: 'Protective equipment evidence remains below the configured overlap thresholds for this worker.',
     violations: [createSafetyViolation(19, 'helmet_missing', 0.87), createSafetyViolation(19, 'seatbelt_missing', 0.92)],
     detections: [
@@ -159,6 +165,8 @@ const worksiteFrames: FrameResult[] = [
     internalFilename: 'tmp_frames/video_2026-06-18_11-38-42_frame_00021.jpg',
     score: 0.041,
     imageUrl: '/sample-evidence/video_2026-06-18_11-38-42_000021_annotated.jpg',
+    evidenceImageRequired: true,
+    visualVariant: 'worksite',
     explanation: 'Helmet and seatbelt detections overlap the expected body regions, so this frame is clear for the current query.',
     violations: [],
     detections: [
@@ -175,6 +183,8 @@ const worksiteFrames: FrameResult[] = [
     internalFilename: 'tmp_frames/video_2026-06-18_11-38-42_frame_00033.jpg',
     score: 0.048,
     imageUrl: '/sample-evidence/video_2026-06-18_11-38-42_000033_annotated.jpg',
+    evidenceImageRequired: true,
+    visualVariant: 'worksite',
     explanation: 'The worker remains relevant to the query and both protective equipment rules are triggered.',
     violations: [createSafetyViolation(33, 'helmet_missing', 0.91), createSafetyViolation(33, 'seatbelt_missing', 0.94)],
     detections: [
