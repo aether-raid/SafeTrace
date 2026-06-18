@@ -38,6 +38,7 @@ export type FrameResult = {
   internalFilename: string;
   queryRelevanceScore: number;
   imageUrl?: string;
+  evidenceImageRequired?: boolean;
   visualVariant?: 'worksite' | 'loading-bay' | 'maintenance';
   explanation?: string;
   violations: Violation[];
