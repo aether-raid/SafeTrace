@@ -1,5 +1,5 @@
-import { AlertTriangle, ClipboardCheck } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { AlertTriangle, ClipboardCheck, RefreshCcw, Server, UploadCloud } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnalysisProgress } from './components/AnalysisProgress';
 import { AnalysisSummary } from './components/AnalysisSummary';
 import { AnnotationViewer } from './components/AnnotationViewer';
@@ -15,8 +15,26 @@ import { UploadPanel } from './components/UploadPanel';
 import { VideoQueue } from './components/VideoQueue';
 import { ViolationSummary } from './components/ViolationSummary';
 import { sampleMedia } from './data/mockAnalysis';
-import { buildMockAnalysisResult, getMockMediaLibrary, runMockAnalysis } from './services/analysisService';
-import type { AnalysisResult, AnalysisSettings, MediaItem } from './types/analysis';
+import {
+  SAFETRACE_API_BASE,
+  SAFETRACE_ENABLE_PREVIEW_MODE,
+  SAFETRACE_REQUIRE_BACKEND,
+  checkBackendHealth,
+  getJobResult,
+  getJobStatus,
+  getMockMediaLibrary,
+  getSystemStatus,
+  runBackendAnalysis,
+  runMockAnalysis,
+} from './services/analysisService';
+import type {
+  AnalysisResult,
+  AnalysisSettings,
+  BackendConnectionState,
+  JobStatus,
+  MediaItem,
+  SystemStatus,
+} from './types/analysis';
 import { formatFileSize } from './utils/formatters';
 import { SelectedMediaViewer } from './components/SelectedMediaViewer';
 
@@ -41,10 +59,12 @@ function wait(ms: number): Promise<void> {
 }
 
 function App() {
+  const previewMode = SAFETRACE_ENABLE_PREVIEW_MODE;
   const [query, setQuery] = useState(DEFAULT_QUERY);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
-  const [mediaLibrary, setMediaLibrary] = useState<MediaItem[]>([sampleMedia]);
-  const [selectedMedia, setSelectedMedia] = useState<MediaItem>(sampleMedia);
+  const [mediaLibrary, setMediaLibrary] = useState<MediaItem[]>(previewMode ? [sampleMedia] : []);
+  const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(previewMode ? sampleMedia : null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [settings, setSettings] = useState<AnalysisSettings>({
     fps: 1,
     topK: 5,
@@ -59,9 +79,44 @@ function App() {
   const [showAnnotation, setShowAnnotation] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [hoveredFrameId, setHoveredFrameId] = useState<string | null>(null);
+  const [backendState, setBackendState] = useState<BackendConnectionState>('connecting');
+  const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
+  const [backendMessage, setBackendMessage] = useState<string | null>(null);
+  const [jobStatus, setJobStatus] = useState<JobStatus | null>(null);
+  const [analysisMode, setAnalysisMode] = useState<'backend' | 'preview' | null>(null);
+  const localFilesRef = useRef<Record<string, File>>({});
 
+  const backendConnected = backendState === 'connected';
+  const controlsLocked = SAFETRACE_REQUIRE_BACKEND && !backendConnected && !previewMode;
+  const canUsePreview = previewMode && Boolean(selectedMedia);
+
+  const refreshBackendConnection = useCallback(async () => {
+    setBackendState('connecting');
+    setBackendMessage(null);
+    try {
+      const [, status] = await Promise.all([checkBackendHealth(), getSystemStatus()]);
+      setSystemStatus(status);
+      setBackendState('connected');
+      setBackendMessage(null);
+    } catch (err) {
+      setSystemStatus(null);
+      setBackendState('disconnected');
+      setBackendMessage(err instanceof Error ? err.message : 'SafeTrace backend is not reachable.');
+      if (!previewMode) {
+        setMediaLibrary([]);
+        setSelectedMedia(null);
+        setSelectedFile(null);
+        setAnalysisResult(null);
+      }
+    }
+  }, [previewMode]);
 
   useEffect(() => {
+    void refreshBackendConnection();
+  }, [refreshBackendConnection]);
+
+  useEffect(() => {
+    if (!previewMode) return undefined;
     let isMounted = true;
     getMockMediaLibrary()
       .then((items) => {
@@ -71,7 +126,7 @@ function App() {
         if (isMounted) setMediaLibrary([sampleMedia]);
       });
     return () => { isMounted = false; };
-  }, []);
+  }, [previewMode]);
 
   useEffect(() => {
     return () => {
@@ -91,35 +146,40 @@ function App() {
     const suggestedQuery = SAMPLE_QUERY_BY_MEDIA_ID[media.id];
     clearLocalPreview();
     setSelectedMedia(media);
+    setSelectedFile(localFilesRef.current[media.id] ?? null);
     setAnalysisResult(null);
     setError(null);
+    setJobStatus(null);
+    setAnalysisMode(null);
     if (suggestedQuery && knownSampleQueries.includes(query)) {
       setQuery(suggestedQuery);
     }
   }
 
   function handleDeleteMedia(mediaId: string) {
+    delete localFilesRef.current[mediaId];
     setMediaLibrary((prev) => prev.filter((m) => m.id !== mediaId));
-    if (selectedMedia.id === mediaId && mediaLibrary.length > 1) {
+    if (selectedMedia?.id === mediaId && mediaLibrary.length > 1) {
       const next = mediaLibrary.find((m) => m.id !== mediaId);
-      if (next) setSelectedMedia(next);
+      if (next) {
+        setSelectedMedia(next);
+        setSelectedFile(localFilesRef.current[next.id] ?? null);
+      }
+    } else if (selectedMedia?.id === mediaId) {
+      setSelectedMedia(null);
+      setSelectedFile(null);
     }
   }
 
   function handleSettingsChange(nextSettings: AnalysisSettings) {
     setSettings(nextSettings);
-    if (analysisResult) {
-      setAnalysisResult(
-        buildMockAnalysisResult({ query: analysisResult.query, media: selectedMedia, settings: nextSettings }),
-      );
-    }
   }
 
   function handleFileSelected(file: File) {
+    if (controlsLocked) return;
     clearLocalPreview();
     const previewUrl = URL.createObjectURL(file);
-    setLocalPreviewUrl(previewUrl);
-    setSelectedMedia({
+    const media: MediaItem = {
       id: `local-${file.name}-${file.lastModified}`,
       filename: file.name,
       type: file.type.startsWith('image/') ? 'image' : 'video',
@@ -128,29 +188,105 @@ function App() {
       status: 'ready',
       source: 'local',
       previewUrl,
-    });
+    };
+    localFilesRef.current[media.id] = file;
+    setLocalPreviewUrl(previewUrl);
+    setSelectedFile(file);
+    setSelectedMedia(media);
+    setMediaLibrary((prev) => [media, ...prev.filter((item) => item.id !== media.id)]);
     setAnalysisResult(null);
     setError(null);
+    setJobStatus(null);
+    setAnalysisMode(null);
+  }
+
+  function progressToStep(progress: number) {
+    if (progress >= 1) return ANALYSIS_STEPS.length;
+    return Math.min(ANALYSIS_STEPS.length - 1, Math.max(0, Math.floor(progress * ANALYSIS_STEPS.length)));
+  }
+
+  async function pollBackendJob(jobId: string): Promise<JobStatus> {
+    const startedAt = Date.now();
+    const timeoutMs = 5 * 60 * 1000;
+
+    while (Date.now() - startedAt < timeoutMs) {
+      const status = await getJobStatus(jobId);
+      setJobStatus(status);
+      setActiveStep(progressToStep(status.progress));
+
+      if (status.status === 'completed') return status;
+      if (status.status === 'failed' || status.status === 'cancelled') {
+        throw new Error(status.error || 'Analysis could not be completed.');
+      }
+
+      await wait(1200);
+    }
+
+    throw new Error('Analysis timed out while waiting for the backend job to finish.');
   }
 
   async function handleAnalyze() {
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery) {
+      setError('Enter a query before starting analysis.');
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     setAnalysisResult(null);
     setHighlightedFrameId(null);
+    setJobStatus(null);
 
     try {
-      for (let index = 0; index < ANALYSIS_STEPS.length; index += 1) {
-        setActiveStep(index);
-        await wait(330);
+      if (backendConnected && selectedFile) {
+        setAnalysisMode('backend');
+        setActiveStep(0);
+        setSelectedMedia((current) => current ? { ...current, status: 'processing' } : current);
+        const job = await runBackendAnalysis({
+          file: selectedFile,
+          query: trimmedQuery,
+          fps: settings.fps,
+          topK: settings.topK,
+          enableVlm: settings.vlmExplanations,
+          device: settings.deviceMode,
+        });
+        setJobStatus({
+          ...job,
+          progress: 0,
+          currentStep: 'Queued for analysis',
+          error: null,
+        });
+        await pollBackendJob(job.jobId);
+        const result = await getJobResult(job.jobId);
+        result.settings = settings;
+        setActiveStep(ANALYSIS_STEPS.length);
+        setAnalysisResult(result);
+        setSelectedMedia((current) => current ? { ...current, status: 'completed' } : current);
+        return;
       }
 
-      const result = await runMockAnalysis({ query, media: selectedMedia, settings });
-      setActiveStep(ANALYSIS_STEPS.length);
-      await wait(150);
-      setAnalysisResult(result);
-    } catch {
-      setError('Analysis could not be completed. Please try again.');
+      if (canUsePreview && selectedMedia) {
+        setAnalysisMode('preview');
+        for (let index = 0; index < ANALYSIS_STEPS.length; index += 1) {
+          setActiveStep(index);
+          await wait(330);
+        }
+        const result = await runMockAnalysis({ query: trimmedQuery, media: selectedMedia, settings });
+        setActiveStep(ANALYSIS_STEPS.length);
+        setAnalysisResult(result);
+        return;
+      }
+
+      if (backendConnected) {
+        throw new Error('Select a local image or video before running backend analysis.');
+      }
+
+      throw new Error('SafeTrace backend is not running or not reachable.');
+    } catch (err) {
+      setAnalysisMode(null);
+      setSelectedMedia((current) => current?.status === 'processing' ? { ...current, status: 'error' } : current);
+      setError(err instanceof Error ? err.message : 'Analysis could not be completed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -161,6 +297,8 @@ function App() {
     setError(null);
     setQuery(DEFAULT_QUERY);
     setHighlightedFrameId(null);
+    setJobStatus(null);
+    setAnalysisMode(null);
   }
 
   function handleFrameSelect(frameId: string) {
@@ -171,13 +309,28 @@ function App() {
     window.setTimeout(() => setHighlightedFrameId(null), 2200);
   }
 
-  // function handleFileUploadClick() {
-  //   fileInputRef.current?.click();
-  // }
+  const analyzeDisabledReason = !backendConnected && !previewMode
+    ? 'Start the SafeTrace backend and retry the connection.'
+    : !selectedFile && !canUsePreview
+      ? 'Select a local image or video before analysis.'
+      : !query.trim()
+        ? 'Enter a query before analysis.'
+        : undefined;
+  const canAnalyze = !isLoading && !analyzeDisabledReason;
 
   return (
     <AppShell
-      sidebar={<Sidebar settings={settings} onSettingsChange={handleSettingsChange} />}
+      sidebar={
+        <Sidebar
+          settings={settings}
+          onSettingsChange={handleSettingsChange}
+          backendState={backendState}
+          apiBase={SAFETRACE_API_BASE}
+          systemStatus={systemStatus}
+          backendMessage={backendMessage}
+          previewMode={previewMode}
+        />
+      }
       rightPanel={
         <VideoQueue
           mediaLibrary={mediaLibrary}
@@ -185,6 +338,7 @@ function App() {
           onSelectMedia={handleSelectMedia}
           onDeleteMedia={handleDeleteMedia}
           onUploadClick={() => setIsUploadModalOpen(true)}
+          uploadDisabled={controlsLocked}
         />
       }
     >
@@ -198,11 +352,31 @@ function App() {
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
               Upload safety footage, describe what to check for, and review evidence-backed violation findings.
             </p>
+            {previewMode ? (
+              <p className="mt-3 inline-flex rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold uppercase text-amber-700">
+                Developer Preview Mode
+              </p>
+            ) : null}
           </div>
         </div>
       </header>
 
-      <SelectedMediaViewer media={selectedMedia} />
+      {!backendConnected && !previewMode ? (
+        <BackendUnavailableState
+          apiBase={SAFETRACE_API_BASE}
+          state={backendState}
+          message={backendMessage}
+          onRetry={refreshBackendConnection}
+        />
+      ) : null}
+
+      <SelectedMediaViewer
+        media={selectedMedia}
+        disabled={controlsLocked}
+        backendConnected={backendConnected}
+        previewMode={previewMode}
+        onUploadClick={() => setIsUploadModalOpen(true)}
+      />
 
       <QueryTabs
         query={query}
@@ -211,12 +385,25 @@ function App() {
         onQueryChange={setQuery}
         onAnalyze={handleAnalyze}
         onReset={handleReset}
+        canAnalyze={canAnalyze}
+        disabledReason={analyzeDisabledReason}
+        previewMode={previewMode && !backendConnected}
       />
 
-      {isLoading ? <AnalysisProgress steps={ANALYSIS_STEPS} activeStep={activeStep} /> : null}
-      {error ? <ErrorState message={error} /> : null}
+      {isLoading ? (
+        <AnalysisProgress
+          steps={ANALYSIS_STEPS}
+          activeStep={activeStep}
+          currentStep={jobStatus?.currentStep}
+          progress={jobStatus?.progress}
+          mode={analysisMode}
+        />
+      ) : null}
+      {error ? <ErrorState message={error} details={jobStatus?.error || backendMessage} /> : null}
 
-      {!analysisResult && !isLoading && !error ? <PreAnalysisState /> : null}
+      {!analysisResult && !isLoading && !error && (backendConnected || previewMode) ? (
+        <PreAnalysisState hasMedia={Boolean(selectedFile || canUsePreview)} previewMode={canUsePreview} />
+      ) : null}
 
       {analysisResult && !isLoading ? (
         <>
@@ -269,7 +456,7 @@ function App() {
          <UploadPanel media={selectedMedia} onFileSelected={(file) => {
             handleFileSelected(file);
             setIsUploadModalOpen(false); // Close modal after upload
-         }} />
+         }} disabled={controlsLocked} />
       </div>
     </div>
   )}
@@ -277,7 +464,63 @@ function App() {
   );
 }
 
-function ErrorState({ message }: { message: string }) {
+function BackendUnavailableState({
+  apiBase,
+  state,
+  message,
+  onRetry,
+}: {
+  apiBase: string;
+  state: BackendConnectionState;
+  message: string | null;
+  onRetry: () => void;
+}) {
+  const isConnecting = state === 'connecting';
+
+  return (
+    <section className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-amber-950 shadow-soft">
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div className="flex items-start gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+            <Server className="h-6 w-6" aria-hidden="true" />
+          </div>
+          <div>
+            <h2 className="text-base font-bold">
+              {isConnecting ? 'Connecting to SafeTrace backend' : 'SafeTrace backend unavailable'}
+            </h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6">
+              SafeTrace requires the local FastAPI backend before upload and analysis are enabled. Start the backend,
+              then retry the connection.
+            </p>
+            <dl className="mt-3 grid gap-1 text-xs">
+              <div>
+                <dt className="font-semibold uppercase text-amber-700">API base</dt>
+                <dd className="break-all font-mono text-amber-900">{apiBase}</dd>
+              </div>
+              {message ? (
+                <div>
+                  <dt className="font-semibold uppercase text-amber-700">Status</dt>
+                  <dd>{message}</dd>
+                </div>
+              ) : null}
+            </dl>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onRetry}
+          disabled={isConnecting}
+          className="focus-ring inline-flex items-center justify-center gap-2 rounded-lg bg-amber-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-800 disabled:opacity-60"
+        >
+          <RefreshCcw className={`h-4 w-4 ${isConnecting ? 'animate-spin' : ''}`} aria-hidden="true" />
+          Retry Connection
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function ErrorState({ message, details }: { message: string; details?: string | null }) {
   return (
     <section className="rounded-lg border border-red-200 bg-red-50 p-5 text-red-900">
       <div className="flex items-start gap-3">
@@ -286,7 +529,7 @@ function ErrorState({ message }: { message: string }) {
           <h2 className="text-sm font-bold">{message}</h2>
           <details className="mt-2 text-sm">
             <summary className="cursor-pointer font-semibold">Debug details</summary>
-            <p className="mt-2 text-red-800">The local analysis preview did not complete.</p>
+            <p className="mt-2 text-red-800">{details || 'The local analysis did not complete.'}</p>
           </details>
         </div>
       </div>
@@ -294,18 +537,23 @@ function ErrorState({ message }: { message: string }) {
   );
 }
 
-function PreAnalysisState() {
+function PreAnalysisState({ hasMedia, previewMode }: { hasMedia: boolean; previewMode: boolean }) {
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-6 text-slate-700 shadow-soft">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-safety-teal text-white">
-          <ClipboardCheck className="h-6 w-6" aria-hidden="true" />
+          {hasMedia ? <ClipboardCheck className="h-6 w-6" aria-hidden="true" /> : <UploadCloud className="h-6 w-6" aria-hidden="true" />}
         </div>
         <div>
-          <h2 className="text-lg font-bold text-slate-950">Ready to run analysis</h2>
+          <h2 className="text-lg font-bold text-slate-950">
+            {hasMedia ? 'Ready to run analysis' : 'Select local media to begin'}
+          </h2>
           <p className="mt-2 max-w-3xl text-sm leading-6">
-            The selected media and query are ready. Click Analyze to prepare a local evidence summary, grouped safety
-            findings, affected frames, and technical evidence when needed.
+            {previewMode
+              ? 'Developer Preview Mode is enabled. Sample media can generate preview findings without the backend.'
+              : hasMedia
+                ? 'The selected media and query are ready. Click Analyze to submit the file to the local SafeTrace backend.'
+                : 'Upload a local image or video, then describe what SafeTrace should inspect.'}
           </p>
         </div>
       </div>

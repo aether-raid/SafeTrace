@@ -4,11 +4,12 @@ import { formatDateTime } from '../utils/formatters';
 
 type VideoQueueProps = {
   mediaLibrary: MediaItem[];
-  selectedMedia: MediaItem;
+  selectedMedia: MediaItem | null;
   onSelectMedia: (media: MediaItem) => void;
   onDeleteMedia?: (mediaId: string) => void;
   onPreviewMedia?: (media: MediaItem) => void;
-  onUploadClick?: () => void; 
+  onUploadClick?: () => void;
+  uploadDisabled?: boolean;
 };
 
 function StatusIcon({ status }: { status: MediaStatus }) {
@@ -39,7 +40,15 @@ function StatusBadgeVideo({ status }: { status: MediaStatus }) {
   );
 }
 
-export function VideoQueue({ mediaLibrary, selectedMedia, onSelectMedia, onDeleteMedia, onPreviewMedia, onUploadClick }: VideoQueueProps) {
+export function VideoQueue({
+  mediaLibrary,
+  selectedMedia,
+  onSelectMedia,
+  onDeleteMedia,
+  onPreviewMedia,
+  onUploadClick,
+  uploadDisabled = false,
+}: VideoQueueProps) {
   return (
     <div className="flex h-full flex-col gap-4 overflow-auto p-5">
       <div className="flex items-center gap-2">
@@ -52,8 +61,9 @@ export function VideoQueue({ mediaLibrary, selectedMedia, onSelectMedia, onDelet
         <button
           type="button"
           onClick={onUploadClick}
+          disabled={uploadDisabled}
           title="Ingest new video"
-          className="ml-auto flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-indigo-700 transition hover:bg-indigo-200 hover:text-indigo-800"
+          className="ml-auto flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-indigo-700 transition hover:bg-indigo-200 hover:text-indigo-800 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Upload className="h-4 w-4" />
         </button>
@@ -61,8 +71,14 @@ export function VideoQueue({ mediaLibrary, selectedMedia, onSelectMedia, onDelet
       </div>
 
       <div className="space-y-3">
+        {mediaLibrary.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-500">
+            {uploadDisabled ? 'Connect to the backend to add media.' : 'Upload local media to start a backend analysis.'}
+          </div>
+        ) : null}
+
         {mediaLibrary.map((media) => {
-          const isSelected = media.id === selectedMedia.id;
+          const isSelected = media.id === selectedMedia?.id;
           const Icon = media.type === 'video' ? FileVideo : FileImage;
 
           return (

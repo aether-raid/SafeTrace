@@ -3,16 +3,26 @@ import { CheckCircle2, LoaderCircle } from 'lucide-react';
 type AnalysisProgressProps = {
   steps: string[];
   activeStep: number;
+  currentStep?: string;
+  progress?: number;
+  mode?: 'backend' | 'preview' | null;
 };
 
-export function AnalysisProgress({ steps, activeStep }: AnalysisProgressProps) {
+export function AnalysisProgress({ steps, activeStep, currentStep, progress, mode }: AnalysisProgressProps) {
+  const progressPercent = typeof progress === 'number' ? Math.round(progress * 100) : null;
+
   return (
     <section className="rounded-lg border border-blue-200 bg-blue-50 p-5 text-blue-950 shadow-soft">
       <div className="flex items-start gap-3">
         <LoaderCircle className="mt-0.5 h-5 w-5 shrink-0 animate-spin" aria-hidden="true" />
         <div>
-          <h2 className="text-sm font-bold">Analyzing selected footage...</h2>
-          <p className="mt-1 text-sm leading-6">Sampling frames and preparing an evidence-backed report.</p>
+          <h2 className="text-sm font-bold">
+            {mode === 'preview' ? 'Preparing developer preview...' : 'Analyzing selected footage...'}
+          </h2>
+          <p className="mt-1 text-sm leading-6">
+            {currentStep || 'Submitting media to the local SafeTrace backend.'}
+            {progressPercent !== null ? ` ${progressPercent}%` : ''}
+          </p>
         </div>
       </div>
 

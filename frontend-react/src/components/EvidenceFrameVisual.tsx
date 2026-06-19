@@ -91,7 +91,9 @@ function DetectionOverlay({ detection }: { detection: Detection }) {
 
 function SampleEvidenceVisual({ frame }: EvidenceFrameVisualProps) {
   const variant = getVariantDetails(frame.visualVariant);
-  const topDetectionConfidence = Math.max(...frame.detections.map((detection) => detection.confidence));
+  const topDetectionConfidence = frame.detections.length > 0
+    ? Math.max(...frame.detections.map((detection) => detection.confidence))
+    : 0;
 
   return (
     <div className="frame-surface relative aspect-video min-h-0 overflow-hidden rounded-lg">
@@ -121,22 +123,20 @@ export function EvidenceFrameVisual({ frame }: EvidenceFrameVisualProps) {
   const [imageFailed, setImageFailed] = useState(false);
   const showImage = Boolean(frame.imageUrl && !imageFailed);
   const shouldBlockFallback = Boolean(frame.imageUrl && frame.evidenceImageRequired && imageFailed);
+  const hasBackendMissingImage = Boolean(!frame.imageUrl && frame.imageMessage);
 
   useEffect(() => {
     setImageFailed(false);
   }, [frame.imageUrl]);
 
-  if (shouldBlockFallback) {
+  if (shouldBlockFallback || hasBackendMissingImage) {
     return (
       <div className="flex aspect-video min-h-0 flex-col justify-center rounded-lg border border-amber-300 bg-amber-50 p-5 text-amber-950">
         <div className="flex items-start gap-3">
           <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
           <div>
             <p className="text-sm font-bold">Evidence image unavailable</p>
-            <p className="mt-2 break-all text-sm leading-6">Expected file: {frame.imageUrl}</p>
-            <p className="mt-2 text-sm leading-6">
-              Add annotated frame images to frontend-react/public/sample-evidence/.
-            </p>
+            <p className="mt-2 break-all text-sm leading-6">{frame.imageMessage || `Expected file: ${frame.imageUrl}`}</p>
           </div>
         </div>
       </div>

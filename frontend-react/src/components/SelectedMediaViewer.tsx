@@ -1,12 +1,53 @@
-import { FileImage, FileVideo, HardDrive, Clock } from 'lucide-react';
+import { FileImage, FileVideo, HardDrive, Clock, UploadCloud } from 'lucide-react';
 import type { MediaItem } from '../types/analysis';
 import { StatusBadge } from './StatusBadge'; // Make sure this is imported
 
 type SelectedMediaViewerProps = {
-  media: MediaItem;
+  media: MediaItem | null;
+  disabled?: boolean;
+  backendConnected?: boolean;
+  previewMode?: boolean;
+  onUploadClick?: () => void;
 };
 
-export function SelectedMediaViewer({ media }: SelectedMediaViewerProps) {
+export function SelectedMediaViewer({
+  media,
+  disabled = false,
+  backendConnected = false,
+  previewMode = false,
+  onUploadClick,
+}: SelectedMediaViewerProps) {
+  if (!media) {
+    return (
+      <div className="mb-6 overflow-hidden rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+              <UploadCloud className="h-6 w-6" aria-hidden="true" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-slate-950">No local media selected</h2>
+              <p className="mt-1 text-sm leading-6 text-slate-600">
+                {disabled
+                  ? 'Start the local backend before choosing footage.'
+                  : 'Upload an image or video to send to the SafeTrace backend.'}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onUploadClick}
+            disabled={disabled}
+            className="focus-ring inline-flex items-center justify-center gap-2 rounded-lg bg-safety-blue px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
+          >
+            <UploadCloud className="h-4 w-4" aria-hidden="true" />
+            Upload media
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const Icon = media.type === 'video' ? FileVideo : FileImage;
 
   return (
@@ -28,7 +69,14 @@ export function SelectedMediaViewer({ media }: SelectedMediaViewerProps) {
         <div className="flex flex-1 flex-col justify-center border-b border-slate-100 p-5 lg:border-b-0 lg:border-r border-slate-100 relative">
           
           <div className="absolute right-5 top-5">
-             <StatusBadge label={media.source === 'local' ? 'Local file selected' : 'Ready for analysis'} tone="success" />
+             <StatusBadge
+               label={previewMode && media.source === 'sample'
+                 ? 'Preview sample'
+                 : backendConnected
+                   ? 'Backend ready'
+                   : 'Local file selected'}
+               tone={backendConnected || previewMode ? 'success' : 'warning'}
+             />
           </div>
 
           <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-safety-blue">
@@ -53,7 +101,9 @@ export function SelectedMediaViewer({ media }: SelectedMediaViewerProps) {
 
           <div className="mt-4 flex items-center gap-2 border-t border-slate-100 pt-4 text-xs text-slate-500">
             <HardDrive className="h-4 w-4" aria-hidden="true" />
-            Selected media is ready for local analysis preview.
+            {previewMode && media.source === 'sample'
+              ? 'Developer preview media is not a backend analysis result.'
+              : 'Selected media is ready for local backend analysis.'}
           </div>
         </div>
 

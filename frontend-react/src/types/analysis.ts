@@ -6,6 +6,8 @@ export type MediaStatus = 'ready' | 'processing' | 'completed' | 'error';
 
 export type DeviceMode = 'Auto' | 'CPU' | 'GPU';
 
+export type BackendConnectionState = 'connecting' | 'connected' | 'disconnected' | 'error';
+
 export type AnalysisSettings = {
   fps: number;
   topK: number;
@@ -70,6 +72,45 @@ export type MediaItem = {
   status: MediaStatus;
   source?: 'sample' | 'local';
   previewUrl?: string;
+};
+
+export type BackendHealth = {
+  status: 'ok';
+  api: 'safetrace-local';
+  version: string;
+  offline: boolean;
+};
+
+export type BackendModelStatus = {
+  status: 'ready' | 'missing' | 'unavailable';
+  path?: string | null;
+  message?: string | null;
+};
+
+export type SystemStatus = {
+  device: string;
+  gpuAvailable: boolean;
+  models: Record<string, BackendModelStatus>;
+};
+
+export type AnalysisRequest = {
+  file: File;
+  query: string;
+  fps: number;
+  topK: number;
+  enableVlm: boolean;
+  device: DeviceMode;
+};
+
+export type AnalysisJob = {
+  jobId: string;
+  status: 'queued' | 'running' | 'completed' | 'failed' | 'cancelled';
+};
+
+export type JobStatus = AnalysisJob & {
+  progress: number;
+  currentStep: string;
+  error?: string | null;
 };
 
 export type AnalysisResult = {

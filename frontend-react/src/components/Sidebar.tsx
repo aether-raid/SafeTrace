@@ -1,10 +1,15 @@
 import { Cpu, Gauge, Layers3, ShieldCheck, SlidersHorizontal, Sparkles } from 'lucide-react';
-import type { AnalysisSettings, DeviceMode } from '../types/analysis';
+import type { AnalysisSettings, BackendConnectionState, BackendModelStatus, DeviceMode, SystemStatus } from '../types/analysis';
 import { StatusBadge } from './StatusBadge';
 
 type SidebarProps = {
   settings: AnalysisSettings;
   onSettingsChange: (settings: AnalysisSettings) => void;
+  backendState: BackendConnectionState;
+  apiBase: string;
+  systemStatus: SystemStatus | null;
+  backendMessage?: string | null;
+  previewMode?: boolean;
 };
 
 function getDeviceStatus(deviceMode: DeviceMode) {
@@ -19,13 +24,65 @@ function getDeviceStatus(deviceMode: DeviceMode) {
   return { label: 'Auto device selection active', tone: 'info' as const };
 }
 
-export function Sidebar({ settings, onSettingsChange }: SidebarProps) {
+function getModelTone(status?: BackendModelStatus) {
+  if (!status) return 'neutral' as const;
+  if (status.status === 'ready') return 'success' as const;
+  if (status.status === 'missing') return 'danger' as const;
+  return 'warning' as const;
+}
+
+function modelLabel(label: string, status?: BackendModelStatus) {
+  if (!status) return `${label} unknown`;
+  if (status.status === 'ready') return `${label} ready`;
+  if (status.status === 'missing') return `${label} missing`;
+  return `${label} unavailable`;
+}
+
+function backendTone(state: BackendConnectionState) {
+  if (state === 'connected') return 'success' as const;
+  if (state === 'connecting') return 'info' as const;
+  return 'danger' as const;
+}
+
+export function Sidebar({
+  settings,
+  onSettingsChange,
+  backendState,
+  apiBase,
+  systemStatus,
+  backendMessage,
+  previewMode = false,
+}: SidebarProps) {
   const processingCost = settings.fps >= 3 ? 'High coverage' : settings.fps >= 1.5 ? 'Balanced coverage' : 'Fast preview';
   const systemStatuses = [
-    getDeviceStatus(settings.deviceMode),
-    { label: 'Embedding model ready', tone: 'success' as const },
-    { label: 'Detector ready', tone: 'success' as const },
-    { label: 'MobileSAM unavailable - refinement disabled', tone: 'warning' as const },
+    {
+      label: backendState === 'connected'
+        ? 'Backend connected'
+        : backendState === 'connecting'
+          ? 'Backend connecting'
+          : 'Backend disconnected',
+      tone: backendTone(backendState),
+    },
+    {
+      label: systemStatus?.gpuAvailable ? 'GPU available' : 'GPU unavailable',
+      tone: systemStatus?.gpuAvailable ? 'success' as const : 'warning' as const,
+    },
+    {
+      label: modelLabel('Embedding model', systemStatus?.models.embeddingModel),
+      tone: getModelTone(systemStatus?.models.embeddingModel),
+    },
+    {
+      label: modelLabel('Detector', systemStatus?.models.detector),
+      tone: getModelTone(systemStatus?.models.detector),
+    },
+    {
+      label: modelLabel('MobileSAM', systemStatus?.models.mobileSam),
+      tone: getModelTone(systemStatus?.models.mobileSam),
+    },
+    {
+      label: modelLabel('VLM', systemStatus?.models.vlm),
+      tone: getModelTone(systemStatus?.models.vlm),
+    },
   ];
 
   function updateSettings(nextSettings: Partial<AnalysisSettings>) {
@@ -40,7 +97,9 @@ export function Sidebar({ settings, onSettingsChange }: SidebarProps) {
         </div>
         <div>
           <p className="text-lg font-bold tracking-normal">SafeTrace</p>
-          <p className="text-xs font-medium text-slate-300">Offline safety intelligence</p>
+          <p className="text-xs font-medium text-slate-300">
+            {previewMode ? 'Developer preview enabled' : 'Backend-required offline intelligence'}
+          </p>
         </div>
       </div>
 
@@ -157,6 +216,25 @@ export function Sidebar({ settings, onSettingsChange }: SidebarProps) {
             <StatusBadge key={status.label} label={status.label} tone={status.tone} className="justify-center" />
           ))}
         </div>
+        <details className="mt-3 rounded-lg border border-white/10 bg-slate-950/50 p-3 text-xs text-slate-300">
+          <summary className="cursor-pointer font-semibold text-white">Backend details</summary>
+          <dl className="mt-3 grid gap-2">
+            <div>
+              <dt className="font-semibold text-slate-200">API base</dt>
+              <dd className="break-all font-mono">{apiBase}</dd>
+            </div>
+            <div>
+              <dt className="font-semibold text-slate-200">Selected device</dt>
+              <dd>{getDeviceStatus(settings.deviceMode).label}</dd>
+            </div>
+            {backendMessage ? (
+              <div>
+                <dt className="font-semibold text-slate-200">Connection message</dt>
+                <dd>{backendMessage}</dd>
+              </div>
+            ) : null}
+          </dl>
+        </details>
       </div>
     </div>
   );

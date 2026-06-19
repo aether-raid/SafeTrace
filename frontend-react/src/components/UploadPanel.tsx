@@ -1,24 +1,20 @@
-import { FileImage, FileVideo, HardDrive, UploadCloud } from 'lucide-react';
 import clsx from 'clsx';
 import { useRef, useState, type DragEvent } from 'react';
+import { UploadCloud } from 'lucide-react';
 import type { MediaItem } from '../types/analysis';
-import { StatusBadge } from './StatusBadge';
 
 type UploadPanelProps = {
-  media: MediaItem;
+  media: MediaItem | null;
   onFileSelected: (file: File) => void;
+  disabled?: boolean;
 };
 
-function getMediaTypeLabel(media: MediaItem) {
-  return media.type === 'video' ? 'Video' : 'Image';
-}
-
-export function UploadPanel({ media, onFileSelected }: UploadPanelProps) {
+export function UploadPanel({ media, onFileSelected, disabled = false }: UploadPanelProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const Icon = media.type === 'video' ? FileVideo : FileImage;
 
   function handleFiles(files: FileList | null) {
+    if (disabled) return;
     const file = files?.[0];
     if (file) {
       onFileSelected(file);
@@ -28,6 +24,7 @@ export function UploadPanel({ media, onFileSelected }: UploadPanelProps) {
   function handleDrop(event: DragEvent<HTMLDivElement>) {
     event.preventDefault();
     setIsDragging(false);
+    if (disabled) return;
     handleFiles(event.dataTransfer.files);
   }
 
@@ -41,25 +38,32 @@ export function UploadPanel({ media, onFileSelected }: UploadPanelProps) {
         <div
           className={clsx(
             'flex min-h-32 flex-col items-center justify-center rounded-lg border border-dashed px-4 py-5 text-center transition',
-            isDragging ? 'border-safety-blue bg-blue-50' : 'border-slate-300 bg-white hover:border-safety-blue hover:bg-slate-50',
+            disabled
+              ? 'cursor-not-allowed border-slate-200 bg-slate-50 opacity-70'
+              : isDragging
+                ? 'border-safety-blue bg-blue-50'
+                : 'border-slate-300 bg-white hover:border-safety-blue hover:bg-slate-50',
           )}
           onDragEnter={(event) => {
             event.preventDefault();
-            setIsDragging(true);
+            if (!disabled) setIsDragging(true);
           }}
           onDragOver={(event) => {
             event.preventDefault();
-            setIsDragging(true);
+            if (!disabled) setIsDragging(true);
           }}
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
         >
           <UploadCloud className="h-6 w-6 text-slate-400" aria-hidden="true" />
           <p className="mt-2 text-sm font-semibold text-slate-800">Select local media</p>
-          <p className="mt-1 text-xs leading-5 text-slate-500">Drop a video or image, or browse from this device.</p>
+          <p className="mt-1 text-xs leading-5 text-slate-500">
+            {disabled ? 'Connect to the SafeTrace backend before selecting media.' : 'Drop a video or image, or browse from this device.'}
+          </p>
           <button
             className="focus-ring mt-3 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
             type="button"
+            disabled={disabled}
             onClick={() => fileInputRef.current?.click()}
           >
             Browse files
@@ -69,9 +73,13 @@ export function UploadPanel({ media, onFileSelected }: UploadPanelProps) {
             className="sr-only"
             type="file"
             accept="image/*,video/*"
+            disabled={disabled}
             onChange={(event) => handleFiles(event.target.files)}
           />
         </div>
+        {media ? (
+          <p className="mt-3 truncate text-xs font-medium text-slate-500">Current selection: {media.filename}</p>
+        ) : null}
       </div>
 
 
