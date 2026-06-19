@@ -1,6 +1,6 @@
 export type Severity = 'High' | 'Medium' | 'Low';
 
-export type MediaType = 'video' | 'image';
+export type MediaType = 'video' | 'image' | 'unknown';
 
 export type MediaStatus = 'ready' | 'processing' | 'completed' | 'error';
 
@@ -36,14 +36,28 @@ export type FrameResult = {
   frameNumber: number;
   timestamp: string;
   internalFilename: string;
-  queryRelevanceScore: number;
+  queryRelevance: number;
+  queryRelevanceScore?: number;
+  score?: number;
   imageUrl?: string;
+  imageMessage?: string;
   evidenceImageRequired?: boolean;
   visualVariant?: 'worksite' | 'loading-bay' | 'maintenance';
   explanation?: string;
   violations: Violation[];
   detections: Detection[];
   technicalEvidence: Record<string, unknown>;
+};
+
+export type Annotation = {
+  id: string;
+  mediaId: string;
+  type: 'bbox' | 'note';
+  label?: string;
+  note?: string;
+  bbox?: [number, number, number, number];
+  color?: string;
+  createdAt: string;
 };
 
 export type MediaItem = {
@@ -59,12 +73,36 @@ export type MediaItem = {
 };
 
 export type AnalysisResult = {
+  jobId?: string;
+  status?: 'completed';
   id: string;
   query: string;
   media: MediaItem;
+  summary?: {
+    framesAnalyzed: number;
+    framesWithViolations: number;
+    uniqueViolationTypes: number;
+    highestSeverity?: string | null;
+    summaryText: string;
+  };
+  violations?: Array<{
+    id: string;
+    name: string;
+    severity: string;
+    description: string;
+    affectedFrames: Array<{
+      frameId: string;
+      frameNumber: number;
+      timestamp: string;
+      confidence: number;
+    }>;
+    confidenceMin: number;
+    confidenceMax: number;
+  }>;
   framesAnalyzed: number;
   generatedAt: string;
   summaryText?: string;
   settings?: AnalysisSettings;
   frames: FrameResult[];
+  technicalDetails?: Record<string, unknown> | null;
 };

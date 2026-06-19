@@ -30,7 +30,7 @@ export function FrameEvidenceCard({ frame, showExplanation, isHighlighted = fals
             <h3 className="text-base font-bold text-slate-950">
               Frame {frame.frameNumber} - {frame.timestamp}
             </h3>
-            <p className="mt-1 text-sm text-slate-500">Query relevance: {formatQueryRelevance(frame.queryRelevanceScore)}</p>
+            <p className="mt-1 text-sm text-slate-500">Query relevance: {formatQueryRelevance(frame.queryRelevance)}</p>
           </div>
           <StatusBadge
             label={hasViolations ? 'Violations detected' : 'No violations detected'}

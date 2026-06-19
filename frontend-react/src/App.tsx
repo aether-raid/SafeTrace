@@ -1,19 +1,24 @@
 import { AlertTriangle, ClipboardCheck } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { AppShell } from './components/AppShell';
+import { useEffect, useRef, useState } from 'react';
 import { AnalysisProgress } from './components/AnalysisProgress';
 import { AnalysisSummary } from './components/AnalysisSummary';
+import { AnnotationViewer } from './components/AnnotationViewer';
+import { AppShell } from './components/AppShell';
 import { EvidenceFrames } from './components/EvidenceFrames';
 import { MediaLibraryPanel } from './components/MediaLibraryPanel';
-import { QueryPanel } from './components/QueryPanel';
+import { QueryTabs } from './components/QueryTabs';
 import { ReportActions } from './components/ReportActions';
 import { Sidebar } from './components/Sidebar';
+import { StatisticsPanel } from './components/StatisticsPanel';
+import { TimelineVisualization } from './components/TimelineVisualization';
 import { UploadPanel } from './components/UploadPanel';
+import { VideoQueue } from './components/VideoQueue';
 import { ViolationSummary } from './components/ViolationSummary';
 import { sampleMedia } from './data/mockAnalysis';
 import { buildMockAnalysisResult, getMockMediaLibrary, runMockAnalysis } from './services/analysisService';
 import type { AnalysisResult, AnalysisSettings, MediaItem } from './types/analysis';
 import { formatFileSize } from './utils/formatters';
+import { SelectedMediaViewer } from './components/SelectedMediaViewer';
 
 const DEFAULT_QUERY = 'worker without helmet';
 const ANALYSIS_STEPS = [
@@ -51,32 +56,26 @@ function App() {
   const [highlightedFrameId, setHighlightedFrameId] = useState<string | null>(null);
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showAnnotation, setShowAnnotation] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [hoveredFrameId, setHoveredFrameId] = useState<string | null>(null);
+
 
   useEffect(() => {
     let isMounted = true;
-
     getMockMediaLibrary()
       .then((items) => {
-        if (isMounted) {
-          setMediaLibrary(items);
-        }
+        if (isMounted) setMediaLibrary(items);
       })
       .catch(() => {
-        if (isMounted) {
-          setMediaLibrary([sampleMedia]);
-        }
+        if (isMounted) setMediaLibrary([sampleMedia]);
       });
-
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, []);
 
   useEffect(() => {
     return () => {
-      if (localPreviewUrl) {
-        URL.revokeObjectURL(localPreviewUrl);
-      }
+      if (localPreviewUrl) URL.revokeObjectURL(localPreviewUrl);
     };
   }, [localPreviewUrl]);
 
@@ -90,27 +89,28 @@ function App() {
   function handleSelectMedia(media: MediaItem) {
     const knownSampleQueries = Object.values(SAMPLE_QUERY_BY_MEDIA_ID);
     const suggestedQuery = SAMPLE_QUERY_BY_MEDIA_ID[media.id];
-
     clearLocalPreview();
     setSelectedMedia(media);
     setAnalysisResult(null);
     setError(null);
-
     if (suggestedQuery && knownSampleQueries.includes(query)) {
       setQuery(suggestedQuery);
     }
   }
 
+  function handleDeleteMedia(mediaId: string) {
+    setMediaLibrary((prev) => prev.filter((m) => m.id !== mediaId));
+    if (selectedMedia.id === mediaId && mediaLibrary.length > 1) {
+      const next = mediaLibrary.find((m) => m.id !== mediaId);
+      if (next) setSelectedMedia(next);
+    }
+  }
+
   function handleSettingsChange(nextSettings: AnalysisSettings) {
     setSettings(nextSettings);
-
     if (analysisResult) {
       setAnalysisResult(
-        buildMockAnalysisResult({
-          query: analysisResult.query,
-          media: selectedMedia,
-          settings: nextSettings,
-        }),
+        buildMockAnalysisResult({ query: analysisResult.query, media: selectedMedia, settings: nextSettings }),
       );
     }
   }
@@ -145,11 +145,7 @@ function App() {
         await wait(330);
       }
 
-      const result = await runMockAnalysis({
-        query,
-        media: selectedMedia,
-        settings,
-      });
+      const result = await runMockAnalysis({ query, media: selectedMedia, settings });
       setActiveStep(ANALYSIS_STEPS.length);
       await wait(150);
       setAnalysisResult(result);
@@ -170,22 +166,25 @@ function App() {
   function handleFrameSelect(frameId: string) {
     setHighlightedFrameId(frameId);
     window.requestAnimationFrame(() => {
-      document.getElementById(`frame-${frameId}`)?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-      });
+      document.getElementById(`frame-${frameId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
     window.setTimeout(() => setHighlightedFrameId(null), 2200);
   }
+
+  // function handleFileUploadClick() {
+  //   fileInputRef.current?.click();
+  // }
 
   return (
     <AppShell
       sidebar={<Sidebar settings={settings} onSettingsChange={handleSettingsChange} />}
       rightPanel={
-        <MediaLibraryPanel
-          selectedMedia={selectedMedia}
+        <VideoQueue
           mediaLibrary={mediaLibrary}
+          selectedMedia={selectedMedia}
           onSelectMedia={handleSelectMedia}
+          onDeleteMedia={handleDeleteMedia}
+          onUploadClick={() => setIsUploadModalOpen(true)}
         />
       }
     >
@@ -203,9 +202,9 @@ function App() {
         </div>
       </header>
 
-      <UploadPanel media={selectedMedia} onFileSelected={handleFileSelected} />
+      <SelectedMediaViewer media={selectedMedia} />
 
-      <QueryPanel
+      <QueryTabs
         query={query}
         isLoading={isLoading}
         hasResult={Boolean(analysisResult)}
@@ -222,15 +221,58 @@ function App() {
       {analysisResult && !isLoading ? (
         <>
           <AnalysisSummary result={analysisResult} showExplanations={settings.vlmExplanations} />
-          <ViolationSummary result={analysisResult} onFrameSelect={handleFrameSelect} />
+          
+          <ViolationSummary 
+            result={analysisResult} 
+            onFrameSelect={handleFrameSelect} 
+            timelineComponent={
+              <TimelineVisualization 
+                result={analysisResult} 
+                onFrameSelect={handleFrameSelect}
+                selectedFrameId={highlightedFrameId}
+                hoveredFrameId={hoveredFrameId}
+                onHover={setHoveredFrameId}
+              />
+            } 
+            statisticsComponent={<StatisticsPanel result={analysisResult} />} 
+          />
+          
           <EvidenceFrames
             frames={analysisResult.frames}
             showExplanations={settings.vlmExplanations}
             highlightedFrameId={highlightedFrameId}
           />
+          
+          {showAnnotation && (
+            <AnnotationViewer
+              mediaUrl={analysisResult.frames[0]?.imageUrl}
+              mediaId={analysisResult.media.id}
+              mediaType={analysisResult.media.type === 'video' ? 'video' : 'image'}
+            />
+          )}
+          
           <ReportActions result={analysisResult} />
         </>
       ) : null}
+
+      {isUploadModalOpen && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
+      <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl relative">
+         <button 
+           onClick={() => setIsUploadModalOpen(false)}
+           className="absolute right-4 top-4 text-slate-400 hover:text-slate-600"
+         >
+           Close
+         </button>
+         <h2 className="text-lg font-bold mb-4">Upload More Videos</h2>
+         {/* Insert your UploadPanel component here instead of the main view */}
+         <UploadPanel media={selectedMedia} onFileSelected={(file) => {
+            handleFileSelected(file);
+            setIsUploadModalOpen(false); // Close modal after upload
+         }} />
+      </div>
+    </div>
+  )}
     </AppShell>
   );
 }
