@@ -9,6 +9,8 @@ from typing import Iterable, List, Optional, Tuple
 import cv2
 import numpy as np
 
+from .preprocessing import build_processing_metadata
+
 logger = logging.getLogger("safetrace.utils")
 
 
@@ -80,6 +82,25 @@ def extract_frames(
 
     Returns the list of written frame paths in capture order.
     """
+    frames, _ = extract_frames_with_metadata(
+        video_path,
+        out_dir,
+        fps=fps,
+        max_frames=max_frames,
+        prefix=prefix,
+    )
+    return frames
+
+
+def extract_frames_with_metadata(
+    video_path: str | Path,
+    out_dir: str | Path,
+    fps: float = 1.0,
+    max_frames: int = 600,
+    prefix: Optional[str] = None,
+    max_duration_seconds: float | None = None,
+) -> Tuple[List[Path], dict]:
+    """Sample frames and return explicit sampling metadata."""
     video_path = Path(video_path)
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -89,6 +110,15 @@ def extract_frames(
         raise RuntimeError(f"Could not open video: {video_path}")
 
     src_fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
+    source_frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+    duration_seconds = (source_frame_count / src_fps) if source_frame_count and src_fps else None
+    if max_duration_seconds and duration_seconds and duration_seconds > max_duration_seconds:
+        cap.release()
+        raise RuntimeError(
+            f"Video duration {duration_seconds:.1f}s exceeds configured limit "
+            f"of {max_duration_seconds:.1f}s."
+        )
+
     step = max(int(round(src_fps / max(fps, 1e-6))), 1)
     prefix = prefix or video_path.stem
 
@@ -109,7 +139,27 @@ def extract_frames(
         idx += 1
     cap.release()
     logger.info("Extracted %d frames from %s", len(saved), video_path.name)
-    return saved
+    metadata = build_processing_metadata(
+        sampled_frame_count=len(saved),
+        sampling_strategy="fixed_fps",
+        fps=fps,
+        max_frames=max_frames,
+        embedding_batch_size=1,
+        embedding_window_size=1,
+        embedding_window_stride=1,
+        embedding_pooling_strategy="mean",
+        processing_window_count=len(saved),
+        source_video_duration_seconds=duration_seconds,
+        source_video_frame_count=source_frame_count,
+    )
+    metadata.update(
+        {
+            "sourceVideoPath": str(video_path),
+            "sourceVideoFps": src_fps,
+            "frameStep": step,
+        }
+    )
+    return saved, metadata
 
 
 def collect_inputs(paths: Iterable[str | Path]) -> Tuple[List[Path], List[Path]]:

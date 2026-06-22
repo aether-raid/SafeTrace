@@ -20,16 +20,19 @@ import {
   SAFETRACE_ENABLE_PREVIEW_MODE,
   SAFETRACE_REQUIRE_BACKEND,
   checkBackendHealth,
+  getBatchStatus,
   getJobResult,
   getJobStatus,
   getMockMediaLibrary,
   getSystemStatus,
   runBackendAnalysis,
+  runBackendBatchAnalysis,
   runMockAnalysis,
 } from './services/analysisService';
 import type {
   AnalysisResult,
   AnalysisSettings,
+  BatchStatus,
   BackendConnectionState,
   JobStatus,
   MediaItem,
@@ -58,6 +61,28 @@ function wait(ms: number): Promise<void> {
   });
 }
 
+function isZipFile(file: File): boolean {
+  return file.name.toLowerCase().endsWith('.zip') || file.type === 'application/zip';
+}
+
+function getMediaTypeForFiles(files: File[]): MediaItem['type'] {
+  if (files.length !== 1) return 'unknown';
+  const file = files[0];
+  if (isZipFile(file)) return 'unknown';
+  if (file.type.startsWith('image/')) return 'image';
+  return 'video';
+}
+
+function getSelectionName(files: File[]): string {
+  if (files.length === 1) return files[0].name;
+  return `${files.length} selected videos`;
+}
+
+function getSelectionSize(files: File[]): string {
+  const total = files.reduce((sum, file) => sum + file.size, 0);
+  return formatFileSize(total);
+}
+
 function App() {
   const previewMode = SAFETRACE_ENABLE_PREVIEW_MODE;
   const [query, setQuery] = useState(DEFAULT_QUERY);
@@ -65,6 +90,7 @@ function App() {
   const [mediaLibrary, setMediaLibrary] = useState<MediaItem[]>(previewMode ? [sampleMedia] : []);
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(previewMode ? sampleMedia : null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [settings, setSettings] = useState<AnalysisSettings>({
     fps: 1,
     topK: 5,
@@ -83,8 +109,12 @@ function App() {
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
   const [backendMessage, setBackendMessage] = useState<string | null>(null);
   const [jobStatus, setJobStatus] = useState<JobStatus | null>(null);
+  const [batchStatus, setBatchStatus] = useState<BatchStatus | null>(null);
+  const [selectedBatchJobId, setSelectedBatchJobId] = useState<string | null>(null);
+  const [batchResultLoadingJobId, setBatchResultLoadingJobId] = useState<string | null>(null);
   const [analysisMode, setAnalysisMode] = useState<'backend' | 'preview' | null>(null);
   const localFilesRef = useRef<Record<string, File>>({});
+  const localFileGroupsRef = useRef<Record<string, File[]>>({});
 
   const backendConnected = backendState === 'connected';
   const controlsLocked = SAFETRACE_REQUIRE_BACKEND && !backendConnected && !previewMode;
@@ -106,7 +136,10 @@ function App() {
         setMediaLibrary([]);
         setSelectedMedia(null);
         setSelectedFile(null);
+        setSelectedFiles([]);
         setAnalysisResult(null);
+        setBatchStatus(null);
+        setSelectedBatchJobId(null);
       }
     }
   }, [previewMode]);
@@ -146,10 +179,16 @@ function App() {
     const suggestedQuery = SAMPLE_QUERY_BY_MEDIA_ID[media.id];
     clearLocalPreview();
     setSelectedMedia(media);
-    setSelectedFile(localFilesRef.current[media.id] ?? null);
+    const fileGroup = localFileGroupsRef.current[media.id] ?? (
+      localFilesRef.current[media.id] ? [localFilesRef.current[media.id]] : []
+    );
+    setSelectedFiles(fileGroup);
+    setSelectedFile(fileGroup.length === 1 ? fileGroup[0] : null);
     setAnalysisResult(null);
     setError(null);
     setJobStatus(null);
+    setBatchStatus(null);
+    setSelectedBatchJobId(null);
     setAnalysisMode(null);
     if (suggestedQuery && knownSampleQueries.includes(query)) {
       setQuery(suggestedQuery);
@@ -158,16 +197,22 @@ function App() {
 
   function handleDeleteMedia(mediaId: string) {
     delete localFilesRef.current[mediaId];
+    delete localFileGroupsRef.current[mediaId];
     setMediaLibrary((prev) => prev.filter((m) => m.id !== mediaId));
     if (selectedMedia?.id === mediaId && mediaLibrary.length > 1) {
       const next = mediaLibrary.find((m) => m.id !== mediaId);
       if (next) {
         setSelectedMedia(next);
-        setSelectedFile(localFilesRef.current[next.id] ?? null);
+        const nextFiles = localFileGroupsRef.current[next.id] ?? (
+          localFilesRef.current[next.id] ? [localFilesRef.current[next.id]] : []
+        );
+        setSelectedFiles(nextFiles);
+        setSelectedFile(nextFiles.length === 1 ? nextFiles[0] : null);
       }
     } else if (selectedMedia?.id === mediaId) {
       setSelectedMedia(null);
       setSelectedFile(null);
+      setSelectedFiles([]);
     }
   }
 
@@ -175,34 +220,54 @@ function App() {
     setSettings(nextSettings);
   }
 
-  function handleFileSelected(file: File) {
+  function handleFilesSelected(files: File[]) {
     if (controlsLocked) return;
+    const selected = files.filter(Boolean);
+    if (!selected.length) return;
     clearLocalPreview();
-    const previewUrl = URL.createObjectURL(file);
+    const isSinglePreviewableFile = selected.length === 1 && !isZipFile(selected[0]);
+    const previewUrl = isSinglePreviewableFile ? URL.createObjectURL(selected[0]) : undefined;
+    const id = selected.length === 1
+      ? `local-${selected[0].name}-${selected[0].lastModified}`
+      : `local-batch-${Date.now()}`;
     const media: MediaItem = {
-      id: `local-${file.name}-${file.lastModified}`,
-      filename: file.name,
-      type: file.type.startsWith('image/') ? 'image' : 'video',
-      sizeLabel: formatFileSize(file.size),
+      id,
+      filename: getSelectionName(selected),
+      type: getMediaTypeForFiles(selected),
+      sizeLabel: getSelectionSize(selected),
       uploadedAt: new Date().toISOString(),
       status: 'ready',
       source: 'local',
       previewUrl,
     };
-    localFilesRef.current[media.id] = file;
-    setLocalPreviewUrl(previewUrl);
-    setSelectedFile(file);
+    if (selected.length === 1) {
+      localFilesRef.current[media.id] = selected[0];
+    }
+    localFileGroupsRef.current[media.id] = selected;
+    setLocalPreviewUrl(previewUrl ?? null);
+    setSelectedFile(selected.length === 1 ? selected[0] : null);
+    setSelectedFiles(selected);
     setSelectedMedia(media);
     setMediaLibrary((prev) => [media, ...prev.filter((item) => item.id !== media.id)]);
     setAnalysisResult(null);
     setError(null);
     setJobStatus(null);
+    setBatchStatus(null);
+    setSelectedBatchJobId(null);
     setAnalysisMode(null);
+  }
+
+  function handleFileSelected(file: File) {
+    handleFilesSelected([file]);
   }
 
   function progressToStep(progress: number) {
     if (progress >= 1) return ANALYSIS_STEPS.length;
     return Math.min(ANALYSIS_STEPS.length - 1, Math.max(0, Math.floor(progress * ANALYSIS_STEPS.length)));
+  }
+
+  function isBatchSelection(files: File[]) {
+    return files.length > 1 || (files.length === 1 && isZipFile(files[0]));
   }
 
   async function pollBackendJob(jobId: string): Promise<JobStatus> {
@@ -225,6 +290,37 @@ function App() {
     throw new Error('Analysis timed out while waiting for the backend job to finish.');
   }
 
+  async function pollBackendBatch(batchId: string): Promise<BatchStatus> {
+    const startedAt = Date.now();
+    const timeoutMs = 10 * 60 * 1000;
+
+    while (Date.now() - startedAt < timeoutMs) {
+      const status = await getBatchStatus(batchId);
+      setBatchStatus(status);
+      const totalJobs = Math.max(status.acceptedFiles.length, 1);
+      const completedJobs = status.acceptedFiles.filter((file) => (
+        file.status === 'completed' || file.status === 'failed' || file.status === 'cancelled'
+      )).length;
+      setActiveStep(progressToStep(completedJobs / totalJobs));
+      setJobStatus({
+        jobId: batchId,
+        status: status.status === 'running' ? 'running' : status.status === 'queued' ? 'queued' : 'completed',
+        progress: completedJobs / totalJobs,
+        currentStep: `Batch analysis ${status.status}`,
+        error: status.status === 'failed' ? 'No videos completed successfully.' : null,
+      });
+
+      if (status.status === 'completed' || status.status === 'partial') return status;
+      if (status.status === 'failed' || status.status === 'cancelled') {
+        throw new Error('Batch analysis could not be completed.');
+      }
+
+      await wait(1500);
+    }
+
+    throw new Error('Batch analysis timed out while waiting for the backend jobs to finish.');
+  }
+
   async function handleAnalyze() {
     const trimmedQuery = query.trim();
     if (!trimmedQuery) {
@@ -237,14 +333,42 @@ function App() {
     setAnalysisResult(null);
     setHighlightedFrameId(null);
     setJobStatus(null);
+    setBatchStatus(null);
+    setSelectedBatchJobId(null);
 
     try {
-      if (backendConnected && selectedFile) {
+      const backendFiles = selectedFiles.length ? selectedFiles : selectedFile ? [selectedFile] : [];
+
+      if (backendConnected && backendFiles.length) {
         setAnalysisMode('backend');
         setActiveStep(0);
         setSelectedMedia((current) => current ? { ...current, status: 'processing' } : current);
+        if (isBatchSelection(backendFiles)) {
+          const batch = await runBackendBatchAnalysis({
+            files: backendFiles,
+            query: trimmedQuery,
+            fps: settings.fps,
+            topK: settings.topK,
+            enableVlm: settings.vlmExplanations,
+            device: settings.deviceMode,
+          });
+          setBatchStatus(batch);
+          const finalBatch = await pollBackendBatch(batch.batchId);
+          const completedFile = finalBatch.acceptedFiles.find((file) => file.status === 'completed');
+          if (!completedFile) {
+            throw new Error('Batch analysis finished without a completed video result.');
+          }
+          const result = await getJobResult(completedFile.jobId);
+          result.settings = settings;
+          setSelectedBatchJobId(completedFile.jobId);
+          setActiveStep(ANALYSIS_STEPS.length);
+          setAnalysisResult(result);
+          setSelectedMedia((current) => current ? { ...current, status: 'completed' } : current);
+          return;
+        }
+
         const job = await runBackendAnalysis({
-          file: selectedFile,
+          file: backendFiles[0],
           query: trimmedQuery,
           fps: settings.fps,
           topK: settings.topK,
@@ -298,7 +422,26 @@ function App() {
     setQuery(DEFAULT_QUERY);
     setHighlightedFrameId(null);
     setJobStatus(null);
+    setBatchStatus(null);
+    setSelectedBatchJobId(null);
     setAnalysisMode(null);
+  }
+
+  async function handleSelectBatchResult(jobId: string) {
+    if (batchResultLoadingJobId === jobId) return;
+    setBatchResultLoadingJobId(jobId);
+    setError(null);
+    try {
+      const result = await getJobResult(jobId);
+      result.settings = settings;
+      setSelectedBatchJobId(jobId);
+      setAnalysisResult(result);
+      setActiveStep(ANALYSIS_STEPS.length);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not load this batch result.');
+    } finally {
+      setBatchResultLoadingJobId(null);
+    }
   }
 
   function handleFrameSelect(frameId: string) {
@@ -311,8 +454,8 @@ function App() {
 
   const analyzeDisabledReason = !backendConnected && !previewMode
     ? 'Start the SafeTrace backend and retry the connection.'
-    : !selectedFile && !canUsePreview
-      ? 'Select a local image or video before analysis.'
+    : !selectedFiles.length && !selectedFile && !canUsePreview
+      ? 'Select a local image, video, ZIP archive, or video batch before analysis.'
       : !query.trim()
         ? 'Enter a query before analysis.'
         : undefined;
@@ -399,10 +542,18 @@ function App() {
           mode={analysisMode}
         />
       ) : null}
+      {batchStatus ? (
+        <BatchStatusPanel
+          batch={batchStatus}
+          selectedJobId={selectedBatchJobId}
+          loadingJobId={batchResultLoadingJobId}
+          onSelectJob={handleSelectBatchResult}
+        />
+      ) : null}
       {error ? <ErrorState message={error} details={jobStatus?.error || backendMessage} /> : null}
 
       {!analysisResult && !isLoading && !error && (backendConnected || previewMode) ? (
-        <PreAnalysisState hasMedia={Boolean(selectedFile || canUsePreview)} previewMode={canUsePreview} />
+        <PreAnalysisState hasMedia={Boolean(selectedFiles.length || selectedFile || canUsePreview)} previewMode={canUsePreview} />
       ) : null}
 
       {analysisResult && !isLoading ? (
@@ -455,6 +606,9 @@ function App() {
          {/* Insert your UploadPanel component here instead of the main view */}
          <UploadPanel media={selectedMedia} onFileSelected={(file) => {
             handleFileSelected(file);
+            setIsUploadModalOpen(false); // Close modal after upload
+         }} onFilesSelected={(files) => {
+            handleFilesSelected(files);
             setIsUploadModalOpen(false); // Close modal after upload
          }} disabled={controlsLocked} />
       </div>
@@ -520,6 +674,96 @@ function BackendUnavailableState({
   );
 }
 
+function BatchStatusPanel({
+  batch,
+  selectedJobId,
+  loadingJobId,
+  onSelectJob,
+}: {
+  batch: BatchStatus;
+  selectedJobId: string | null;
+  loadingJobId: string | null;
+  onSelectJob: (jobId: string) => void;
+}) {
+  const completed = batch.acceptedFiles.filter((file) => file.status === 'completed').length;
+  const total = batch.acceptedFiles.length;
+
+  return (
+    <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft">
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div>
+          <p className="text-xs font-bold uppercase text-safety-blue">Batch analysis</p>
+          <h2 className="mt-1 text-base font-bold text-slate-950">{batch.sourceFilename}</h2>
+          <p className="mt-1 text-sm text-slate-600">
+            {completed} of {total} accepted video{total === 1 ? '' : 's'} completed.
+          </p>
+        </div>
+        <span className="inline-flex w-fit rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold uppercase text-slate-700">
+          {batch.status}
+        </span>
+      </div>
+
+      {batch.acceptedFiles.length ? (
+        <div className="mt-4 grid gap-2">
+          {batch.acceptedFiles.map((file) => {
+            const isSelected = selectedJobId === file.jobId;
+            const isLoading = loadingJobId === file.jobId;
+
+            return (
+              <div
+                key={file.jobId}
+                className={`flex flex-col gap-2 rounded-lg border px-3 py-2 sm:flex-row sm:items-center sm:justify-between ${
+                  isSelected ? 'border-safety-blue bg-blue-50' : 'border-slate-100 bg-slate-50'
+                }`}
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-slate-900">{file.filename}</p>
+                  <p className="text-xs text-slate-500">{formatFileSize(file.sizeBytes)}</p>
+                  {file.status === 'failed' ? (
+                    <p className="mt-1 text-xs font-medium text-red-700">
+                      {file.error || 'Analysis failed for this video.'}
+                    </p>
+                  ) : null}
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <span className="text-xs font-bold uppercase text-slate-600">{file.status}</span>
+                  {file.status === 'completed' ? (
+                    <button
+                      type="button"
+                      onClick={() => onSelectJob(file.jobId)}
+                      disabled={isLoading}
+                      className={`focus-ring rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
+                        isSelected
+                          ? 'border-safety-blue bg-white text-safety-blue'
+                          : 'border-slate-300 bg-white text-slate-700 hover:border-safety-blue hover:text-safety-blue'
+                      } disabled:opacity-60`}
+                    >
+                      {isLoading ? 'Loading' : isSelected ? 'Viewing' : 'Open evidence'}
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
+
+      {batch.rejectedFiles.length ? (
+        <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3">
+          <p className="text-xs font-bold uppercase text-amber-800">Rejected files</p>
+          <ul className="mt-2 space-y-1 text-sm text-amber-950">
+            {batch.rejectedFiles.map((file) => (
+              <li key={`${file.filename}-${file.reason}`}>
+                <span className="font-semibold">{file.filename}</span>: {file.reason}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
 function ErrorState({ message, details }: { message: string; details?: string | null }) {
   return (
     <section className="rounded-lg border border-red-200 bg-red-50 p-5 text-red-900">
@@ -553,7 +797,7 @@ function PreAnalysisState({ hasMedia, previewMode }: { hasMedia: boolean; previe
               ? 'Developer Preview Mode is enabled. Sample media can generate preview findings without the backend.'
               : hasMedia
                 ? 'The selected media and query are ready. Click Analyze to submit the file to the local SafeTrace backend.'
-                : 'Upload a local image or video, then describe what SafeTrace should inspect.'}
+                : 'Upload a local image, video, ZIP archive, or batch of videos, then describe what SafeTrace should inspect.'}
           </p>
         </div>
       </div>

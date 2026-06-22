@@ -1,4 +1,4 @@
-import { Clock, Eye, Edit3, Trash2, HardDrive, Upload, CheckCircle2, LoaderCircle, AlertCircle, FileVideo, FileImage } from 'lucide-react';
+import { Archive, Clock, Eye, Edit3, Trash2, HardDrive, Upload, CheckCircle2, LoaderCircle, AlertCircle, FileVideo, FileImage } from 'lucide-react';
 import type { MediaItem, MediaStatus } from '../types/analysis';
 import { formatDateTime } from '../utils/formatters';
 
@@ -79,7 +79,7 @@ export function VideoQueue({
 
         {mediaLibrary.map((media) => {
           const isSelected = media.id === selectedMedia?.id;
-          const Icon = media.type === 'video' ? FileVideo : FileImage;
+          const Icon = media.type === 'video' ? FileVideo : media.type === 'image' ? FileImage : Archive;
 
           return (
             <div

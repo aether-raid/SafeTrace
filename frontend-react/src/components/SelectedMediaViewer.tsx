@@ -1,4 +1,4 @@
-import { FileImage, FileVideo, HardDrive, Clock, UploadCloud } from 'lucide-react';
+import { Archive, FileImage, FileVideo, HardDrive, Clock, UploadCloud } from 'lucide-react';
 import type { MediaItem } from '../types/analysis';
 import { StatusBadge } from './StatusBadge'; // Make sure this is imported
 
@@ -48,7 +48,7 @@ export function SelectedMediaViewer({
     );
   }
 
-  const Icon = media.type === 'video' ? FileVideo : FileImage;
+  const Icon = media.type === 'video' ? FileVideo : media.type === 'image' ? FileImage : Archive;
 
   return (
     <div className="mb-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-soft">
@@ -58,8 +58,10 @@ export function SelectedMediaViewer({
           {media.previewUrl ? (
              media.type === 'video' ? (
                <video src={media.previewUrl} className="h-full w-full object-cover" controls muted />
-             ) : (
+             ) : media.type === 'image' ? (
                <img src={media.previewUrl} alt={media.filename} className="h-full w-full object-cover" />
+             ) : (
+               <Icon className="h-12 w-12 text-slate-600" />
              )
           ) : (
              <Icon className="h-12 w-12 text-slate-600" />
@@ -102,7 +104,9 @@ export function SelectedMediaViewer({
           <div className="mt-4 flex items-center gap-2 border-t border-slate-100 pt-4 text-xs text-slate-500">
             <HardDrive className="h-4 w-4" aria-hidden="true" />
             {previewMode && media.source === 'sample'
-              ? 'Developer preview media is not a backend analysis result.'
+                ? 'Developer preview media is not a backend analysis result.'
+              : media.type === 'unknown'
+                ? 'Bulk media is ready for local backend batch analysis.'
               : 'Selected media is ready for local backend analysis.'}
           </div>
         </div>

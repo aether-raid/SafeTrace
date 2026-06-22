@@ -51,6 +51,10 @@ def test_normalization_creates_frontend_friendly_result(tmp_path):
     assert result["summary"]["framesAnalyzed"] == 2
     assert result["summary"]["framesWithViolations"] == 1
     assert result["summary"]["highestSeverity"] == "high"
+    assert result["summary"]["potentialEventCount"] == 1
+    assert result["summary"]["eventTypes"] == ["helmet_missing"]
+    assert result["events"][0]["name"] == "Missing Helmet"
+    assert result["events"][0]["supportingFrameCount"] == 1
     assert result["violations"][0]["name"] == "Missing Helmet"
     assert result["violations"][0]["confidenceMin"] == 0.98
     assert result["frames"][0]["timestamp"] == "00:00:46"
@@ -60,5 +64,7 @@ def test_normalization_creates_frontend_friendly_result(tmp_path):
     assert result["frames"][0]["technicalEvidence"]["detections"][0]["label"] == "person"
     assert result["frames"][1]["imageUrl"] is None
     assert "No annotated evidence image" in result["frames"][1]["imageMessage"]
+    assert result["technicalDetails"]["processingMetadata"]["sampledFrameCount"] == 2
+    assert result["technicalDetails"]["eventAggregation"]["eventCount"] == 1
     assert list(registered) == ["video_20260618_000046_annotated.jpg"]
     assert registered["video_20260618_000046_annotated.jpg"].read_bytes() == b"annotated-image"

@@ -14,6 +14,7 @@ import torch
 from PIL import Image
 
 from .config import SETTINGS
+from .preprocessing import build_frame_windows, normalize_pooling_strategy, pool_embeddings
 from .utils import imread_rgb, resolve_device, write_json
 
 logger = logging.getLogger("safetrace.embedder")
@@ -104,16 +105,28 @@ class ClipEmbedder:
         embeddings_path: Path | None = None,
         metadata_path: Path | None = None,
     ) -> tuple[np.ndarray, list[dict]]:
-        """Embed every frame, persist embeddings + metadata to disk, return both."""
+        """Embed frames, optionally pool frame windows, persist embeddings + metadata."""
         embeddings_path = Path(embeddings_path or SETTINGS.embeddings_path)
         metadata_path = Path(metadata_path or SETTINGS.metadata_path)
+        pooling_strategy = normalize_pooling_strategy(SETTINGS.embedding_pooling_strategy)
+        window_size = max(int(SETTINGS.embedding_window_size or 1), 1)
+        window_stride = max(int(SETTINGS.embedding_window_stride or 1), 1)
 
         logger.info("Embedding %d frames", len(frame_paths))
-        embeddings = self.embed_images([str(p) for p in frame_paths])
+        frame_embeddings = self.embed_images([str(p) for p in frame_paths])
+        windows = build_frame_windows(frame_paths, window_size=window_size, stride=window_stride)
+        embeddings = pool_embeddings(frame_embeddings, windows, strategy=pooling_strategy)
 
         metadata = [
-            {"frame_id": Path(p).stem, "frame_path": str(p), "index": i}
-            for i, p in enumerate(frame_paths)
+            {
+                "frame_id": Path(window.representative_frame_path).stem,
+                "frame_path": window.representative_frame_path,
+                "index": i,
+                "window_id": window.window_id,
+                "window": window.to_metadata(),
+                "pooling_strategy": pooling_strategy,
+            }
+            for i, window in enumerate(windows)
         ]
 
         embeddings_path.parent.mkdir(parents=True, exist_ok=True)

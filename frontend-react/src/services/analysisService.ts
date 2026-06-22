@@ -4,6 +4,8 @@ import type {
   AnalysisRequest,
   AnalysisResult,
   AnalysisSettings,
+  BatchAnalysisRequest,
+  BatchStatus,
   BackendHealth,
   Detection,
   DeviceMode,
@@ -13,6 +15,7 @@ import type {
   Severity,
   SystemStatus,
   Violation,
+  ViolationEvent,
 } from '../types/analysis';
 
 const MOCK_DELAY_MS = 150;
@@ -79,6 +82,27 @@ type BackendFrameResult = {
   technicalEvidence: Record<string, unknown>;
 };
 
+type BackendViolationEvent = {
+  id: string;
+  type: string;
+  name: string;
+  severity: string;
+  description: string;
+  startTimestamp: string;
+  endTimestamp: string;
+  representativeConfidence: number;
+  confidenceMin: number;
+  confidenceMax: number;
+  supportingFrameCount: number;
+  supportingFrames: Array<{
+    frameId: string;
+    frameNumber: number;
+    timestamp: string;
+    confidence: number;
+    imageUrl?: string | null;
+  }>;
+};
+
 type BackendAnalysisResult = {
   jobId: string;
   status: 'completed';
@@ -90,8 +114,13 @@ type BackendAnalysisResult = {
     uniqueViolationTypes: number;
     highestSeverity?: string | null;
     summaryText: string;
+    potentialEventCount?: number;
+    eventTypes?: string[];
+    overallConfidence?: number;
+    keyEvents?: unknown[];
   };
   violations: BackendGroupedViolation[];
+  events?: BackendViolationEvent[];
   frames: BackendFrameResult[];
   technicalDetails?: Record<string, unknown> | null;
 };
@@ -167,6 +196,10 @@ function cloneResult(result: AnalysisResult): AnalysisResult {
       })),
       detections: frame.detections.map((detection) => ({ ...detection })),
       technicalEvidence: { ...frame.technicalEvidence },
+    })),
+    events: result.events?.map((event) => ({
+      ...event,
+      supportingFrames: event.supportingFrames.map((frame) => ({ ...frame })),
     })),
   };
 }
@@ -250,6 +283,27 @@ function mapViolations(violations: BackendViolation[]): Violation[] {
   }));
 }
 
+function mapEvents(events: BackendViolationEvent[] | undefined): ViolationEvent[] | undefined {
+  if (!events) return undefined;
+  return events.map((event) => ({
+    id: event.id,
+    type: event.type,
+    name: event.name,
+    severity: toSeverity(event.severity),
+    description: event.description,
+    startTimestamp: event.startTimestamp,
+    endTimestamp: event.endTimestamp,
+    representativeConfidence: event.representativeConfidence,
+    confidenceMin: event.confidenceMin,
+    confidenceMax: event.confidenceMax,
+    supportingFrameCount: event.supportingFrameCount,
+    supportingFrames: event.supportingFrames.map((frame) => ({
+      ...frame,
+      imageUrl: resolveBackendMediaUrl(frame.imageUrl ?? null),
+    })),
+  }));
+}
+
 function mapBackendResult(result: BackendAnalysisResult): AnalysisResult {
   const mediaName = result.media.name || result.media.id || 'Selected media';
 
@@ -270,6 +324,7 @@ function mapBackendResult(result: BackendAnalysisResult): AnalysisResult {
     },
     summary: result.summary,
     violations: result.violations,
+    events: mapEvents(result.events),
     framesAnalyzed: result.summary.framesAnalyzed,
     generatedAt: new Date().toISOString(),
     summaryText: result.summary.summaryText,
@@ -370,8 +425,29 @@ export async function runBackendAnalysis(request: AnalysisRequest): Promise<Anal
   });
 }
 
+export async function runBackendBatchAnalysis(request: BatchAnalysisRequest): Promise<BatchStatus> {
+  const formData = new FormData();
+  request.files.forEach((file) => {
+    formData.append('files', file);
+  });
+  formData.append('query', request.query);
+  formData.append('fps', String(request.fps));
+  formData.append('topK', String(request.topK));
+  formData.append('enableVlm', String(request.enableVlm));
+  formData.append('device', deviceToApiMode(request.device));
+
+  return apiFetch<BatchStatus>('batches/analyze', {
+    method: 'POST',
+    body: formData,
+  });
+}
+
 export async function getJobStatus(jobId: string): Promise<JobStatus> {
   return apiFetch<JobStatus>(`jobs/${encodeURIComponent(jobId)}`);
+}
+
+export async function getBatchStatus(batchId: string): Promise<BatchStatus> {
+  return apiFetch<BatchStatus>(`batches/${encodeURIComponent(batchId)}`);
 }
 
 export async function getJobResult(jobId: string): Promise<AnalysisResult> {
@@ -386,6 +462,12 @@ export async function getTechnicalReport(jobId: string): Promise<AnalysisResult>
 
 export async function deleteJob(jobId: string): Promise<void> {
   await apiFetch(`jobs/${encodeURIComponent(jobId)}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function deleteBatch(batchId: string): Promise<void> {
+  await apiFetch(`batches/${encodeURIComponent(batchId)}`, {
     method: 'DELETE',
   });
 }

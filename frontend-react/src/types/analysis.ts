@@ -91,10 +91,21 @@ export type SystemStatus = {
   device: string;
   gpuAvailable: boolean;
   models: Record<string, BackendModelStatus>;
+  limits?: Record<string, unknown>;
+  queue?: Record<string, unknown>;
 };
 
 export type AnalysisRequest = {
   file: File;
+  query: string;
+  fps: number;
+  topK: number;
+  enableVlm: boolean;
+  device: DeviceMode;
+};
+
+export type BatchAnalysisRequest = {
+  files: File[];
   query: string;
   fps: number;
   topK: number;
@@ -111,6 +122,55 @@ export type JobStatus = AnalysisJob & {
   progress: number;
   currentStep: string;
   error?: string | null;
+  metrics?: Record<string, unknown>;
+};
+
+export type BatchAcceptedFile = {
+  originalFilename: string;
+  filename: string;
+  sizeBytes: number;
+  mediaType: 'video';
+  jobId: string;
+  status: AnalysisJob['status'];
+  error?: string | null;
+};
+
+export type BatchRejectedFile = {
+  filename: string;
+  reason: string;
+};
+
+export type BatchStatus = {
+  batchId: string;
+  status: 'queued' | 'running' | 'completed' | 'failed' | 'partial' | 'cancelled';
+  sourceFilename: string;
+  acceptedFiles: BatchAcceptedFile[];
+  rejectedFiles: BatchRejectedFile[];
+  jobIds: string[];
+  statusCounts: Record<string, number>;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ViolationEvent = {
+  id: string;
+  type: string;
+  name: string;
+  severity: Severity;
+  description: string;
+  startTimestamp: string;
+  endTimestamp: string;
+  representativeConfidence: number;
+  confidenceMin: number;
+  confidenceMax: number;
+  supportingFrameCount: number;
+  supportingFrames: Array<{
+    frameId: string;
+    frameNumber: number;
+    timestamp: string;
+    confidence: number;
+    imageUrl?: string | null;
+  }>;
 };
 
 export type AnalysisResult = {
@@ -125,6 +185,10 @@ export type AnalysisResult = {
     uniqueViolationTypes: number;
     highestSeverity?: string | null;
     summaryText: string;
+    potentialEventCount?: number;
+    eventTypes?: string[];
+    overallConfidence?: number;
+    keyEvents?: unknown[];
   };
   violations?: Array<{
     id: string;
@@ -144,6 +208,7 @@ export type AnalysisResult = {
   generatedAt: string;
   summaryText?: string;
   settings?: AnalysisSettings;
+  events?: ViolationEvent[];
   frames: FrameResult[];
   technicalDetails?: Record<string, unknown> | null;
 };

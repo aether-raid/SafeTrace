@@ -1,6 +1,6 @@
 import { AlertTriangle, Frame } from 'lucide-react';
 import type { Severity } from '../types/analysis';
-import { formatAverageConfidence, formatConfidenceRange } from '../utils/formatters';
+import { formatAverageConfidence, formatConfidence, formatConfidenceRange } from '../utils/formatters';
 import { SeverityBadge } from './SeverityBadge';
 
 export type GroupedViolation = {
@@ -14,6 +14,10 @@ export type GroupedViolation = {
     timestamp: string;
   }>;
   confidences: number[];
+  startTimestamp?: string;
+  endTimestamp?: string;
+  representativeConfidence?: number;
+  supportingFrameCount?: number;
 };
 
 type ViolationCardProps = {
@@ -23,6 +27,7 @@ type ViolationCardProps = {
 
 export function ViolationCard({ violation, onFrameSelect }: ViolationCardProps) {
   const firstFrameId = violation.affectedFrames[0]?.frameId;
+  const isAggregatedEvent = Boolean(violation.startTimestamp && violation.endTimestamp);
 
   return (
     <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft transition hover:border-slate-300">
@@ -39,7 +44,14 @@ export function ViolationCard({ violation, onFrameSelect }: ViolationCardProps) 
 
       <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
         <div className="rounded-lg bg-slate-50 p-3">
-          <p className="text-xs font-semibold uppercase text-slate-500">Affected evidence</p>
+          <p className="text-xs font-semibold uppercase text-slate-500">
+            {isAggregatedEvent ? 'Event evidence' : 'Affected evidence'}
+          </p>
+          {isAggregatedEvent ? (
+            <p className="mt-2 text-sm font-semibold text-slate-950">
+              {violation.startTimestamp} - {violation.endTimestamp}
+            </p>
+          ) : null}
           <div className="mt-2 flex flex-wrap gap-2">
             {violation.affectedFrames.map((frame) => (
               <button
@@ -58,9 +70,15 @@ export function ViolationCard({ violation, onFrameSelect }: ViolationCardProps) 
         <div className="rounded-lg bg-slate-50 p-3">
           <p className="text-xs font-semibold uppercase text-slate-500">Confidence</p>
           <p className="mt-2 text-sm font-semibold text-slate-950">
-            {formatConfidenceRange(violation.confidences)}
+            {typeof violation.representativeConfidence === 'number'
+              ? formatConfidence(violation.representativeConfidence)
+              : formatConfidenceRange(violation.confidences)}
           </p>
-          <p className="mt-1 text-xs text-slate-500">Average {formatAverageConfidence(violation.confidences)}</p>
+          <p className="mt-1 text-xs text-slate-500">
+            {isAggregatedEvent
+              ? `${violation.supportingFrameCount ?? violation.affectedFrames.length} supporting frame${(violation.supportingFrameCount ?? violation.affectedFrames.length) === 1 ? '' : 's'}`
+              : `Average ${formatAverageConfidence(violation.confidences)}`}
+          </p>
         </div>
       </div>
 

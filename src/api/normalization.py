@@ -6,6 +6,10 @@ import shutil
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
+from src.aggregation import aggregate_violation_events, summarize_events
+from src.config import SETTINGS
+from src.preprocessing import build_processing_metadata
+
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp", ".bmp"}
 SEVERITY_RANK = {"low": 1, "medium": 2, "high": 3, "critical": 4}
 
@@ -76,10 +80,11 @@ def normalize_pipeline_results(
     media_dir: Path,
     register_media: Callable[[str, Path], None],
 ) -> Dict[str, Any]:
+    raw_frame_list = list(raw_frames)
     frames: List[Dict[str, Any]] = []
     grouped: Dict[str, Dict[str, Any]] = {}
 
-    for index, raw in enumerate(raw_frames, start=1):
+    for index, raw in enumerate(raw_frame_list, start=1):
         frame_id = str(raw.get("frame_id") or f"frame_{index:03d}")
         timestamp = timestamp_from_frame_id(frame_id)
         raw_violations = list(raw.get("violations") or [])
@@ -148,6 +153,7 @@ def normalize_pipeline_results(
                     "annotatedPath": raw.get("annotated_path"),
                     "detections": raw.get("detections") or [],
                     "explanation": raw.get("explanation"),
+                    "searchMetadata": raw.get("search_metadata") or {},
                     "raw": raw,
                 },
             }
@@ -168,13 +174,37 @@ def normalize_pipeline_results(
         reverse=True,
     )
 
+    events = aggregate_violation_events(frames, merge_gap_seconds=5)
+    event_summary = summarize_events(events)
     frames_with_violations = sum(1 for frame in frames if frame["violations"])
-    highest = grouped_violations[0]["severity"] if grouped_violations else None
+    highest = event_summary.get("highestSeverity") or (grouped_violations[0]["severity"] if grouped_violations else None)
     summary_text = (
-        "SafeTrace found safety findings across selected evidence frames."
+        "SafeTrace grouped repeated frame findings into potential video-level events."
+        if events
+        else "SafeTrace found safety findings across selected evidence frames."
         if grouped_violations
         else "No matching safety violations were detected in the selected frames."
     )
+    processing_metadata = next(
+        (
+            dict(raw.get("processing_metadata") or {})
+            for raw in raw_frame_list
+            if raw.get("processing_metadata")
+        ),
+        None,
+    )
+    if processing_metadata is None:
+        processing_metadata = build_processing_metadata(
+            sampled_frame_count=len(frames),
+            sampling_strategy="api_normalized_frames",
+            fps=None,
+            max_frames=SETTINGS.max_frames,
+            embedding_batch_size=SETTINGS.embedding_batch_size,
+            embedding_window_size=SETTINGS.embedding_window_size,
+            embedding_window_stride=SETTINGS.embedding_window_stride,
+            embedding_pooling_strategy=SETTINGS.embedding_pooling_strategy,
+            processing_window_count=len(frames),
+        )
 
     return {
         "jobId": job_id,
@@ -193,11 +223,21 @@ def normalize_pipeline_results(
             "uniqueViolationTypes": len(grouped_violations),
             "highestSeverity": highest,
             "summaryText": summary_text,
+            "potentialEventCount": event_summary["potentialEventCount"],
+            "eventTypes": event_summary["eventTypes"],
+            "overallConfidence": event_summary["overallConfidence"],
+            "keyEvents": event_summary["keyEvents"],
         },
         "violations": grouped_violations,
+        "events": events,
         "frames": frames,
         "technicalDetails": {
             "normalizer": "safetrace-api-v1",
+            "processingMetadata": processing_metadata,
+            "eventAggregation": {
+                "mergeGapSeconds": 5,
+                "eventCount": len(events),
+                "note": "Presentation-level grouping only; detector and rule outputs are unchanged.",
+            },
         },
     }
-

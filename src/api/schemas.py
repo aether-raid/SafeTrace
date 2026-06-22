@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 DeviceMode = Literal["auto", "cpu", "cuda"]
 JobStatus = Literal["queued", "running", "completed", "failed", "cancelled"]
+BatchStatus = Literal["queued", "running", "completed", "failed", "partial", "cancelled"]
 
 
 class HealthResponse(BaseModel):
@@ -27,11 +28,40 @@ class SystemStatusResponse(BaseModel):
     device: str
     gpuAvailable: bool
     models: Dict[str, ModelStatus]
+    limits: Optional[Dict[str, Any]] = None
+    queue: Optional[Dict[str, Any]] = None
 
 
 class AnalyzeResponse(BaseModel):
     jobId: str
     status: JobStatus
+
+
+class BatchAcceptedFile(BaseModel):
+    originalFilename: str
+    filename: str
+    sizeBytes: int
+    mediaType: Literal["video"]
+    jobId: str
+    status: JobStatus
+    error: Optional[str] = None
+
+
+class BatchRejectedFile(BaseModel):
+    filename: str
+    reason: str
+
+
+class BatchResponse(BaseModel):
+    batchId: str
+    status: BatchStatus
+    sourceFilename: str
+    acceptedFiles: List[BatchAcceptedFile]
+    rejectedFiles: List[BatchRejectedFile]
+    jobIds: List[str]
+    statusCounts: Dict[str, int]
+    createdAt: str
+    updatedAt: str
 
 
 class JobStatusResponse(BaseModel):
@@ -40,6 +70,7 @@ class JobStatusResponse(BaseModel):
     progress: float = Field(ge=0.0, le=1.0)
     currentStep: str
     error: Optional[str] = None
+    metrics: Optional[Dict[str, Any]] = None
 
 
 class MediaSummary(BaseModel):
@@ -56,6 +87,10 @@ class AnalysisSummary(BaseModel):
     uniqueViolationTypes: int
     highestSeverity: Optional[str] = None
     summaryText: str
+    potentialEventCount: Optional[int] = None
+    eventTypes: Optional[List[str]] = None
+    overallConfidence: Optional[float] = None
+    keyEvents: Optional[List[Dict[str, Any]]] = None
 
 
 class AffectedFrame(BaseModel):
@@ -83,6 +118,29 @@ class FrameViolation(BaseModel):
     description: str
 
 
+class EventSupportingFrame(BaseModel):
+    frameId: str
+    frameNumber: int
+    timestamp: str
+    confidence: float
+    imageUrl: Optional[str] = None
+
+
+class ViolationEvent(BaseModel):
+    id: str
+    type: str
+    name: str
+    severity: str
+    description: str
+    startTimestamp: str
+    endTimestamp: str
+    representativeConfidence: float
+    confidenceMin: float
+    confidenceMax: float
+    supportingFrameCount: int
+    supportingFrames: List[EventSupportingFrame]
+
+
 class FrameResult(BaseModel):
     id: str
     frameNumber: int
@@ -102,6 +160,6 @@ class AnalysisResultResponse(BaseModel):
     query: str
     summary: AnalysisSummary
     violations: List[GroupedViolation]
+    events: Optional[List[ViolationEvent]] = None
     frames: List[FrameResult]
     technicalDetails: Optional[Dict[str, Any]] = None
-

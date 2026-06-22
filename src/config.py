@@ -87,6 +87,22 @@ class Settings:
     max_frames: int = field(default_factory=lambda: _env_int("SAFETRACE_MAX_FRAMES", 600))
     top_k: int = field(default_factory=lambda: _env_int("SAFETRACE_TOPK", 5))
     embedding_batch_size: int = field(default_factory=lambda: _env_int("SAFETRACE_EMB_BATCH", 16))
+    embedding_window_size: int = field(default_factory=lambda: _env_int("SAFETRACE_EMB_WINDOW_SIZE", 1))
+    embedding_window_stride: int = field(default_factory=lambda: _env_int("SAFETRACE_EMB_WINDOW_STRIDE", 1))
+    embedding_pooling_strategy: str = field(default_factory=lambda: _env("SAFETRACE_EMB_POOLING", "mean"))
+    max_video_duration_seconds: float = field(
+        default_factory=lambda: _env_float("SAFETRACE_MAX_VIDEO_SECONDS", 0.0)
+    )
+    worker_concurrency: int = field(default_factory=lambda: _env_int("SAFETRACE_WORKER_CONCURRENCY", 1))
+
+    # ---- Local API hardening ----
+    max_upload_mb: float = field(default_factory=lambda: _env_float("SAFETRACE_MAX_UPLOAD_MB", 512.0))
+    bulk_max_files: int = field(default_factory=lambda: _env_int("SAFETRACE_BULK_MAX_FILES", 25))
+    bulk_max_uncompressed_mb: float = field(
+        default_factory=lambda: _env_float("SAFETRACE_BULK_MAX_UNCOMPRESSED_MB", 2048.0)
+    )
+    job_retention_hours: float = field(default_factory=lambda: _env_float("SAFETRACE_JOB_RETENTION_HOURS", 24.0))
+    stale_running_minutes: float = field(default_factory=lambda: _env_float("SAFETRACE_STALE_RUNNING_MINUTES", 30.0))
 
     # ---- Detection ----
     yolo_conf_threshold: float = field(default_factory=lambda: _env_float("SAFETRACE_YOLO_CONF", 0.25))

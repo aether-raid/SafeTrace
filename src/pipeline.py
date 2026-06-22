@@ -19,10 +19,11 @@ from .faiss_index import FaissIndex
 from .mobile_sam_segmenter import MobileSamSegmenter
 from .rule_engine import evaluate as evaluate_rules
 from .schemas import FrameAnalysis
+from .preprocessing import build_processing_metadata
 from .utils import (
     collect_inputs,
     draw_overlays,
-    extract_frames,
+    extract_frames_with_metadata,
     imread_rgb,
     imwrite_rgb,
     is_video,
@@ -47,6 +48,7 @@ class SafeTracePipeline:
         self.detector = detector or YoloDetector()
         self.segmenter = segmenter or MobileSamSegmenter()
         self.vlm = vlm or VlmReasoner()
+        self.last_processing_metadata: Dict = {}
 
     # ------------------------------------------------------------------ #
     # Ingestion
@@ -63,10 +65,18 @@ class SafeTracePipeline:
 
         videos, images = collect_inputs(inputs)
         all_frames: List[Path] = []
+        sampling_runs: List[Dict] = []
 
         for vid in videos:
-            frames = extract_frames(vid, SETTINGS.frames_dir, fps=fps, max_frames=max_frames)
+            frames, metadata = extract_frames_with_metadata(
+                vid,
+                SETTINGS.frames_dir,
+                fps=fps,
+                max_frames=max_frames,
+                max_duration_seconds=SETTINGS.max_video_duration_seconds,
+            )
             all_frames.extend(frames)
+            sampling_runs.append(metadata)
 
         # Copy/standardize image inputs into the frames folder so the corpus
         # has one canonical location.
@@ -80,7 +90,32 @@ class SafeTracePipeline:
         if not all_frames:
             raise ValueError("No usable frames produced from the supplied inputs.")
 
-        self.index.build_from_frames(all_frames)
+        index_metadata = self.index.build_from_frames(all_frames)
+        self.last_processing_metadata = build_processing_metadata(
+            sampled_frame_count=len(all_frames),
+            sampling_strategy="fixed_fps" if videos else "image_inputs",
+            fps=fps if videos else None,
+            max_frames=max_frames,
+            embedding_batch_size=SETTINGS.embedding_batch_size,
+            embedding_window_size=SETTINGS.embedding_window_size,
+            embedding_window_stride=SETTINGS.embedding_window_stride,
+            embedding_pooling_strategy=SETTINGS.embedding_pooling_strategy,
+            processing_window_count=len(index_metadata),
+            source_video_duration_seconds=(
+                max(
+                    (
+                        float(run["sourceVideoDurationSeconds"])
+                        for run in sampling_runs
+                        if run.get("sourceVideoDurationSeconds") is not None
+                    ),
+                    default=None,
+                )
+            ),
+            source_video_frame_count=sum(int(run.get("sourceVideoFrameCount") or 0) for run in sampling_runs) or None,
+        )
+        self.last_processing_metadata["inputVideoCount"] = len(videos)
+        self.last_processing_metadata["inputImageCount"] = len(images)
+        self.last_processing_metadata["samplingRuns"] = sampling_runs
         return all_frames
 
     # ------------------------------------------------------------------ #
@@ -129,11 +164,19 @@ class SafeTracePipeline:
             logger.error("FAISS index not built. Call ingest() first.")
             return []
 
-        results: List[FrameAnalysis] = []
+        payloads: List[Dict] = []
         for hit in hits:
             fa = self.analyze_frame(hit["frame_path"], score=hit.get("score", 0.0))
-            results.append(fa)
-        return [r.to_dict() for r in results]
+            payload = fa.to_dict()
+            payload["search_metadata"] = {
+                key: value
+                for key, value in hit.items()
+                if key not in {"frame_path", "frame_id", "score"}
+            }
+            if self.last_processing_metadata:
+                payload["processing_metadata"] = self.last_processing_metadata
+            payloads.append(payload)
+        return payloads
 
     # Convenience: full ingest + analyze in one call.
     def run(

@@ -1,7 +1,8 @@
 import { ShieldCheck, List, Clock, BarChart2 } from 'lucide-react';
 import { useState } from 'react';
 import type { AnalysisResult, Severity } from '../types/analysis';
-import { formatViolationName } from '../utils/formatters';
+import { formatConfidence, formatViolationName } from '../utils/formatters';
+import { SeverityBadge } from './SeverityBadge';
 import { ViolationCard, type GroupedViolation } from './ViolationCard';
 
 type ViolationSummaryProps = {
@@ -15,6 +16,18 @@ type ViolationSummaryProps = {
 // We define the three tabs we want to show
 type TabView = 'list' | 'timeline' | 'statistics';
 
+type ViolationOverviewRow = {
+  type: string;
+  name: string;
+  severity: Severity;
+  eventCount: number;
+  firstTimestamp: string;
+  lastTimestamp: string;
+  representativeConfidence: number;
+  supportingFrameCount: number;
+  firstFrameId?: string;
+};
+
 const severityRank: Record<Severity, number> = {
   High: 3,
   Medium: 2,
@@ -22,6 +35,25 @@ const severityRank: Record<Severity, number> = {
 };
 
 function groupViolations(result: AnalysisResult): GroupedViolation[] {
+  if (result.events && result.events.length > 0) {
+    return result.events.map((event) => ({
+      type: event.type,
+      name: event.name || formatViolationName(event.type),
+      severity: event.severity,
+      description: event.description,
+      affectedFrames: event.supportingFrames.map((frame) => ({
+        frameId: frame.frameId,
+        frameNumber: frame.frameNumber,
+        timestamp: frame.timestamp,
+      })),
+      confidences: event.supportingFrames.map((frame) => frame.confidence),
+      startTimestamp: event.startTimestamp,
+      endTimestamp: event.endTimestamp,
+      representativeConfidence: event.representativeConfidence,
+      supportingFrameCount: event.supportingFrameCount,
+    }));
+  }
+
   const groups = new Map<string, GroupedViolation>();
 
   result.frames.forEach((frame) => {
@@ -57,18 +89,114 @@ function groupViolations(result: AnalysisResult): GroupedViolation[] {
   return Array.from(groups.values()).sort((a, b) => severityRank[b.severity] - severityRank[a.severity]);
 }
 
+function toSeverity(value: string | undefined): Severity {
+  const normalized = (value || '').toLowerCase();
+  if (normalized === 'high' || normalized === 'critical') return 'High';
+  if (normalized === 'medium') return 'Medium';
+  return 'Low';
+}
+
+function timestampValue(timestamp: string): number {
+  const parts = timestamp.split(':').map(Number);
+  if (parts.length !== 3 || parts.some((part) => !Number.isFinite(part))) return 0;
+  return parts[0] * 3600 + parts[1] * 60 + parts[2];
+}
+
+function earlierTimestamp(current: string, next: string): string {
+  return timestampValue(next) < timestampValue(current) ? next : current;
+}
+
+function laterTimestamp(current: string, next: string): string {
+  return timestampValue(next) > timestampValue(current) ? next : current;
+}
+
+function buildOverviewRows(result: AnalysisResult): ViolationOverviewRow[] {
+  const rows = new Map<string, ViolationOverviewRow>();
+
+  function upsert(input: ViolationOverviewRow) {
+    const existing = rows.get(input.type);
+    if (!existing) {
+      rows.set(input.type, input);
+      return;
+    }
+
+    existing.eventCount += input.eventCount;
+    existing.firstTimestamp = earlierTimestamp(existing.firstTimestamp, input.firstTimestamp);
+    existing.lastTimestamp = laterTimestamp(existing.lastTimestamp, input.lastTimestamp);
+    existing.representativeConfidence = Math.max(
+      existing.representativeConfidence,
+      input.representativeConfidence,
+    );
+    existing.supportingFrameCount += input.supportingFrameCount;
+    if (severityRank[input.severity] > severityRank[existing.severity]) {
+      existing.severity = input.severity;
+    }
+    existing.firstFrameId = existing.firstFrameId || input.firstFrameId;
+  }
+
+  if (result.events?.length) {
+    result.events.forEach((event) => {
+      upsert({
+        type: event.type,
+        name: event.name || formatViolationName(event.type),
+        severity: event.severity,
+        eventCount: 1,
+        firstTimestamp: event.startTimestamp,
+        lastTimestamp: event.endTimestamp,
+        representativeConfidence: event.representativeConfidence,
+        supportingFrameCount: event.supportingFrameCount,
+        firstFrameId: event.supportingFrames[0]?.frameId,
+      });
+    });
+  } else if (result.violations?.length) {
+    result.violations.forEach((violation) => {
+      const timestamps = violation.affectedFrames.map((frame) => frame.timestamp);
+      upsert({
+        type: violation.id,
+        name: violation.name || formatViolationName(violation.id),
+        severity: toSeverity(violation.severity),
+        eventCount: 1,
+        firstTimestamp: timestamps.reduce(earlierTimestamp, timestamps[0] || '00:00:00'),
+        lastTimestamp: timestamps.reduce(laterTimestamp, timestamps[0] || '00:00:00'),
+        representativeConfidence: violation.confidenceMax,
+        supportingFrameCount: violation.affectedFrames.length,
+        firstFrameId: violation.affectedFrames[0]?.frameId,
+      });
+    });
+  } else {
+    result.frames.forEach((frame) => {
+      frame.violations.forEach((violation) => {
+        upsert({
+          type: violation.type,
+          name: violation.name || formatViolationName(violation.type),
+          severity: violation.severity,
+          eventCount: 1,
+          firstTimestamp: frame.timestamp,
+          lastTimestamp: frame.timestamp,
+          representativeConfidence: violation.confidence,
+          supportingFrameCount: 1,
+          firstFrameId: frame.id,
+        });
+      });
+    });
+  }
+
+  return Array.from(rows.values()).sort((a, b) => severityRank[b.severity] - severityRank[a.severity]);
+}
+
 export function ViolationSummary({ result, onFrameSelect, timelineComponent, statisticsComponent }: ViolationSummaryProps) {
   // State to track which tab is currently selected
   const [activeTab, setActiveTab] = useState<TabView>('list');
   const groupedViolations = groupViolations(result);
+  const overviewRows = buildOverviewRows(result);
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-soft">
+    <section id="video-violation-overview" className="rounded-lg border border-slate-200 bg-white p-6 shadow-soft">
       {/* Header and Tab Controls */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-lg font-bold text-slate-950">Analysis Results</h2>
-          <p className="mt-1 text-sm text-slate-600">Review findings, timelines, and statistics.</p>
+          <h2 className="text-lg font-bold text-slate-950">Video Violation Overview</h2>
+          <p className="mt-1 text-sm text-slate-600">Review grouped violation types, event spans, and supporting evidence.</p>
         </div>
 
         {/* Tab Toggle Switch (Similar to your image) */}
@@ -101,6 +229,57 @@ export function ViolationSummary({ result, onFrameSelect, timelineComponent, sta
             Statistics
           </button>
         </div>
+      </div>
+
+      <div className="mb-6 overflow-hidden rounded-lg border border-slate-200">
+        {overviewRows.length > 0 ? (
+          <>
+            <div className="grid gap-3 bg-slate-50 px-4 py-3 text-xs font-bold uppercase text-slate-500 md:grid-cols-[1.5fr_0.8fr_0.9fr_0.9fr_0.8fr_0.9fr]">
+              <span>Violation type</span>
+              <span>Events</span>
+              <span>First seen</span>
+              <span>Last seen</span>
+              <span>Confidence</span>
+              <span>Support</span>
+            </div>
+            {overviewRows.map((row) => (
+              <div
+                key={row.type}
+                className="grid gap-3 border-t border-slate-200 px-4 py-3 text-sm md:grid-cols-[1.5fr_0.8fr_0.9fr_0.9fr_0.8fr_0.9fr] md:items-center"
+              >
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="truncate font-semibold text-slate-950">{row.name}</p>
+                    <SeverityBadge severity={row.severity} />
+                  </div>
+                </div>
+                <span className="font-medium text-slate-700">{row.eventCount}</span>
+                <span className="font-mono text-xs text-slate-600">{row.firstTimestamp}</span>
+                <span className="font-mono text-xs text-slate-600">{row.lastTimestamp}</span>
+                <span className="font-semibold text-slate-900">{formatConfidence(row.representativeConfidence)}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-700">{row.supportingFrameCount} frame{row.supportingFrameCount === 1 ? '' : 's'}</span>
+                  {row.firstFrameId ? (
+                    <button
+                      type="button"
+                      onClick={() => onFrameSelect(row.firstFrameId as string)}
+                      className="focus-ring rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 transition hover:border-safety-blue hover:text-safety-blue"
+                    >
+                      View
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            ))}
+          </>
+        ) : (
+          <div className="flex items-start gap-3 bg-emerald-50 p-4 text-emerald-800">
+            <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
+            <p className="text-sm font-medium">
+              No matching safety violations were detected in the selected frames for this query.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Conditional Rendering: Show content based on the active tab */}

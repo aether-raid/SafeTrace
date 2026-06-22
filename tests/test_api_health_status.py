@@ -46,3 +46,9 @@ def test_system_status_reports_missing_paths_without_loading_models(monkeypatch,
     assert body["models"]["detector"]["status"] == "missing"
     assert body["models"]["mobileSam"]["status"] == "unavailable"
     assert body["models"]["vlm"]["status"] == "unavailable"
+    assert body["limits"]["maxUploadMb"] > 0
+    assert body["limits"]["maxSampledFrames"] > 0
+    assert body["limits"]["maxVideoDurationUnlimited"] is True
+    assert "No explicit video duration cap" in body["limits"]["maxVideoDurationMessage"]
+    assert body["limits"]["embeddingPoolingStrategy"] in {"mean", "max"}
+    assert body["queue"]["statusCounts"] == {}

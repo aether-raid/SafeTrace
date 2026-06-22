@@ -1,6 +1,6 @@
 import { Clock3, FileVideo, Layers3, ShieldAlert, type LucideIcon } from 'lucide-react';
 import type { AnalysisResult, Severity } from '../types/analysis';
-import { formatDateTime, pluralize } from '../utils/formatters';
+import { formatConfidence, formatDateTime, pluralize } from '../utils/formatters';
 import { SeverityBadge } from './SeverityBadge';
 import { StatusBadge } from './StatusBadge';
 
@@ -45,6 +45,9 @@ function getSummaryStats(result: AnalysisResult) {
 export function AnalysisSummary({ result, showExplanations }: AnalysisSummaryProps) {
   const stats = getSummaryStats(result);
   const hasViolations = stats.uniqueViolationCount > 0;
+  const potentialEventCount = result.summary?.potentialEventCount ?? result.events?.length ?? 0;
+  const hasEventSummary = potentialEventCount > 0;
+  const overallConfidence = result.summary?.overallConfidence;
   const severityLabel = stats.highestSeverity ? stats.highestSeverity.toLowerCase() : 'clear';
   const repeatedFindings = stats.uniqueViolationNames.join(' and ');
 
@@ -57,7 +60,9 @@ export function AnalysisSummary({ result, showExplanations }: AnalysisSummaryPro
             {hasViolations ? 'Violation findings detected' : 'No matching violations detected'}
           </h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-            {hasViolations
+            {hasEventSummary
+              ? `SafeTrace grouped repeated frame findings into ${potentialEventCount} potential video-level event${potentialEventCount === 1 ? '' : 's'} across ${stats.framesWithViolations} supporting frame${stats.framesWithViolations === 1 ? '' : 's'}.`
+              : hasViolations
               ? `SafeTrace found ${stats.uniqueViolationCount} ${severityLabel}-risk violation type${stats.uniqueViolationCount === 1 ? '' : 's'} across ${stats.framesWithViolations} of ${result.framesAnalyzed} relevant frames. Repeated findings include ${repeatedFindings}.`
               : 'No matching safety violations were detected in the selected frames for this query.'}
           </p>
@@ -80,8 +85,8 @@ export function AnalysisSummary({ result, showExplanations }: AnalysisSummaryPro
         <SummaryMetric icon={Layers3} label="Frames analyzed" value={String(result.framesAnalyzed)} />
         <SummaryMetric
           icon={ShieldAlert}
-          label="Frames with violations"
-          value={`${stats.framesWithViolations} of ${result.framesAnalyzed}`}
+          label={hasEventSummary ? 'Potential events' : 'Frames with violations'}
+          value={hasEventSummary ? String(potentialEventCount) : `${stats.framesWithViolations} of ${result.framesAnalyzed}`}
         />
         <SummaryMetric icon={Clock3} label="Generated" value={formatDateTime(result.generatedAt)} />
       </div>
@@ -96,6 +101,9 @@ export function AnalysisSummary({ result, showExplanations }: AnalysisSummaryPro
           </>
         ) : null}
         <StatusBadge label={pluralize(stats.uniqueViolationCount, 'violation type')} tone={hasViolations ? 'danger' : 'success'} />
+        {hasEventSummary && typeof overallConfidence === 'number' ? (
+          <StatusBadge label={`Overall confidence ${formatConfidence(overallConfidence)}`} tone="info" />
+        ) : null}
         <StatusBadge label="Evidence-backed findings" tone="neutral" />
       </div>
     </section>

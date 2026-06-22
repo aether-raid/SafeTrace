@@ -6,18 +6,28 @@ import type { MediaItem } from '../types/analysis';
 type UploadPanelProps = {
   media: MediaItem | null;
   onFileSelected: (file: File) => void;
+  onFilesSelected?: (files: File[]) => void;
   disabled?: boolean;
 };
 
-export function UploadPanel({ media, onFileSelected, disabled = false }: UploadPanelProps) {
+export function UploadPanel({ media, onFileSelected, onFilesSelected, disabled = false }: UploadPanelProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
   function handleFiles(files: FileList | null) {
     if (disabled) return;
-    const file = files?.[0];
+    const selected = Array.from(files || []);
+    if (selected.length > 1 && onFilesSelected) {
+      onFilesSelected(selected);
+      return;
+    }
+    const file = selected[0];
     if (file) {
-      onFileSelected(file);
+      if (onFilesSelected) {
+        onFilesSelected([file]);
+      } else {
+        onFileSelected(file);
+      }
     }
   }
 
@@ -58,7 +68,7 @@ export function UploadPanel({ media, onFileSelected, disabled = false }: UploadP
           <UploadCloud className="h-6 w-6 text-slate-400" aria-hidden="true" />
           <p className="mt-2 text-sm font-semibold text-slate-800">Select local media</p>
           <p className="mt-1 text-xs leading-5 text-slate-500">
-            {disabled ? 'Connect to the SafeTrace backend before selecting media.' : 'Drop a video or image, or browse from this device.'}
+            {disabled ? 'Connect to the SafeTrace backend before selecting media.' : 'Drop videos, a ZIP archive, or browse from this device.'}
           </p>
           <button
             className="focus-ring mt-3 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
@@ -72,7 +82,8 @@ export function UploadPanel({ media, onFileSelected, disabled = false }: UploadP
             ref={fileInputRef}
             className="sr-only"
             type="file"
-            accept="image/*,video/*"
+            accept="image/*,video/*,.zip,application/zip"
+            multiple
             disabled={disabled}
             onChange={(event) => handleFiles(event.target.files)}
           />
