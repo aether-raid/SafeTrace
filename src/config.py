@@ -48,19 +48,29 @@ def _chat_profile_float(key: str, balanced_default: float, fast_default: float) 
     return _env_float(key, fast_default if _chat_speed_profile() == "fast" else balanced_default)
 
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(_env("SAFETRACE_PROJECT_ROOT", str(Path(__file__).resolve().parent.parent)))
 
 
 @dataclass
 class Settings:
     # ---- Paths ----
     project_root: Path = PROJECT_ROOT
-    data_dir: Path = PROJECT_ROOT / "data"
-    frames_dir: Path = PROJECT_ROOT / "data" / "frames"
-    embeddings_path: Path = PROJECT_ROOT / "data" / "embeddings.npy"
-    metadata_path: Path = PROJECT_ROOT / "data" / "metadata.json"
-    index_path: Path = PROJECT_ROOT / "data" / "index.faiss"
-    checkpoints_dir: Path = PROJECT_ROOT / "checkpoints"
+    data_dir: Path = field(default_factory=lambda: Path(_env("SAFETRACE_DATA_DIR", str(PROJECT_ROOT / "data"))))
+    frames_dir: Path = field(
+        default_factory=lambda: Path(_env("SAFETRACE_FRAMES_DIR", str(PROJECT_ROOT / "data" / "frames")))
+    )
+    embeddings_path: Path = field(
+        default_factory=lambda: Path(_env("SAFETRACE_EMBEDDINGS_PATH", str(PROJECT_ROOT / "data" / "embeddings.npy")))
+    )
+    metadata_path: Path = field(
+        default_factory=lambda: Path(_env("SAFETRACE_METADATA_PATH", str(PROJECT_ROOT / "data" / "metadata.json")))
+    )
+    index_path: Path = field(
+        default_factory=lambda: Path(_env("SAFETRACE_INDEX_PATH", str(PROJECT_ROOT / "data" / "index.faiss")))
+    )
+    checkpoints_dir: Path = field(
+        default_factory=lambda: Path(_env("SAFETRACE_CHECKPOINTS_DIR", str(PROJECT_ROOT / "checkpoints")))
+    )
 
     # ---- Models (local checkpoints / local model dirs) ----
     siglip_model_dir: Path = field(

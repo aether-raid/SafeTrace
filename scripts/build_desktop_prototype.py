@@ -14,6 +14,8 @@ from typing import Iterable
 
 
 PACKAGE_DIRNAME = "SafeTrace"
+DEFAULT_BACKEND_EXE = Path("dist") / "backend" / "safetrace-backend.exe"
+PACKAGED_BACKEND_EXE = Path("backend") / "safetrace-backend.exe"
 PROTECTED_ASSET_RULES = [
     "*.gguf",
     "*.bin",
@@ -189,7 +191,25 @@ def copy_config_example(repo_root: Path, package: Path) -> bool:
     return True
 
 
-def build_prototype(repo_root: Path, output_dir: Path | None = None, *, clean: bool = False) -> dict:
+def copy_backend_exe_if_exists(repo_root: Path, package: Path, backend_exe: Path | None = None) -> bool:
+    source = backend_exe or repo_root / DEFAULT_BACKEND_EXE
+    if not source.is_absolute():
+        source = repo_root / source
+    if not source.is_file():
+        return False
+    target = package / PACKAGED_BACKEND_EXE
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source, target)
+    return True
+
+
+def build_prototype(
+    repo_root: Path,
+    output_dir: Path | None = None,
+    *,
+    clean: bool = False,
+    backend_exe: Path | None = None,
+) -> dict:
     repo_root = repo_root.resolve()
     package = package_root(repo_root, output_dir).resolve()
 
@@ -213,6 +233,7 @@ def build_prototype(repo_root: Path, output_dir: Path | None = None, *, clean: b
     write_json(package / "backend" / "backend_manifest.json", backend_manifest_payload())
     write_json(package / "packaging_manifest.json", manifest_payload())
 
+    backend_exe_copied = copy_backend_exe_if_exists(repo_root, package, backend_exe)
     copied_config = copy_config_example(repo_root, package)
     frontend_copied = copy_if_exists(repo_root / "frontend-react" / "dist", package / "frontend" / "dist")
     if not frontend_copied:
@@ -221,8 +242,9 @@ def build_prototype(repo_root: Path, output_dir: Path | None = None, *, clean: b
     warnings = [
         "Excluded local data, uploads, generated reports, generated media, and cache folders.",
         "Excluded checkpoints and model assets, including GGUF chat models.",
-        "No final backend .exe is built or copied by this prototype script.",
     ]
+    if not backend_exe_copied:
+        warnings.append("Backend executable not found; created a placeholder backend folder only.")
     if not copied_config:
         warnings.append("config/safetrace.env.example was not found in the source tree.")
     if not frontend_copied:
@@ -231,6 +253,7 @@ def build_prototype(repo_root: Path, output_dir: Path | None = None, *, clean: b
     return {
         "package_root": str(package),
         "created_dirs": [str(path) for path in created_dirs],
+        "backend_exe_copied": backend_exe_copied,
         "frontend_copied": frontend_copied,
         "config_copied": copied_config,
         "preserve_paths": PRESERVE_PATHS,
@@ -244,6 +267,7 @@ def print_summary(summary: dict) -> None:
     print("Created package folders:")
     for path in summary["created_dirs"]:
         print(f"  - {path}")
+    print(f"Backend executable copied: {summary['backend_exe_copied']}")
     print(f"Frontend dist copied: {summary['frontend_copied']}")
     print(f"Config example copied: {summary['config_copied']}")
     print("Preserved external paths:")
@@ -260,6 +284,12 @@ def print_summary(summary: dict) -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-dir", type=Path, default=None, help="Base output directory; default is ./dist")
+    parser.add_argument(
+        "--backend-exe",
+        type=Path,
+        default=None,
+        help="Optional path to an already-built safetrace-backend.exe to copy into the package",
+    )
     parser.add_argument("--clean", action="store_true", help="Remove existing dist/SafeTrace before creating it")
     parser.add_argument("--dry-run", action="store_true", help="Print the planned package path and exclusions only")
     return parser.parse_args()
@@ -271,11 +301,13 @@ def main() -> int:
     package = package_root(repo_root, args.output_dir)
     if args.dry_run:
         print(f"Would create SafeTrace desktop prototype at: {package}")
+        backend_exe = args.backend_exe or repo_root / DEFAULT_BACKEND_EXE
+        print(f"Would copy backend exe if present: {backend_exe}")
         print("Would exclude:")
         for rule in PROTECTED_ASSET_RULES:
             print(f"  - {rule}")
         return 0
-    summary = build_prototype(repo_root, args.output_dir, clean=args.clean)
+    summary = build_prototype(repo_root, args.output_dir, clean=args.clean, backend_exe=args.backend_exe)
     print_summary(summary)
     return 0
 

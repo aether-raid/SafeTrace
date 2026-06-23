@@ -33,10 +33,26 @@ dist/SafeTrace/
 
 `dist/SafeTrace/` is generated output and must not be committed.
 
+If a local backend executable already exists at:
+
+```text
+dist/backend/safetrace-backend.exe
+```
+
+the package builder copies it into:
+
+```text
+dist/SafeTrace/backend/safetrace-backend.exe
+```
+
+The executable is optional. If it is absent, the package still builds with a
+placeholder backend folder and a clear warning.
+
 ## What It Contains
 
 - A prototype launcher batch file.
 - A backend runtime placeholder folder.
+- An optional copied backend executable when one already exists locally.
 - A backend manifest placeholder.
 - A frontend `dist/` folder. If `frontend-react/dist` exists, it is copied;
   otherwise a placeholder README is written.
@@ -113,9 +129,13 @@ Rules:
 
 ## Path To A Future EXE
 
-This prototype is a filesystem contract for later packaging work. A future build
-can replace `backend/README.txt` with `backend/safetrace-backend.exe` and
-runtime dependencies while preserving:
+This prototype is a filesystem contract for later packaging work. Phase 6 adds
+a PyInstaller prototype for creating `dist/backend/safetrace-backend.exe`.
+The package script can copy that existing local executable into
+`backend/safetrace-backend.exe`, or continue with the placeholder backend folder
+when no executable has been built. Future builds may replace
+`backend/README.txt` with `backend/safetrace-backend.exe` and runtime
+dependencies while preserving:
 
 - `config/`
 - `data/`
@@ -124,3 +144,6 @@ runtime dependencies while preserving:
 
 The backend remains update-friendly because data, configuration, frontend assets,
 logs, checkpoints, and GGUF files are external to the backend runtime folder.
+
+See `docs/backend_executable_prototype.md` for the backend executable build
+prototype, risks, and rollback guidance.

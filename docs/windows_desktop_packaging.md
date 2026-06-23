@@ -81,6 +81,24 @@ The script creates `dist/SafeTrace/` with:
 The prototype does not build or copy a final backend `.exe`. It also does not
 copy local uploads, generated evidence, checkpoints, GGUF files, or model assets.
 
+Phase 6 adds a backend executable prototype. The dry-run command is:
+
+```cmd
+python scripts\build_backend_exe.py
+```
+
+Developers with PyInstaller installed can attempt a local build with:
+
+```cmd
+python scripts\build_backend_exe.py --run
+```
+
+Generated backend executable output belongs under `dist/backend/` and must not
+be committed. If `dist/backend/safetrace-backend.exe` exists, the desktop
+package builder copies it into `dist/SafeTrace/backend/safetrace-backend.exe`.
+If it is missing, the package builder still creates the placeholder backend
+folder.
+
 ## Packaged Frontend Serving
 
 The FastAPI backend can serve the React production build in packaged mode:
@@ -141,6 +159,8 @@ If startup or status checks fail, restore the previous backend folder and leave
 See `docs/desktop_packaging_prototype.md` and
 `packaging/desktop_packaging_manifest.example.json` for the desktop package
 prototype contract.
+See `docs/backend_executable_prototype.md` for the backend executable prototype
+strategy, PyInstaller/Nuitka tradeoff, PyTorch/CUDA risks, and rollback flow.
 
 ## Model Files
 

@@ -51,6 +51,24 @@ The Phase 5 prototype package script creates this shape under `dist/SafeTrace/`
 without building a final `.exe`. Treat that generated folder as disposable local
 output.
 
+Phase 6 adds a backend executable prototype using:
+
+```text
+src/api/__main__.py
+packaging/backend/safetrace_backend.spec
+scripts/build_backend_exe.py
+```
+
+The prototype keeps the executable replaceable and expects local build output at:
+
+```text
+dist/backend/safetrace-backend.exe
+```
+
+The desktop package builder may copy that existing executable into
+`dist/SafeTrace/backend/safetrace-backend.exe`, but it does not require the file
+to exist.
+
 ## What Stays Outside The Backend EXE
 
 Keep these paths external and preserved across backend updates:
@@ -154,3 +172,15 @@ a different cadence than backend code. Embedding them in `safetrace-backend.exe`
 would make every backend patch heavy, harder to verify, and risk overwriting
 user-managed offline model files. Keep model assets in external `models/` or
 `checkpoints/` folders and preserve those folders across backend updates.
+
+## PyInstaller And PyTorch Notes
+
+The Phase 6 prototype uses PyInstaller because it is the smallest change around
+the existing FastAPI entrypoint. It does not change analysis thresholds,
+detector behavior, model loading logic, queue behavior, VLM explanation, or the
+assistant provider boundary.
+
+PyTorch/CUDA packaging can be fragile and large on Windows. If the one-file
+prototype is not reliable on target machines, switch to a replaceable one-dir
+backend runtime under `SafeTrace/backend/` while preserving the same external
+asset boundary and rollback flow.
