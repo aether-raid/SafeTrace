@@ -18,6 +18,7 @@ set SAFETRACE_CHAT_MAX_TOKENS=512
 set SAFETRACE_CHAT_TEMPERATURE=0.2
 set SAFETRACE_CHAT_TOP_P=0.9
 set SAFETRACE_CHAT_AUTOLOAD=false
+set SAFETRACE_CHAT_WARMUP_ON_OPEN=false
 ```
 
 In packaged mode, users do not need to run Ollama manually. The backend checks
@@ -45,9 +46,9 @@ For a lighter, more mobile-feeling assistant experience, use the fast profile:
 ```cmd
 set SAFETRACE_CHAT_SPEED_PROFILE=fast
 set SAFETRACE_CHAT_CONTEXT_WINDOW=2048
-set SAFETRACE_CHAT_MAX_TOKENS=256
+set SAFETRACE_CHAT_MAX_TOKENS=200
 set SAFETRACE_CHAT_TEMPERATURE=0.1
-set SAFETRACE_CHAT_TOP_P=0.85
+set SAFETRACE_CHAT_TOP_P=0.82
 set SAFETRACE_CHAT_REPEAT_PENALTY=1.15
 ```
 
@@ -106,6 +107,20 @@ set SAFETRACE_CHAT_MODEL_PATH=models/chat/safetrace-assistant-qwen2.5-1.5b-instr
 If chat is disabled, unavailable, missing the runtime, or missing the model,
 `POST /api/chat` returns a structured `503` error instead of crashing. Main
 SafeTrace analysis, single-video upload, and ZIP/batch upload continue to work.
+
+## Optional Warmup On Open
+
+By default, the packaged local model is lazy-loaded only when the first in-scope
+assistant question is submitted. To warm the model when the floating assistant
+panel opens, set:
+
+```cmd
+set SAFETRACE_CHAT_WARMUP_ON_OPEN=true
+```
+
+The React assistant checks `GET /api/chat/status`; if `warmup_on_open` is true,
+it calls `POST /api/chat/warmup` after the panel opens. This does not run during
+backend startup and does not run during normal SafeTrace analysis.
 
 ## Optional Ollama Fallback
 

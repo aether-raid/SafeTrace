@@ -26,11 +26,17 @@ class ModelStatus(BaseModel):
 
 
 class SystemStatusResponse(BaseModel):
+    app_version: Optional[str] = None
+    backend_version: Optional[str] = None
+    build_mode: Optional[str] = None
+    runtime_layout: Optional[str] = None
     device: str
     gpuAvailable: bool
     models: Dict[str, ModelStatus]
     limits: Optional[Dict[str, Any]] = None
     queue: Optional[Dict[str, Any]] = None
+    runtime: Optional[Dict[str, Any]] = None
+    preflight: Optional[Dict[str, Any]] = None
 
 
 class ChatStatusResponse(BaseModel):
@@ -45,6 +51,7 @@ class ChatStatusResponse(BaseModel):
     model_exists: Optional[bool] = None
     runtime_available: Optional[bool] = None
     speed_profile: Optional[str] = None
+    warmup_on_open: Optional[bool] = None
     reason: Optional[str] = None
     action_hint: Optional[str] = None
     message: str

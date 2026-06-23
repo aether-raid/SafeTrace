@@ -10,7 +10,7 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { askSafeTraceAssistant, getChatStatus } from '../services/chatService';
+import { askSafeTraceAssistant, getChatStatus, warmupSafeTraceAssistant } from '../services/chatService';
 import type { AnalysisResult, BatchStatus } from '../types/analysis';
 import type { ChatMessage, ChatStatus } from '../types/chat';
 
@@ -73,6 +73,7 @@ export function SafeTraceAssistant({
   const [draft, setDraft] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshingStatus, setIsRefreshingStatus] = useState(false);
+  const [warmupAttempted, setWarmupAttempted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -139,9 +140,39 @@ export function SafeTraceAssistant({
   }, [backendConnected]);
 
   useEffect(() => {
+    if (!backendConnected) {
+      setWarmupAttempted(false);
+    }
+  }, [backendConnected]);
+
+  useEffect(() => {
+    if (!isOpen || !backendConnected || !status?.warmup_on_open || warmupAttempted) return undefined;
+    let isMounted = true;
+    setWarmupAttempted(true);
+    warmupSafeTraceAssistant()
+      .then((nextStatus) => {
+        if (isMounted) setStatus(nextStatus);
+      })
+      .catch(() => {
+        if (isMounted) void refreshStatus();
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [backendConnected, isOpen, status?.warmup_on_open, warmupAttempted]);
+
+  useEffect(() => {
     if (!isOpen) return;
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [messages, isOpen, isLoading]);
+
+  function togglePanel() {
+    const nextOpen = !isOpen;
+    setIsOpen(nextOpen);
+    if (nextOpen) {
+      void refreshStatus();
+    }
+  }
 
   async function submitMessage(nextMessage?: string) {
     const message = (nextMessage ?? draft).trim();
@@ -372,7 +403,7 @@ set SAFETRACE_CHAT_MODEL_PATH=models/chat/safetrace-assistant-qwen2.5-1.5b-instr
 
       <button
         type="button"
-        onClick={() => setIsOpen((current) => !current)}
+        onClick={togglePanel}
         className="focus-ring group relative inline-flex h-14 w-14 items-center justify-center rounded-full bg-safety-blue text-white shadow-2xl transition hover:bg-blue-700"
         aria-label={isOpen ? 'Minimize SafeTrace Assistant' : 'Open SafeTrace Assistant'}
       >

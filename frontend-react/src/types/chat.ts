@@ -12,6 +12,7 @@ export type ChatStatus = {
   model_exists?: boolean | null;
   runtime_available?: boolean | null;
   speed_profile?: string | null;
+  warmup_on_open?: boolean | null;
   reason?: string | null;
   action_hint?: string | null;
   message: string;

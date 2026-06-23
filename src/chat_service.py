@@ -95,7 +95,7 @@ class ChatContext:
     sources: list[str]
 
 
-def chat_status_payload() -> Dict[str, Any]:
+def chat_status_payload(*, allow_model_load: bool = True) -> Dict[str, Any]:
     provider = _configured_provider()
     enabled, mode = _chat_enabled()
     if not enabled:
@@ -128,7 +128,7 @@ def chat_status_payload() -> Dict[str, Any]:
             action_hint=None,
         )
     if provider == "packaged_llamacpp":
-        return _packaged_status_payload(mode)
+        return _packaged_status_payload(mode, allow_model_load=allow_model_load)
     if provider == "ollama":
         return _ollama_status_payload(mode)
     reason = f"Unsupported chat provider: {provider}"
@@ -172,6 +172,7 @@ def _status_payload(
         "model_exists": model_exists,
         "runtime_available": runtime_available,
         "speed_profile": _speed_profile(),
+        "warmup_on_open": bool(getattr(SETTINGS, "chat_warmup_on_open", False)),
         "message": message,
         "reason": reason or message,
         "action_hint": action_hint,
@@ -341,7 +342,7 @@ def _llama_cpp_runtime_available() -> bool:
     return importlib.util.find_spec("llama_cpp") is not None
 
 
-def _packaged_status_payload(enabled_mode: str) -> Dict[str, Any]:
+def _packaged_status_payload(enabled_mode: str, *, allow_model_load: bool = True) -> Dict[str, Any]:
     model_path = _packaged_model_path()
     model_name = _display_model_path(model_path)
     model_exists = model_path.is_file()
@@ -393,7 +394,7 @@ def _packaged_status_payload(enabled_mode: str) -> Dict[str, Any]:
             reason="The local GGUF is present and llama-cpp runtime is loading it.",
             action_hint="Wait a moment, then retry the assistant.",
         )
-    if bool(getattr(SETTINGS, "chat_autoload", False)) and _PACKAGED_MODEL is None:
+    if allow_model_load and bool(getattr(SETTINGS, "chat_autoload", False)) and _PACKAGED_MODEL is None:
         try:
             _get_packaged_model()
         except ChatProviderUnavailableError as exc:
@@ -425,6 +426,25 @@ def _packaged_status_payload(enabled_mode: str) -> Dict[str, Any]:
         reason="Packaged model file and llama-cpp runtime are available.",
         action_hint=None,
     )
+
+
+def warmup_chat_provider() -> Dict[str, Any]:
+    provider = _configured_provider()
+    enabled, mode = _chat_enabled()
+    if not enabled:
+        raise ChatDisabledError(f"SafeTrace Assistant disabled by SAFETRACE_CHAT_ENABLED={mode}. {CHAT_ENABLE_HINT}")
+    if not bool(getattr(SETTINGS, "chat_warmup_on_open", False)):
+        return chat_status_payload(allow_model_load=False)
+    if provider == "mock":
+        return chat_status_payload(allow_model_load=False)
+    if provider == "packaged_llamacpp":
+        _ensure_provider_ready(provider)
+        _get_packaged_model()
+        return chat_status_payload(allow_model_load=False)
+    if provider == "ollama":
+        _ensure_provider_ready(provider)
+        return chat_status_payload(allow_model_load=False)
+    raise ChatProviderUnavailableError(f"Unsupported chat provider: {provider}")
 
 
 def _ollama_status_payload(enabled_mode: str) -> Dict[str, Any]:

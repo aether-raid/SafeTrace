@@ -87,12 +87,73 @@ export type BackendModelStatus = {
   message?: string | null;
 };
 
+export type RuntimeCheckStatus = 'ready' | 'available' | 'warning' | 'missing' | 'unavailable' | 'disabled' | 'loading';
+
+export type RuntimeCheck = {
+  status: RuntimeCheckStatus | string;
+  message?: string | null;
+  path?: string | null;
+  actionHint?: string | null;
+  details?: Record<string, unknown>;
+};
+
+export type SystemRuntimeStatus = {
+  backend?: Record<string, unknown>;
+  python?: {
+    executable?: string;
+    version?: string;
+  };
+  workingDirectory?: string;
+  device?: {
+    configured?: string;
+    gpuAvailable?: boolean;
+  };
+  models?: Record<string, BackendModelStatus>;
+  chat?: {
+    enabled?: boolean;
+    available?: boolean;
+    state?: string;
+    status?: string;
+    provider?: string;
+    model?: string | null;
+    model_path?: string | null;
+    model_exists?: boolean | null;
+    runtime_available?: boolean | null;
+    speed_profile?: string | null;
+    warmup_on_open?: boolean | null;
+    reason?: string | null;
+    action_hint?: string | null;
+    message?: string | null;
+  };
+  openmp?: {
+    status?: string;
+    kmpDuplicateLibOk?: boolean;
+    rawKmpDuplicateLibOk?: string | null;
+    ompNumThreads?: string | null;
+    message?: string | null;
+    actionHint?: string | null;
+  };
+  uploadLimits?: Record<string, unknown>;
+  batchLimits?: Record<string, unknown>;
+  jobStorePath?: string;
+};
+
+export type SystemPreflightStatus = {
+  checks?: Record<string, RuntimeCheck>;
+  summary?: {
+    ready?: number;
+    warnings?: number;
+  };
+};
+
 export type SystemStatus = {
   device: string;
   gpuAvailable: boolean;
   models: Record<string, BackendModelStatus>;
   limits?: Record<string, unknown>;
   queue?: Record<string, unknown>;
+  runtime?: SystemRuntimeStatus;
+  preflight?: SystemPreflightStatus;
 };
 
 export type AnalysisRequest = {

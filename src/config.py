@@ -134,6 +134,7 @@ class Settings:
     chat_top_p: float = field(default_factory=lambda: _chat_profile_float("SAFETRACE_CHAT_TOP_P", 0.9, 0.82))
     chat_repeat_penalty: float = field(default_factory=lambda: _env_float("SAFETRACE_CHAT_REPEAT_PENALTY", 1.15))
     chat_autoload: bool = field(default_factory=lambda: _env_bool("SAFETRACE_CHAT_AUTOLOAD", False))
+    chat_warmup_on_open: bool = field(default_factory=lambda: _env_bool("SAFETRACE_CHAT_WARMUP_ON_OPEN", False))
     ollama_base_url: str = field(default_factory=lambda: _env("SAFETRACE_OLLAMA_BASE_URL", "http://127.0.0.1:11434"))
     ollama_model: str = field(default_factory=lambda: _env("SAFETRACE_OLLAMA_MODEL", "llama3.2:3b"))
     chat_timeout_seconds: float = field(default_factory=lambda: _env_float("SAFETRACE_CHAT_TIMEOUT_SECONDS", 8.0))

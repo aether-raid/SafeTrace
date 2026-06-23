@@ -1,6 +1,8 @@
 """FastAPI app for the local SafeTrace backend."""
 from __future__ import annotations
 
+import os
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -13,6 +15,7 @@ from src.chat_service import (
     ChatProviderUnavailableError,
     answer_chat,
     chat_status_payload,
+    warmup_chat_provider,
 )
 from src.config import SETTINGS
 
@@ -102,6 +105,183 @@ def _detector_status() -> ModelStatus:
     )
 
 
+def _model_status_payload(status: ModelStatus) -> dict:
+    return {
+        "status": status.status,
+        "path": status.path,
+        "message": status.message,
+    }
+
+
+def _runtime_check(
+    status: str,
+    message: str,
+    *,
+    path: Optional[str] = None,
+    action_hint: Optional[str] = None,
+    details: Optional[dict] = None,
+) -> dict:
+    payload = {
+        "status": status,
+        "message": message,
+        "path": path,
+        "actionHint": action_hint,
+    }
+    if details:
+        payload["details"] = details
+    return payload
+
+
+def _model_preflight_check(label: str, status: ModelStatus, *, optional: bool = False) -> dict:
+    if status.status == "ready":
+        return _runtime_check("ready", f"{label} ready", path=status.path)
+    if status.status == "missing":
+        return _runtime_check(
+            "missing",
+            status.message or f"{label} missing",
+            path=status.path,
+            action_hint=f"Place the required {label} asset at the configured path.",
+        )
+    return _runtime_check(
+        "unavailable",
+        status.message or f"{label} unavailable",
+        path=status.path,
+        action_hint=None if optional else f"Check the configured {label} path.",
+    )
+
+
+def _openmp_status() -> dict:
+    kmp_value = os.environ.get("KMP_DUPLICATE_LIB_OK")
+    omp_value = os.environ.get("OMP_NUM_THREADS")
+    kmp_enabled = str(kmp_value or "").strip().upper() == "TRUE"
+    status = "ready" if kmp_enabled else "warning"
+    return {
+        "status": status,
+        "kmpDuplicateLibOk": kmp_enabled,
+        "rawKmpDuplicateLibOk": kmp_value,
+        "ompNumThreads": omp_value,
+        "message": (
+            "OpenMP duplicate runtime workaround is enabled."
+            if kmp_enabled
+            else "OpenMP duplicate runtime workaround is not set for this process."
+        ),
+        "actionHint": None if kmp_enabled else "Set KMP_DUPLICATE_LIB_OK=TRUE before launching on Windows.",
+    }
+
+
+def _assistant_preflight_check(chat: dict) -> dict:
+    state = str(chat.get("state") or "unavailable")
+    message = str(chat.get("message") or chat.get("reason") or "SafeTrace Assistant status unknown.")
+    return _runtime_check(state, message, action_hint=chat.get("action_hint"), details={"provider": chat.get("provider")})
+
+
+def _assistant_model_check(chat: dict) -> dict:
+    provider = str(chat.get("provider") or "unknown")
+    model_path = chat.get("model_path")
+    model_exists = chat.get("model_exists")
+    if provider != "packaged_llamacpp":
+        return _runtime_check(
+            "unavailable",
+            f"Assistant model file check is not applicable for provider {provider}.",
+            path=model_path,
+        )
+    if model_exists is True:
+        return _runtime_check("ready", "Assistant model found", path=model_path)
+    if model_exists is False:
+        return _runtime_check(
+            "missing",
+            "Assistant model file is missing.",
+            path=model_path,
+            action_hint=chat.get("action_hint"),
+        )
+    return _runtime_check("unavailable", "Assistant model file status unknown.", path=model_path)
+
+
+def _assistant_runtime_check(chat: dict) -> dict:
+    provider = str(chat.get("provider") or "unknown")
+    runtime_available = chat.get("runtime_available")
+    if provider != "packaged_llamacpp":
+        return _runtime_check(
+            "unavailable",
+            f"llama-cpp runtime check is not applicable for provider {provider}.",
+        )
+    if runtime_available is True:
+        return _runtime_check("ready", "Assistant runtime installed")
+    if runtime_available is False:
+        return _runtime_check(
+            "missing",
+            "Assistant runtime is missing.",
+            action_hint=chat.get("action_hint"),
+        )
+    return _runtime_check("unavailable", "Assistant runtime status unknown.")
+
+
+def _preflight_payload(*, models: dict[str, ModelStatus], chat: dict, openmp: dict) -> dict:
+    checks = {
+        "backend": _runtime_check("ready", "SafeTrace backend is responding."),
+        "openmp": _runtime_check(
+            openmp["status"],
+            openmp["message"],
+            action_hint=openmp.get("actionHint"),
+            details={
+                "kmpDuplicateLibOk": openmp.get("kmpDuplicateLibOk"),
+                "ompNumThreads": openmp.get("ompNumThreads"),
+            },
+        ),
+        "embeddingModel": _model_preflight_check("embedding model", models["embeddingModel"]),
+        "detector": _model_preflight_check("detector", models["detector"]),
+        "mobileSam": _model_preflight_check("MobileSAM", models["mobileSam"], optional=True),
+        "vlm": _model_preflight_check("VLM", models["vlm"], optional=True),
+        "assistant": _assistant_preflight_check(chat),
+        "assistantModel": _assistant_model_check(chat),
+        "assistantRuntime": _assistant_runtime_check(chat),
+    }
+    ready = sum(1 for check in checks.values() if check["status"] in {"ready", "available"})
+    warnings = len(checks) - ready
+    return {"checks": checks, "summary": {"ready": ready, "warnings": warnings}}
+
+
+def _runtime_payload(
+    *,
+    store: "JobStore",
+    models: dict[str, ModelStatus],
+    gpu_available: bool,
+    chat: dict,
+    openmp: dict,
+) -> dict:
+    return {
+        "backend": {
+            "status": "ready",
+            "api": "safetrace-local",
+            "version": "dev",
+            "offline": SETTINGS.offline,
+        },
+        "python": {
+            "executable": sys.executable,
+            "version": sys.version.split()[0],
+        },
+        "workingDirectory": str(Path.cwd()),
+        "device": {
+            "configured": SETTINGS.device,
+            "gpuAvailable": gpu_available,
+        },
+        "models": {key: _model_status_payload(value) for key, value in models.items()},
+        "chat": chat,
+        "openmp": openmp,
+        "uploadLimits": {
+            "maxUploadMb": SETTINGS.max_upload_mb,
+            "maxVideoDurationSeconds": SETTINGS.max_video_duration_seconds,
+            "maxSampledFrames": SETTINGS.max_frames,
+        },
+        "batchLimits": {
+            "bulkMaxFiles": SETTINGS.bulk_max_files,
+            "bulkMaxUncompressedMb": SETTINGS.bulk_max_uncompressed_mb,
+            "workerConcurrency": SETTINGS.worker_concurrency,
+        },
+        "jobStorePath": _display_path(store.root_dir),
+    }
+
+
 def get_job_store(request: Request) -> JobStore:
     return request.app.state.job_store
 
@@ -165,6 +345,7 @@ def create_app(job_store: JobStore | None = None, batch_store: BatchStore | None
 
     @app.get("/api/system/status", response_model=SystemStatusResponse)
     def system_status(store: JobStore = Depends(get_job_store)) -> SystemStatusResponse:
+        gpu_available = _gpu_available()
         vlm_status = (
             _path_status(SETTINGS.vlm_model_dir, optional=True, unavailable_message="VLM explanations disabled")
             if SETTINGS.enable_vlm
@@ -174,49 +355,74 @@ def create_app(job_store: JobStore | None = None, batch_store: BatchStore | None
                 message="VLM explanations disabled",
             )
         )
+        models = {
+            "embeddingModel": _path_status(SETTINGS.siglip_model_dir),
+            "detector": _detector_status(),
+            "mobileSam": _path_status(
+                SETTINGS.mobile_sam_checkpoint,
+                optional=True,
+                unavailable_message="Refinement disabled",
+            ),
+            "vlm": vlm_status,
+        }
+        limits = {
+            "maxUploadMb": SETTINGS.max_upload_mb,
+            "bulkMaxFiles": SETTINGS.bulk_max_files,
+            "bulkMaxUncompressedMb": SETTINGS.bulk_max_uncompressed_mb,
+            "maxVideoDurationSeconds": SETTINGS.max_video_duration_seconds,
+            "maxVideoDurationUnlimited": SETTINGS.max_video_duration_seconds <= 0,
+            "maxVideoDurationMessage": (
+                "No explicit video duration cap is enforced; sampled frames remain bounded."
+                if SETTINGS.max_video_duration_seconds <= 0
+                else "Video duration cap is enforced during frame extraction."
+            ),
+            "maxSampledFrames": SETTINGS.max_frames,
+            "embeddingBatchSize": SETTINGS.embedding_batch_size,
+            "embeddingWindowSize": SETTINGS.embedding_window_size,
+            "embeddingWindowStride": SETTINGS.embedding_window_stride,
+            "embeddingPoolingStrategy": SETTINGS.embedding_pooling_strategy,
+            "workerConcurrency": SETTINGS.worker_concurrency,
+            "jobRetentionHours": SETTINGS.job_retention_hours,
+            "staleRunningMinutes": SETTINGS.stale_running_minutes,
+        }
+        chat = chat_status_payload(allow_model_load=False)
+        openmp = _openmp_status()
         return SystemStatusResponse(
+            app_version=__version__,
+            backend_version=__version__,
+            build_mode=os.environ.get("SAFETRACE_BUILD_MODE", "development"),
+            runtime_layout=os.environ.get("SAFETRACE_RUNTIME_LAYOUT", "source"),
             device=SETTINGS.device,
-            gpuAvailable=_gpu_available(),
-            models={
-                "embeddingModel": _path_status(SETTINGS.siglip_model_dir),
-                "detector": _detector_status(),
-                "mobileSam": _path_status(
-                    SETTINGS.mobile_sam_checkpoint,
-                    optional=True,
-                    unavailable_message="Refinement disabled",
-                ),
-                "vlm": vlm_status,
-            },
-            limits={
-                "maxUploadMb": SETTINGS.max_upload_mb,
-                "bulkMaxFiles": SETTINGS.bulk_max_files,
-                "bulkMaxUncompressedMb": SETTINGS.bulk_max_uncompressed_mb,
-                "maxVideoDurationSeconds": SETTINGS.max_video_duration_seconds,
-                "maxVideoDurationUnlimited": SETTINGS.max_video_duration_seconds <= 0,
-                "maxVideoDurationMessage": (
-                    "No explicit video duration cap is enforced; sampled frames remain bounded."
-                    if SETTINGS.max_video_duration_seconds <= 0
-                    else "Video duration cap is enforced during frame extraction."
-                ),
-                "maxSampledFrames": SETTINGS.max_frames,
-                "embeddingBatchSize": SETTINGS.embedding_batch_size,
-                "embeddingWindowSize": SETTINGS.embedding_window_size,
-                "embeddingWindowStride": SETTINGS.embedding_window_stride,
-                "embeddingPoolingStrategy": SETTINGS.embedding_pooling_strategy,
-                "workerConcurrency": SETTINGS.worker_concurrency,
-                "jobRetentionHours": SETTINGS.job_retention_hours,
-                "staleRunningMinutes": SETTINGS.stale_running_minutes,
-            },
+            gpuAvailable=gpu_available,
+            models=models,
+            limits=limits,
             queue={
                 "statusCounts": store.status_counts(),
                 "activeStates": ["queued", "running"],
                 "terminalStates": ["completed", "failed", "cancelled"],
             },
+            runtime=_runtime_payload(
+                store=store,
+                models=models,
+                gpu_available=gpu_available,
+                chat=chat,
+                openmp=openmp,
+            ),
+            preflight=_preflight_payload(models=models, chat=chat, openmp=openmp),
         )
 
     @app.get("/api/chat/status", response_model=ChatStatusResponse)
     def chat_status() -> ChatStatusResponse:
         return ChatStatusResponse(**chat_status_payload())
+
+    @app.post("/api/chat/warmup", response_model=ChatStatusResponse)
+    def chat_warmup() -> ChatStatusResponse:
+        try:
+            return ChatStatusResponse(**warmup_chat_provider())
+        except ChatDisabledError as exc:
+            raise HTTPException(status_code=503, detail={"message": str(exc)}) from exc
+        except ChatProviderUnavailableError as exc:
+            raise HTTPException(status_code=503, detail={"message": str(exc)}) from exc
 
     @app.post("/api/chat", response_model=ChatResponse)
     def chat(

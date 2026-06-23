@@ -1,0 +1,15 @@
+{
+  "component": "safetrace-backend",
+  "version": "0.0.0-dev",
+  "build_mode": "development",
+  "requires_frontend_version": ">=0.0.0",
+  "schema_version": 1,
+  "entrypoint": "safetrace-backend.exe",
+  "preserve_paths": [
+    "config/",
+    "data/",
+    "models/",
+    "logs/"
+  ],
+  "notes": "Example manifest only. Do not place model files in backend builds."
+}

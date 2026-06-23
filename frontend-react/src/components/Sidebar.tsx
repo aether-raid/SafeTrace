@@ -1,5 +1,12 @@
 import { Cpu, Gauge, Layers3, ShieldCheck, SlidersHorizontal, Sparkles } from 'lucide-react';
-import type { AnalysisSettings, BackendConnectionState, BackendModelStatus, DeviceMode, SystemStatus } from '../types/analysis';
+import type {
+  AnalysisSettings,
+  BackendConnectionState,
+  BackendModelStatus,
+  DeviceMode,
+  RuntimeCheck,
+  SystemStatus,
+} from '../types/analysis';
 import { StatusBadge } from './StatusBadge';
 
 type SidebarProps = {
@@ -44,6 +51,24 @@ function backendTone(state: BackendConnectionState) {
   return 'danger' as const;
 }
 
+function checkTone(check?: RuntimeCheck) {
+  const status = String(check?.status || '').toLowerCase();
+  if (status === 'ready' || status === 'available') return 'success' as const;
+  if (status === 'missing') return 'danger' as const;
+  if (status === 'loading') return 'info' as const;
+  if (status === 'warning' || status === 'disabled' || status === 'unavailable') return 'warning' as const;
+  return 'neutral' as const;
+}
+
+function checkLabel(label: string, check?: RuntimeCheck) {
+  if (!check) return `${label}: unknown`;
+  const status = String(check.status || 'unknown').toLowerCase();
+  if (label === 'Assistant model' && status === 'ready') return `${label}: found`;
+  if (label === 'Assistant runtime' && status === 'ready') return `${label}: installed`;
+  if (label === 'OpenMP workaround' && status === 'ready') return `${label}: enabled`;
+  return `${label}: ${status}`;
+}
+
 export function Sidebar({
   settings,
   onSettingsChange,
@@ -54,6 +79,16 @@ export function Sidebar({
   previewMode = false,
 }: SidebarProps) {
   const processingCost = settings.fps >= 3 ? 'High coverage' : settings.fps >= 1.5 ? 'Balanced coverage' : 'Fast preview';
+  const preflightChecks = systemStatus?.preflight?.checks;
+  const runtime = systemStatus?.runtime;
+  const diagnosticChecks = [
+    ['Assistant', preflightChecks?.assistant],
+    ['Assistant model', preflightChecks?.assistantModel],
+    ['Assistant runtime', preflightChecks?.assistantRuntime],
+    ['OpenMP workaround', preflightChecks?.openmp],
+    ['MobileSAM', preflightChecks?.mobileSam],
+    ['VLM', preflightChecks?.vlm],
+  ].filter((item): item is [string, RuntimeCheck] => Boolean(item[1]));
   const systemStatuses = [
     {
       label: backendState === 'connected'
@@ -74,6 +109,22 @@ export function Sidebar({
     {
       label: modelLabel('Detector', systemStatus?.models.detector),
       tone: getModelTone(systemStatus?.models.detector),
+    },
+    {
+      label: checkLabel('Assistant', preflightChecks?.assistant),
+      tone: checkTone(preflightChecks?.assistant),
+    },
+    {
+      label: checkLabel('Assistant model', preflightChecks?.assistantModel),
+      tone: checkTone(preflightChecks?.assistantModel),
+    },
+    {
+      label: checkLabel('Assistant runtime', preflightChecks?.assistantRuntime),
+      tone: checkTone(preflightChecks?.assistantRuntime),
+    },
+    {
+      label: checkLabel('OpenMP workaround', preflightChecks?.openmp),
+      tone: checkTone(preflightChecks?.openmp),
     },
     {
       label: modelLabel('MobileSAM', systemStatus?.models.mobileSam),
@@ -231,6 +282,64 @@ export function Sidebar({
               <div>
                 <dt className="font-semibold text-slate-200">Connection message</dt>
                 <dd>{backendMessage}</dd>
+              </div>
+            ) : null}
+            {runtime?.python?.executable ? (
+              <div>
+                <dt className="font-semibold text-slate-200">Python</dt>
+                <dd className="break-all font-mono">
+                  {runtime.python.version} - {runtime.python.executable}
+                </dd>
+              </div>
+            ) : null}
+            {runtime?.workingDirectory ? (
+              <div>
+                <dt className="font-semibold text-slate-200">Working directory</dt>
+                <dd className="break-all font-mono">{runtime.workingDirectory}</dd>
+              </div>
+            ) : null}
+            {runtime?.jobStorePath ? (
+              <div>
+                <dt className="font-semibold text-slate-200">Job store</dt>
+                <dd className="break-all font-mono">{runtime.jobStorePath}</dd>
+              </div>
+            ) : null}
+            {runtime?.chat ? (
+              <div>
+                <dt className="font-semibold text-slate-200">Assistant provider</dt>
+                <dd>
+                  {runtime.chat.provider || 'unknown'} / {runtime.chat.state || runtime.chat.status || 'unknown'}
+                </dd>
+              </div>
+            ) : null}
+            {runtime?.chat?.model_path ? (
+              <div>
+                <dt className="font-semibold text-slate-200">Assistant model path</dt>
+                <dd className="break-all font-mono">{runtime.chat.model_path}</dd>
+              </div>
+            ) : null}
+            {runtime?.openmp ? (
+              <div>
+                <dt className="font-semibold text-slate-200">OpenMP environment</dt>
+                <dd>
+                  KMP_DUPLICATE_LIB_OK={runtime.openmp.rawKmpDuplicateLibOk || 'unset'},
+                  {' '}OMP_NUM_THREADS={runtime.openmp.ompNumThreads || 'unset'}
+                </dd>
+              </div>
+            ) : null}
+            {diagnosticChecks.length ? (
+              <div>
+                <dt className="font-semibold text-slate-200">Actionable diagnostics</dt>
+                <dd>
+                  <ul className="mt-1 space-y-1">
+                    {diagnosticChecks.map(([label, check]) => (
+                      <li key={label}>
+                        <span className="font-semibold">{label}:</span> {check.message}
+                        {check.actionHint ? <span> {check.actionHint}</span> : null}
+                      </li>
+                    ))}
+                  </ul>
+                </dd>
               </div>
             ) : null}
           </dl>
