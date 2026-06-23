@@ -8,6 +8,12 @@ from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 
 from src import __version__
+from src.chat_service import (
+    ChatDisabledError,
+    ChatProviderUnavailableError,
+    answer_chat,
+    chat_status_payload,
+)
 from src.config import SETTINGS
 
 from .batches import BatchStore, BatchValidationError
@@ -25,6 +31,9 @@ from .schemas import (
     AnalysisResultResponse,
     AnalyzeResponse,
     BatchResponse,
+    ChatRequest,
+    ChatResponse,
+    ChatStatusResponse,
     DeviceMode,
     HealthResponse,
     JobStatusResponse,
@@ -204,6 +213,33 @@ def create_app(job_store: JobStore | None = None, batch_store: BatchStore | None
                 "terminalStates": ["completed", "failed", "cancelled"],
             },
         )
+
+    @app.get("/api/chat/status", response_model=ChatStatusResponse)
+    def chat_status() -> ChatStatusResponse:
+        return ChatStatusResponse(**chat_status_payload())
+
+    @app.post("/api/chat", response_model=ChatResponse)
+    def chat(
+        request: ChatRequest,
+        store: JobStore = Depends(get_job_store),
+        batches: BatchStore = Depends(get_batch_store),
+    ) -> ChatResponse:
+        if not request.message.strip():
+            raise HTTPException(status_code=400, detail={"message": "Message is required"})
+        try:
+            payload = answer_chat(
+                message=request.message,
+                job_store=store,
+                batch_store=batches,
+                job_id=request.job_id,
+                batch_id=request.batch_id,
+                include_current_result=request.include_current_result,
+            )
+        except ChatDisabledError as exc:
+            raise HTTPException(status_code=503, detail={"message": str(exc)}) from exc
+        except ChatProviderUnavailableError as exc:
+            raise HTTPException(status_code=503, detail={"message": str(exc)}) from exc
+        return ChatResponse(**payload)
 
     @app.post("/api/analyze", response_model=AnalyzeResponse)
     async def analyze(

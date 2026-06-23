@@ -36,6 +36,18 @@ def _env_bool(key: str, default: bool) -> bool:
     return raw.strip().lower() in {"1", "true", "yes", "y", "on"}
 
 
+def _chat_speed_profile() -> str:
+    return _env("SAFETRACE_CHAT_SPEED_PROFILE", "balanced").strip().lower() or "balanced"
+
+
+def _chat_profile_int(key: str, balanced_default: int, fast_default: int) -> int:
+    return _env_int(key, fast_default if _chat_speed_profile() == "fast" else balanced_default)
+
+
+def _chat_profile_float(key: str, balanced_default: float, fast_default: float) -> float:
+    return _env_float(key, fast_default if _chat_speed_profile() == "fast" else balanced_default)
+
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
@@ -103,6 +115,28 @@ class Settings:
     )
     job_retention_hours: float = field(default_factory=lambda: _env_float("SAFETRACE_JOB_RETENTION_HOURS", 24.0))
     stale_running_minutes: float = field(default_factory=lambda: _env_float("SAFETRACE_STALE_RUNNING_MINUTES", 30.0))
+
+    # ---- Optional SafeTrace assistant ----
+    chat_enabled: str = field(default_factory=lambda: _env("SAFETRACE_CHAT_ENABLED", "auto"))
+    chat_provider: str = field(default_factory=lambda: _env("SAFETRACE_CHAT_PROVIDER", "packaged_llamacpp"))
+    chat_speed_profile: str = field(default_factory=_chat_speed_profile)
+    chat_model_path: Path = field(
+        default_factory=lambda: Path(
+            _env(
+                "SAFETRACE_CHAT_MODEL_PATH",
+                str(Path("models") / "chat" / "safetrace-assistant-qwen2.5-1.5b-instruct-q4.gguf"),
+            )
+        )
+    )
+    chat_context_window: int = field(default_factory=lambda: _chat_profile_int("SAFETRACE_CHAT_CONTEXT_WINDOW", 4096, 2048))
+    chat_max_tokens: int = field(default_factory=lambda: _chat_profile_int("SAFETRACE_CHAT_MAX_TOKENS", 512, 200))
+    chat_temperature: float = field(default_factory=lambda: _chat_profile_float("SAFETRACE_CHAT_TEMPERATURE", 0.2, 0.1))
+    chat_top_p: float = field(default_factory=lambda: _chat_profile_float("SAFETRACE_CHAT_TOP_P", 0.9, 0.82))
+    chat_repeat_penalty: float = field(default_factory=lambda: _env_float("SAFETRACE_CHAT_REPEAT_PENALTY", 1.15))
+    chat_autoload: bool = field(default_factory=lambda: _env_bool("SAFETRACE_CHAT_AUTOLOAD", False))
+    ollama_base_url: str = field(default_factory=lambda: _env("SAFETRACE_OLLAMA_BASE_URL", "http://127.0.0.1:11434"))
+    ollama_model: str = field(default_factory=lambda: _env("SAFETRACE_OLLAMA_MODEL", "llama3.2:3b"))
+    chat_timeout_seconds: float = field(default_factory=lambda: _env_float("SAFETRACE_CHAT_TIMEOUT_SECONDS", 8.0))
 
     # ---- Detection ----
     yolo_conf_threshold: float = field(default_factory=lambda: _env_float("SAFETRACE_YOLO_CONF", 0.25))

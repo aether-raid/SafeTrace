@@ -8,6 +8,7 @@ import { EvidenceFrames } from './components/EvidenceFrames';
 import { MediaLibraryPanel } from './components/MediaLibraryPanel';
 import { QueryTabs } from './components/QueryTabs';
 import { ReportActions } from './components/ReportActions';
+import { SafeTraceAssistant } from './components/SafeTraceAssistant';
 import { Sidebar } from './components/Sidebar';
 import { StatisticsPanel } from './components/StatisticsPanel';
 import { TimelineVisualization } from './components/TimelineVisualization';
@@ -614,6 +615,13 @@ function App() {
       </div>
     </div>
   )}
+
+      <SafeTraceAssistant
+        backendConnected={backendConnected}
+        result={analysisResult}
+        batch={batchStatus}
+        selectedJobId={selectedBatchJobId}
+      />
     </AppShell>
   );
 }

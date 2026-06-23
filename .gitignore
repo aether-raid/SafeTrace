@@ -13,9 +13,20 @@ data/metadata.json
 data/index.faiss
 checkpoints/*
 !checkpoints/.gitkeep
+*.gguf
+models/chat/*.gguf
+models/chat/*.bin
+models/chat/*.safetensors
+*.bin
+*.safetensors
+*.pt
+*.pth
 
 # IDE / OS
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
+.ai-pipeline/
+codex_prompts/
+AGENTS.md

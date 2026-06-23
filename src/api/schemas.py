@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 DeviceMode = Literal["auto", "cpu", "cuda"]
 JobStatus = Literal["queued", "running", "completed", "failed", "cancelled"]
 BatchStatus = Literal["queued", "running", "completed", "failed", "partial", "cancelled"]
+ChatAvailabilityState = Literal["available", "disabled", "missing_model", "missing_runtime", "loading", "unavailable"]
 
 
 class HealthResponse(BaseModel):
@@ -30,6 +31,37 @@ class SystemStatusResponse(BaseModel):
     models: Dict[str, ModelStatus]
     limits: Optional[Dict[str, Any]] = None
     queue: Optional[Dict[str, Any]] = None
+
+
+class ChatStatusResponse(BaseModel):
+    enabled: bool
+    available: bool
+    state: ChatAvailabilityState
+    status: ChatAvailabilityState
+    enabled_mode: str
+    provider: str
+    model: Optional[str] = None
+    model_path: Optional[str] = None
+    model_exists: Optional[bool] = None
+    runtime_available: Optional[bool] = None
+    speed_profile: Optional[str] = None
+    reason: Optional[str] = None
+    action_hint: Optional[str] = None
+    message: str
+
+
+class ChatRequest(BaseModel):
+    message: str
+    job_id: Optional[str] = None
+    batch_id: Optional[str] = None
+    include_current_result: bool = True
+
+
+class ChatResponse(BaseModel):
+    answer: str
+    sources: List[str]
+    safeTraceOnly: bool
+    modelProvider: str
 
 
 class AnalyzeResponse(BaseModel):
