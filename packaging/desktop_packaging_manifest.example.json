@@ -1,0 +1,34 @@
+{
+  "component": "safetrace-desktop-package",
+  "version": "0.0.0-dev",
+  "build_mode": "prototype",
+  "schema_version": 1,
+  "frontend": {
+    "dist_path": "frontend/dist",
+    "served_by_backend": true
+  },
+  "backend": {
+    "layout": "backend/",
+    "entrypoint": "safetrace-backend.exe",
+    "manifest": "backend/backend_manifest.json"
+  },
+  "preserve_paths": [
+    "config/",
+    "data/",
+    "models/",
+    "logs/"
+  ],
+  "excluded_asset_rules": [
+    "*.gguf",
+    "*.bin",
+    "*.safetensors",
+    "*.pt",
+    "*.pth",
+    "checkpoints/",
+    "data/",
+    "uploads/",
+    "generated/",
+    "generated_media/"
+  ],
+  "notes": "Prototype manifest only. Generated package output belongs under dist/SafeTrace/ and must not be committed."
+}

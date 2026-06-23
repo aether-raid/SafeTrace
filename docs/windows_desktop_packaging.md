@@ -3,6 +3,9 @@
 Phase 4 prepares SafeTrace for offline Windows desktop usage. It does not build
 the final packaged `.exe`.
 
+Phase 5 adds a prototype package layout under `dist/SafeTrace/`. That generated
+folder is ignored and must not be committed.
+
 ## Development Launcher
 
 Use:
@@ -56,6 +59,42 @@ SafeTrace/
 The packaged app should start the backend first, then serve or open the frontend.
 The same environment defaults above should be applied by the app launcher.
 
+## Prototype Package Layout
+
+Create the local prototype package with:
+
+```cmd
+python scripts\build_desktop_prototype.py --clean
+```
+
+The script creates `dist/SafeTrace/` with:
+
+- `SafeTraceLauncher.bat`
+- `backend/`
+- `frontend/dist/`
+- `config/safetrace.env.example`
+- `models/chat/`
+- `data/`
+- `logs/`
+- `packaging_manifest.json`
+
+The prototype does not build or copy a final backend `.exe`. It also does not
+copy local uploads, generated evidence, checkpoints, GGUF files, or model assets.
+
+## Packaged Frontend Serving
+
+The FastAPI backend can serve the React production build in packaged mode:
+
+```cmd
+set SAFETRACE_SERVE_FRONTEND=true
+set SAFETRACE_FRONTEND_DIST=frontend/dist
+```
+
+When enabled, `/` serves the React app, `/assets/*` serves static assets, and
+unknown frontend routes fall back to `index.html`. `/api/*` remains API-only.
+Vite development mode remains supported by leaving `SAFETRACE_SERVE_FRONTEND`
+unset or false.
+
 ## Update-Friendly Backend Executable Design
 
 The future backend executable should be a replaceable component, not a hard to
@@ -98,8 +137,10 @@ A future updater should:
 If startup or status checks fail, restore the previous backend folder and leave
 `config/`, `data/`, `models/`, and `logs/` untouched. See
 `docs/backend_exe_update_strategy.md` and
-`packaging/backend_manifest.example.json` for the detailed design note and
-manifest shape.
+`packaging/backend_manifest.example.json` for the detailed backend design note.
+See `docs/desktop_packaging_prototype.md` and
+`packaging/desktop_packaging_manifest.example.json` for the desktop package
+prototype contract.
 
 ## Model Files
 

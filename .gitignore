@@ -6,6 +6,7 @@ __pycache__/
 venv/
 
 # Data / models / outputs
+dist/SafeTrace/
 data/frames/*
 data/annotated/*
 data/embeddings.npy
@@ -21,6 +22,8 @@ models/chat/*.safetensors
 *.safetensors
 *.pt
 *.pth
+logs/*.log
+config/safetrace.env
 
 # IDE / OS
 .vscode/

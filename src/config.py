@@ -93,6 +93,10 @@ class Settings:
     device: str = field(default_factory=lambda: _env("SAFETRACE_DEVICE", "auto"))
     offline: bool = field(default_factory=lambda: _env_bool("SAFETRACE_OFFLINE", True))
     enable_vlm: bool = field(default_factory=lambda: _env_bool("SAFETRACE_ENABLE_VLM", False))
+    serve_frontend: bool = field(default_factory=lambda: _env_bool("SAFETRACE_SERVE_FRONTEND", False))
+    frontend_dist: Path = field(
+        default_factory=lambda: Path(_env("SAFETRACE_FRONTEND_DIST", str(PROJECT_ROOT / "frontend-react" / "dist")))
+    )
 
     # ---- Sampling / pipeline ----
     frame_fps: float = field(default_factory=lambda: _env_float("SAFETRACE_FPS", 1.0))

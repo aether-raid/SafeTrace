@@ -278,6 +278,14 @@ export function Sidebar({
               <dt className="font-semibold text-slate-200">Selected device</dt>
               <dd>{getDeviceStatus(settings.deviceMode).label}</dd>
             </div>
+            {systemStatus?.build_mode || systemStatus?.runtime_layout ? (
+              <div>
+                <dt className="font-semibold text-slate-200">Runtime layout</dt>
+                <dd>
+                  {systemStatus.build_mode || 'unknown'} / {systemStatus.runtime_layout || 'unknown'}
+                </dd>
+              </div>
+            ) : null}
             {backendMessage ? (
               <div>
                 <dt className="font-semibold text-slate-200">Connection message</dt>

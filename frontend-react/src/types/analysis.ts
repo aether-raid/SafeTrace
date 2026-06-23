@@ -147,6 +147,10 @@ export type SystemPreflightStatus = {
 };
 
 export type SystemStatus = {
+  app_version?: string | null;
+  backend_version?: string | null;
+  build_mode?: string | null;
+  runtime_layout?: string | null;
   device: string;
   gpuAvailable: boolean;
   models: Record<string, BackendModelStatus>;

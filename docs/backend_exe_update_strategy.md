@@ -47,6 +47,10 @@ The launcher should pass explicit external paths to the backend through
 environment variables. Backend builds should never assume data, configuration,
 models, or logs live inside the backend executable folder.
 
+The Phase 5 prototype package script creates this shape under `dist/SafeTrace/`
+without building a final `.exe`. Treat that generated folder as disposable local
+output.
+
 ## What Stays Outside The Backend EXE
 
 Keep these paths external and preserved across backend updates:
@@ -118,6 +122,30 @@ The backend status endpoint exposes lightweight metadata:
 
 These fields are static or environment-driven defaults in source/development
 mode and should come from the package manifest in future executable builds.
+
+The desktop package manifest example lives at:
+
+```text
+packaging/desktop_packaging_manifest.example.json
+```
+
+It describes the frontend dist path, backend runtime layout, preserved paths,
+and excluded asset rules. Future updaters should verify both the desktop package
+manifest and `backend/backend_manifest.json` before replacing runtime files.
+
+## Packaged Frontend Serving
+
+In packaged mode, the backend may serve the built React frontend directly:
+
+```cmd
+set SAFETRACE_SERVE_FRONTEND=true
+set SAFETRACE_FRONTEND_DIST=frontend/dist
+```
+
+This does not change the backend update boundary. The frontend bundle remains in
+`frontend/dist/`; the backend executable only serves those files at runtime.
+`/api/*` remains API-only so backend API compatibility can still be tested
+independently from frontend route fallback behavior.
 
 ## Why Models Should Not Be Embedded
 

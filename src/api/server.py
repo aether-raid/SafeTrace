@@ -8,6 +8,7 @@ from typing import Optional
 
 from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from src import __version__
 from src.chat_service import (
@@ -50,6 +51,35 @@ def _display_path(path: Path) -> str:
         return str(path.relative_to(SETTINGS.project_root))
     except ValueError:
         return str(path)
+
+
+def _resolve_configured_path(path: Path) -> Path:
+    if path.is_absolute():
+        return path
+    cwd_candidate = (Path.cwd() / path).resolve()
+    if cwd_candidate.exists():
+        return cwd_candidate
+    return (SETTINGS.project_root / path).resolve()
+
+
+def _frontend_dist_path() -> Path:
+    return _resolve_configured_path(Path(SETTINGS.frontend_dist))
+
+
+def _frontend_status_payload() -> dict:
+    dist = _frontend_dist_path()
+    index = dist / "index.html"
+    return {
+        "serveFrontend": bool(SETTINGS.serve_frontend),
+        "distPath": _display_path(dist),
+        "distExists": dist.is_dir(),
+        "indexExists": index.is_file(),
+        "message": (
+            "Frontend static serving is enabled."
+            if SETTINGS.serve_frontend and index.is_file()
+            else "Frontend static serving is disabled or the dist index is missing."
+        ),
+    }
 
 
 def _path_has_contents(path: Path) -> bool:
@@ -268,6 +298,7 @@ def _runtime_payload(
         "models": {key: _model_status_payload(value) for key, value in models.items()},
         "chat": chat,
         "openmp": openmp,
+        "frontend": _frontend_status_payload(),
         "uploadLimits": {
             "maxUploadMb": SETTINGS.max_upload_mb,
             "maxVideoDurationSeconds": SETTINGS.max_video_duration_seconds,
@@ -288,6 +319,35 @@ def get_job_store(request: Request) -> JobStore:
 
 def get_batch_store(request: Request) -> BatchStore:
     return request.app.state.batch_store
+
+
+def _configure_frontend_static(app: FastAPI) -> None:
+    if not bool(SETTINGS.serve_frontend):
+        return
+    dist = _frontend_dist_path()
+    index = dist / "index.html"
+    if not index.is_file():
+        return
+    assets = dist / "assets"
+    if assets.is_dir():
+        app.mount("/assets", StaticFiles(directory=assets), name="frontend-assets")
+
+    @app.get("/", include_in_schema=False)
+    def frontend_index() -> FileResponse:
+        return FileResponse(index)
+
+    @app.get("/{frontend_path:path}", include_in_schema=False)
+    def frontend_fallback(frontend_path: str) -> FileResponse:
+        if frontend_path.startswith("api/"):
+            raise HTTPException(status_code=404, detail={"message": "API route not found"})
+        candidate = (dist / frontend_path).resolve()
+        try:
+            candidate.relative_to(dist.resolve())
+        except ValueError:
+            return FileResponse(index)
+        if candidate.is_file():
+            return FileResponse(candidate)
+        return FileResponse(index)
 
 
 def _upload_http_error(exc: UploadValidationError) -> HTTPException:
@@ -625,6 +685,8 @@ def create_app(job_store: JobStore | None = None, batch_store: BatchStore | None
         if not batches.delete(batch_id, store):
             raise HTTPException(status_code=404, detail={"message": "Batch not found"})
         return {"batchId": batch_id, "status": "deleted"}
+
+    _configure_frontend_static(app)
 
     return app
 
