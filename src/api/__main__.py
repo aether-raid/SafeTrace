@@ -37,20 +37,22 @@ def apply_packaged_defaults(app_root: Path) -> None:
     os.environ.setdefault("SAFETRACE_CHAT_SPEED_PROFILE", "fast")
     os.environ.setdefault(
         "SAFETRACE_CHAT_MODEL_PATH",
-        str(Path("models") / "chat" / "safetrace-assistant-qwen2.5-1.5b-instruct-q4.gguf"),
+        str(app_root / "models" / "chat" / "safetrace-assistant-qwen2.5-1.5b-instruct-q4.gguf"),
     )
     os.environ.setdefault("SAFETRACE_SERVE_FRONTEND", "true")
-    os.environ.setdefault("SAFETRACE_FRONTEND_DIST", str(Path("frontend") / "dist"))
-    os.environ.setdefault("SAFETRACE_BUILD_MODE", "prototype")
+    os.environ.setdefault("SAFETRACE_FRONTEND_DIST", str(app_root / "frontend" / "dist"))
+    os.environ.setdefault("SAFETRACE_BUILD_MODE", "release-package")
     os.environ.setdefault("SAFETRACE_RUNTIME_LAYOUT", "packaged")
     os.environ.setdefault("SAFETRACE_DATA_DIR", str(app_root / "data"))
     os.environ.setdefault("SAFETRACE_CHECKPOINTS_DIR", str(app_root / "checkpoints"))
     os.environ.setdefault("SAFETRACE_MOBILESAM_ENABLED", "auto")
-    os.environ.setdefault("SAFETRACE_MOBILESAM_CHECKPOINT", str(Path("checkpoints") / "mobile_sam.pt"))
+    os.environ.setdefault("SAFETRACE_MOBILESAM_CHECKPOINT", str(app_root / "checkpoints" / "mobile_sam.pt"))
     os.environ.setdefault("SAFETRACE_VLM_ENABLED", "auto")
     os.environ.setdefault("SAFETRACE_VLM_PROVIDER", "auto")
+    os.environ.setdefault("SAFETRACE_VLM_MODEL_PATH", str(app_root / "models" / "vlm"))
+    os.environ.setdefault("SAFETRACE_VLM_DIR", os.environ["SAFETRACE_VLM_MODEL_PATH"])
     os.environ.setdefault("SAFETRACE_VLM_OLLAMA_BASE_URL", "http://127.0.0.1:11434")
-    os.environ.setdefault("SAFETRACE_VLM_MODEL", "llava")
+    os.environ.setdefault("SAFETRACE_VLM_MODEL", "local-vlm")
     os.environ.setdefault("SAFETRACE_VLM_TIMEOUT_SECONDS", "30")
     os.environ.setdefault("SAFETRACE_VLM_MAX_FRAMES", "3")
     os.environ.setdefault("SAFETRACE_VLM_MAX_TOKENS", "180")

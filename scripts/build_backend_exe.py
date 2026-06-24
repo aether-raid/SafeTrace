@@ -18,6 +18,8 @@ BACKEND_EXE_NAME = "safetrace-backend.exe"
 EXTERNAL_ASSET_RULES = [
     "config/",
     "models/",
+    "models/chat/*.gguf",
+    "models/vlm/",
     "data/",
     "logs/",
     "frontend/",
@@ -28,6 +30,7 @@ EXTERNAL_ASSET_RULES = [
     "*.bin",
     "*.onnx",
     "checkpoints/",
+    "checkpoints/mobile_sam.pt",
     "uploads/",
     "generated/",
     "generated_media/",

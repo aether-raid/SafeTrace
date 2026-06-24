@@ -22,19 +22,30 @@ if not exist "frontend-react\package.json" (
 
 set "KMP_DUPLICATE_LIB_OK=TRUE"
 set "OMP_NUM_THREADS=1"
+set "SAFETRACE_PROJECT_ROOT=%REPO_ROOT%"
+set "SAFETRACE_DATA_DIR=%REPO_ROOT%\data"
+set "SAFETRACE_CHECKPOINTS_DIR=%REPO_ROOT%\checkpoints"
 set "SAFETRACE_CHAT_ENABLED=auto"
 set "SAFETRACE_CHAT_PROVIDER=packaged_llamacpp"
 set "SAFETRACE_CHAT_SPEED_PROFILE=fast"
 
 if not defined SAFETRACE_CHAT_MODEL_PATH (
-  set "SAFETRACE_CHAT_MODEL_PATH=models\chat\safetrace-assistant-qwen2.5-1.5b-instruct-q4.gguf"
+  set "SAFETRACE_CHAT_MODEL_PATH=%REPO_ROOT%\models\chat\safetrace-assistant-qwen2.5-1.5b-instruct-q4.gguf"
 )
+if not defined SAFETRACE_MOBILESAM_ENABLED set "SAFETRACE_MOBILESAM_ENABLED=auto"
+if not defined SAFETRACE_MOBILESAM_CHECKPOINT set "SAFETRACE_MOBILESAM_CHECKPOINT=%REPO_ROOT%\checkpoints\mobile_sam.pt"
+if not defined SAFETRACE_VLM_ENABLED set "SAFETRACE_VLM_ENABLED=auto"
+if not defined SAFETRACE_VLM_PROVIDER set "SAFETRACE_VLM_PROVIDER=auto"
+if not defined SAFETRACE_VLM_MODEL_PATH set "SAFETRACE_VLM_MODEL_PATH=%REPO_ROOT%\models\vlm"
+if not defined SAFETRACE_VLM_DIR set "SAFETRACE_VLM_DIR=%SAFETRACE_VLM_MODEL_PATH%"
 
 echo [SafeTrace] Repo root: "%REPO_ROOT%"
 echo [SafeTrace] Backend URL:  http://127.0.0.1:8000/api/health
 echo [SafeTrace] Frontend URL: http://127.0.0.1:5173
 echo [SafeTrace] Chat provider: %SAFETRACE_CHAT_PROVIDER%
 echo [SafeTrace] Chat model: %SAFETRACE_CHAT_MODEL_PATH%
+echo [SafeTrace] MobileSAM: %SAFETRACE_MOBILESAM_CHECKPOINT%
+echo [SafeTrace] VLM assets: %SAFETRACE_VLM_DIR%
 echo.
 echo [SafeTrace] Opening backend and frontend terminals. Keep both windows open.
 

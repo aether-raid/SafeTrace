@@ -111,14 +111,17 @@ class Settings:
     )
     vlm_model_dir: Path = field(
         default_factory=lambda: Path(
-            _env("SAFETRACE_VLM_DIR", str(PROJECT_ROOT / "checkpoints" / "vlm_model"))
+            _env_first(
+                ("SAFETRACE_VLM_MODEL_PATH", "SAFETRACE_VLM_DIR"),
+                str(PROJECT_ROOT / "models" / "vlm"),
+            )
         )
     )
     vlm_provider: str = field(default_factory=lambda: _env("SAFETRACE_VLM_PROVIDER", "auto"))
     vlm_ollama_base_url: str = field(
         default_factory=lambda: _env("SAFETRACE_VLM_OLLAMA_BASE_URL", "http://127.0.0.1:11434")
     )
-    vlm_model: str = field(default_factory=lambda: _env("SAFETRACE_VLM_MODEL", "llava"))
+    vlm_model: str = field(default_factory=lambda: _env("SAFETRACE_VLM_MODEL", "local-vlm"))
     vlm_timeout_seconds: float = field(default_factory=lambda: _env_float("SAFETRACE_VLM_TIMEOUT_SECONDS", 30.0))
     vlm_max_frames: int = field(default_factory=lambda: _env_int("SAFETRACE_VLM_MAX_FRAMES", 3))
     vlm_max_tokens: int = field(default_factory=lambda: _env_int("SAFETRACE_VLM_MAX_TOKENS", 180))

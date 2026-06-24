@@ -153,7 +153,7 @@ def _local_provider_status(base_details: dict[str, Any]) -> dict[str, Any]:
             "status": "unavailable",
             "path": str(model_dir),
             "message": "Local transformer VLM model directory is missing or empty.",
-            "actionHint": "Place the existing local VLM snapshot at SAFETRACE_VLM_DIR, or use rule-based fallback.",
+            "actionHint": "Place packaged local VLM assets in models/vlm or set SAFETRACE_VLM_MODEL_PATH, or use rule-based fallback.",
             "details": details,
         }
     return {
@@ -310,7 +310,7 @@ def vlm_status_payload(*, timeout_seconds: float = 1.5) -> dict[str, Any]:  # no
         {
             "status": "unavailable",
             "message": "VLM unavailable. SafeTrace will use rule-based explanations.",
-            "actionHint": "Place the existing local VLM snapshot at SAFETRACE_VLM_DIR, or explicitly configure local Ollama.",
+            "actionHint": "Place packaged local VLM assets at models/vlm, or explicitly configure local Ollama.",
             "details": base_details,
         },
         requested_provider=AUTO_PROVIDER,

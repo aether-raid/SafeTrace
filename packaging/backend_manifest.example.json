@@ -1,10 +1,18 @@
 {
   "component": "safetrace-backend",
   "version": "0.0.0-dev",
-  "build_mode": "development",
+  "build_mode": "release-package-prototype",
   "requires_frontend_version": ">=0.0.0",
   "schema_version": 1,
   "entrypoint": "safetrace-backend.exe",
+  "external_assets": {
+    "config": "config/safetrace.env",
+    "data": "data/",
+    "logs": "logs/",
+    "mobileSam": "checkpoints/mobile_sam.pt",
+    "chat": "models/chat/safetrace-assistant-qwen2.5-1.5b-instruct-q4.gguf",
+    "vlm": "models/vlm/"
+  },
   "preserve_paths": [
     "config/",
     "data/",
@@ -12,5 +20,5 @@
     "logs/",
     "checkpoints/"
   ],
-  "notes": "Example manifest only. Do not place model files in backend builds."
+  "notes": "Example manifest only. Keep release assets outside the backend executable and do not commit generated package output."
 }

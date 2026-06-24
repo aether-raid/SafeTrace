@@ -90,6 +90,20 @@ If the runtime is disconnected, the website stays locked and tells the user to:
 1. Run `SafeTrace.exe` on this computer.
 2. Keep the local runtime window open.
 3. Return to the website and click `Reconnect to Local Runtime`.
+4. Analyze locally.
+
+The runtime package should already include MobileSAM, packaged chat, and local
+VLM assets:
+
+```text
+SafeTrace/checkpoints/mobile_sam.pt
+SafeTrace/models/chat/
+SafeTrace/models/vlm/
+```
+
+Users should not need to install MobileSAM, copy VLM checkpoints, edit config,
+or run Ollama for the default no-extra-steps release flow. Ollama remains an
+optional advanced local provider only.
 
 During development, run:
 
@@ -164,4 +178,5 @@ scripts\start_safetrace_windows.bat
 
 The live frontend is a shell until the local runtime is running. The backend
 executable design remains update-friendly: `config/`, `data/`, `models/`,
-`logs/`, frontend assets, checkpoints, and GGUF files stay external.
+`logs/`, frontend assets, checkpoints, and GGUF files stay external to the
+backend executable but bundled with the local SafeTrace folder.

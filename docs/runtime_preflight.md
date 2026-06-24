@@ -38,6 +38,7 @@ The `preflight.checks` object includes:
 - `openmp`
 - `embeddingModel`
 - `detector`
+- `visualExplanations`
 - `mobileSam`
 - `vlm`
 - `assistant`
@@ -58,11 +59,13 @@ Optional model statuses include:
 - `unavailable`: a non-blocking optional readiness issue was detected.
 
 MobileSAM details include checkpoint existence, runtime availability, and the
-packaged expected path. VLM details include `provider`, `selectedProvider`,
-`availableProviders`, provider-specific runtime/model readiness, and action
-hints. With `SAFETRACE_VLM_PROVIDER=auto`, SafeTrace prefers the existing local
-transformer VLM provider, then optional local Ollama, then rule-based fallback.
-VLM status is independent from SafeTrace Assistant status.
+packaged expected path. `visualExplanations` remains `available` because
+rule-based explanations are always available. VLM details include `provider`,
+`selectedProvider`, `availableProviders`, provider-specific runtime/model
+readiness, and action hints. With `SAFETRACE_VLM_PROVIDER=auto`, SafeTrace
+prefers packaged local VLM assets in `models/vlm/`, then optional local Ollama,
+then rule-based fallback. VLM status is independent from SafeTrace Assistant
+status.
 
 ## Chat Status Safety
 

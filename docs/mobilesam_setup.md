@@ -36,13 +36,13 @@ SafeTrace keeps using detector-box evidence.
 
 ## Packaging
 
-The prototype package builder looks for:
+The no-extra-steps release package should include:
 
 ```text
 checkpoints/mobile_sam.pt
 ```
 
-If present locally, it copies the checkpoint into:
+The prototype package builder looks for that local file and copies it into:
 
 ```text
 dist/SafeTrace/checkpoints/mobile_sam.pt
@@ -53,6 +53,15 @@ If absent, it creates `dist/SafeTrace/checkpoints/README.txt` and prints:
 ```text
 MobileSAM checkpoint missing; package will use detector-box fallback
 ```
+
+Release validation can require the checkpoint before distribution:
+
+```cmd
+python scripts\build_desktop_prototype.py --dry-run --strict-assets
+```
+
+End users should not need to manually install MobileSAM or copy this checkpoint
+after receiving the release package.
 
 Do not commit checkpoints or model weights. The `.gitignore` rules keep
 `*.pt`, `*.pth`, `*.bin`, `*.safetensors`, `*.gguf`, and `*.onnx` ignored.

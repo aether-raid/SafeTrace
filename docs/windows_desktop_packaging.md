@@ -34,13 +34,15 @@ set OMP_NUM_THREADS=1
 set SAFETRACE_CHAT_ENABLED=auto
 set SAFETRACE_CHAT_PROVIDER=packaged_llamacpp
 set SAFETRACE_CHAT_SPEED_PROFILE=fast
-set SAFETRACE_CHAT_MODEL_PATH=models\chat\safetrace-assistant-qwen2.5-1.5b-instruct-q4.gguf
+set SAFETRACE_CHAT_MODEL_PATH=%APP_ROOT%\models\chat\safetrace-assistant-qwen2.5-1.5b-instruct-q4.gguf
 set SAFETRACE_MOBILESAM_ENABLED=auto
-set SAFETRACE_MOBILESAM_CHECKPOINT=checkpoints\mobile_sam.pt
+set SAFETRACE_MOBILESAM_CHECKPOINT=%APP_ROOT%\checkpoints\mobile_sam.pt
 set SAFETRACE_VLM_ENABLED=auto
 set SAFETRACE_VLM_PROVIDER=auto
+set SAFETRACE_VLM_MODEL_PATH=%APP_ROOT%\models\vlm
+set SAFETRACE_VLM_DIR=%APP_ROOT%\models\vlm
 set SAFETRACE_VLM_OLLAMA_BASE_URL=http://127.0.0.1:11434
-set SAFETRACE_VLM_MODEL=llava
+set SAFETRACE_VLM_MODEL=local-vlm
 ```
 
 `KMP_DUPLICATE_LIB_OK=TRUE` is a local development workaround for duplicate
@@ -54,12 +56,21 @@ The expected future installer layout is:
 
 ```text
 SafeTrace/
-  SafeTrace.exe
+  SafeTrace.exe or SafeTraceLauncher.exe
   backend/
+    safetrace-backend.exe
   frontend/
   .venv/ or packaged Python runtime/
   checkpoints/
+    mobile_sam.pt
   models/chat/
+    safetrace-assistant-qwen2.5-1.5b-instruct-q4.gguf
+  models/vlm/
+    <local/non-Ollama VLM assets>
+  config/
+    safetrace.env
+  data/
+  logs/
 ```
 
 The packaged app should start the backend first, then serve or open the frontend.
@@ -80,16 +91,26 @@ The script creates `dist/SafeTrace/` with:
 - `frontend/dist/`
 - `config/safetrace.env.example`
 - `models/chat/`
+- `models/vlm/`
 - `checkpoints/`
 - `data/`
 - `logs/`
 - `packaging_manifest.json`
 
-The prototype does not build or copy a final backend `.exe`. It also does not
-copy local uploads, generated evidence, GGUF files, or model assets. It may copy
-the optional local `checkpoints/mobile_sam.pt` into the generated package when
-that file already exists locally; otherwise it writes a checkpoint README and
-uses detector-box fallback.
+The prototype does not build a final backend `.exe`. It can copy an existing
+local `dist/backend/safetrace-backend.exe` into the generated package. It also
+copies approved local release assets when they already exist:
+
+- `checkpoints/mobile_sam.pt`
+- `models/chat/*.gguf`
+- `models/vlm/**`
+
+It never copies uploads, generated evidence, reports, or local caches.
+Generated package output remains ignored and must not be committed.
+
+The builder writes `OPTIONAL_ASSETS_REPORT.txt` inside the generated package.
+Use `python scripts\build_desktop_prototype.py --dry-run --strict-assets` to
+validate that release assets are present before distribution.
 
 Phase 6 adds a backend executable prototype. The dry-run command is:
 
@@ -150,6 +171,13 @@ The backend still binds to `127.0.0.1` by default. Do not expose it to the LAN
 or use unrestricted CORS origins for the public website flow. See
 `docs/live_frontend_deployment.md`.
 
+The release-facing user flow is:
+
+1. Open the live SafeTrace website.
+2. If it reports the runtime is disconnected, run `SafeTrace.exe` locally.
+3. Click `Reconnect to Local Runtime`.
+4. Analyze media locally.
+
 ## Update-Friendly Backend Executable Design
 
 The future backend executable should be a replaceable component, not a hard to
@@ -180,12 +208,13 @@ folder. The launcher should point the backend to those external paths with
 environment variables so a backend replacement never overwrites user data,
 generated reports, local model files, the GGUF chat model, or local settings.
 
-MobileSAM and VLM are optional. MobileSAM refinement uses
-`checkpoints/mobile_sam.pt` when present and otherwise falls back to detector-box
-evidence. VLM explanations use the existing local VLM provider first, optional
-local Ollama only when configured/available, and otherwise fall back to
-rule-based explanation text. The SafeTrace Assistant remains a separate chat
-feature.
+MobileSAM and VLM assets should be bundled with the no-extra-steps release
+package. MobileSAM refinement uses `checkpoints/mobile_sam.pt` when present and
+otherwise falls back to detector-box evidence. VLM explanations use packaged
+`models/vlm/` assets first, optional local Ollama only when explicitly
+configured/available, and otherwise fall back to rule-based explanation text.
+Ollama is optional and is not required for the release package. The SafeTrace
+Assistant remains a separate chat feature and uses `models/chat/`.
 
 A future updater should:
 
@@ -217,6 +246,7 @@ Do not commit local model assets:
 - `*.pth`
 - `*.onnx`
 - `models/chat/*.gguf`
+- `models/vlm/**`
 - `data/`
 - `uploads/`
 - `generated/`

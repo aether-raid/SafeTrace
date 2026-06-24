@@ -83,7 +83,7 @@ Place each checkpoint under `checkpoints/`:
 | YOLOv9-seg  | `checkpoints/yolov9c-seg.pt`                            | Ultralytics release asset                   |
 | YOLOv8-seg* | `checkpoints/yolov8s-seg.pt` *(fallback)*               | Ultralytics release asset                   |
 | MobileSAM   | `checkpoints/mobile_sam.pt`                             | https://github.com/ChaoningZhang/MobileSAM  |
-| VLM (opt.)  | `checkpoints/vlm_model/` or local Ollama at `http://127.0.0.1:11434` | Existing local VLM snapshot, or optional Ollama vision model outside Git |
+| VLM (opt.)  | `models/vlm/` or local Ollama at `http://127.0.0.1:11434` | Packaged local VLM assets, or optional Ollama vision model outside Git |
 
 All paths are overridable via environment variables — see `src/config.py`.
 
@@ -156,8 +156,9 @@ All settings live in `src/config.py` and accept environment overrides:
 | `SAFETRACE_ENABLE_VLM`       | `0`                                              | Enable optional VLM explanations |
 | `SAFETRACE_VLM_ENABLED`      | `auto`                                           | Optional local VLM availability mode |
 | `SAFETRACE_VLM_PROVIDER`     | `auto`                                           | Prefer local VLM, then optional Ollama, then rule-based fallback |
+| `SAFETRACE_VLM_MODEL_PATH`   | `models/vlm`                                     | Optional packaged local VLM asset dir |
 | `SAFETRACE_VLM_OLLAMA_BASE_URL` | `http://127.0.0.1:11434`                      | Local Ollama vision runtime URL |
-| `SAFETRACE_VLM_MODEL`        | `llava`                                          | Local Ollama vision model name |
+| `SAFETRACE_VLM_MODEL`        | `local-vlm`                                      | Packaged VLM label; set to a local Ollama model only when using Ollama |
 | `SAFETRACE_FPS`              | `1.0`                                            | Frame sampling FPS               |
 | `SAFETRACE_TOPK`             | `5`                                              | Default semantic-search k        |
 | `SAFETRACE_SIGLIP_DIR`       | `checkpoints/siglip-base-patch16-224`            | Embedding model dir              |
@@ -165,7 +166,7 @@ All settings live in `src/config.py` and accept environment overrides:
 | `SAFETRACE_MOBILESAM_ENABLED` | `auto`                                          | Optional MobileSAM refinement mode |
 | `SAFETRACE_MOBILESAM_CHECKPOINT` | `checkpoints/mobile_sam.pt`                   | Optional MobileSAM weights       |
 | `SAFETRACE_MSAM_CKPT`        | `checkpoints/mobile_sam.pt`                      | Legacy MobileSAM checkpoint env  |
-| `SAFETRACE_VLM_DIR`          | `checkpoints/vlm_model`                          | Optional VLM dir                 |
+| `SAFETRACE_VLM_DIR`          | `models/vlm`                                     | Optional VLM dir compatibility alias |
 | `STREAMLIT_SERVER_MAX_UPLOAD_SIZE` | `51200`                                    | Per-file upload limit in **MB** (default 50 GB) |
 | `STREAMLIT_SERVER_MAX_MESSAGE_SIZE`| `51200`                                    | Streamlit websocket message cap in **MB**       |
 
@@ -207,10 +208,12 @@ results = analyze_query("worker without helmet")
   are set in both the container and `src/config.py`.
 - MobileSAM and the VLM are **optional**: if checkpoints are missing the
   pipeline degrades gracefully (YOLO masks only, deterministic explanations).
-- Packaged releases may include `checkpoints/mobile_sam.pt` locally, but Git
-  must not track checkpoints or model weights. VLM explanations default to
-  `auto`: existing local VLM provider first, optional local Ollama second, then
-  rule-based fallback. SafeTrace never uses cloud VLM APIs.
+- Packaged releases should include `checkpoints/mobile_sam.pt`,
+  `models/chat/`, and `models/vlm/` beside the local runtime, but Git must not
+  track checkpoints or model weights. VLM explanations default to `auto`:
+  packaged local VLM provider first, optional local Ollama second, then
+  rule-based fallback. SafeTrace never uses cloud VLM APIs and Ollama is not
+  required for the no-extra-steps release flow.
 - YOLO label spaces vary across checkpoints; `src/config.py` contains a
   configurable `CLASS_ALIASES` map normalizing labels for the rule engine.
 - The React frontend result cache is local to the user's browser. It can store

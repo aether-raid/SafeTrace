@@ -10,9 +10,10 @@ Default configuration:
 ```cmd
 set SAFETRACE_VLM_ENABLED=auto
 set SAFETRACE_VLM_PROVIDER=auto
-set SAFETRACE_VLM_DIR=checkpoints\vlm_model
+set SAFETRACE_VLM_MODEL_PATH=models\vlm
+set SAFETRACE_VLM_DIR=models\vlm
 set SAFETRACE_VLM_OLLAMA_BASE_URL=http://127.0.0.1:11434
-set SAFETRACE_VLM_MODEL=llava
+set SAFETRACE_VLM_MODEL=local-vlm
 set SAFETRACE_VLM_TIMEOUT_SECONDS=30
 set SAFETRACE_VLM_MAX_FRAMES=3
 set SAFETRACE_VLM_MAX_TOKENS=180
@@ -20,12 +21,33 @@ set SAFETRACE_VLM_MAX_TOKENS=180
 
 `auto` preserves the original local/non-Ollama VLM behavior:
 
-1. Use the existing local transformer VLM provider when `SAFETRACE_VLM_DIR`
+1. Use the existing local transformer VLM provider when `SAFETRACE_VLM_MODEL_PATH`
+   or `SAFETRACE_VLM_DIR`
    points to a local model snapshot and the runtime is installed.
 2. Otherwise use local Ollama vision only when it is configured and available.
 3. Otherwise use rule-based explanation fallback.
 
 Use `SAFETRACE_VLM_PROVIDER=ollama` only when you explicitly want Ollama.
+
+## No-Extra-Steps Release Package
+
+The release package should bundle the local/non-Ollama VLM assets at:
+
+```text
+SafeTrace/models/vlm/
+```
+
+The launcher resolves this folder relative to the local SafeTrace folder and
+sets:
+
+```cmd
+set SAFETRACE_VLM_MODEL_PATH=%APP_ROOT%\models\vlm
+set SAFETRACE_VLM_DIR=%APP_ROOT%\models\vlm
+set SAFETRACE_VLM_PROVIDER=auto
+```
+
+Users should not need to run Ollama, copy VLM checkpoints, or edit config for
+the default release flow.
 
 ## Ollama Vision Provider
 

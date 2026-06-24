@@ -1,9 +1,20 @@
 {
   "component": "safetrace-desktop-package",
   "version": "0.0.0-dev",
-  "build_mode": "prototype",
-  "schema_version": 1,
+  "build_mode": "release-package-prototype",
+  "schema_version": 2,
+  "release_runtime_layout": {
+    "launcher": "SafeTrace.exe or SafeTraceLauncher.exe",
+    "backend": "backend/safetrace-backend.exe",
+    "mobileSamCheckpoint": "checkpoints/mobile_sam.pt",
+    "chatModel": "models/chat/safetrace-assistant-qwen2.5-1.5b-instruct-q4.gguf",
+    "vlmAssets": "models/vlm/",
+    "config": "config/safetrace.env",
+    "data": "data/",
+    "logs": "logs/"
+  },
   "frontend": {
+    "live_frontend_supported": true,
     "dist_path": "frontend/dist",
     "served_by_backend": true
   },
@@ -11,6 +22,12 @@
     "layout": "backend/",
     "entrypoint": "safetrace-backend.exe",
     "manifest": "backend/backend_manifest.json"
+  },
+  "packaged_assets": {
+    "mobileSam": "checkpoints/mobile_sam.pt",
+    "chat": "models/chat/safetrace-assistant-qwen2.5-1.5b-instruct-q4.gguf",
+    "vlm": "models/vlm/",
+    "ollamaRequired": false
   },
   "preserve_paths": [
     "config/",
@@ -27,11 +44,20 @@
     "*.pth",
     "*.onnx",
     "checkpoints/",
-    "!dist/SafeTrace/checkpoints/mobile_sam.pt",
+    "models/chat/*.gguf",
+    "models/vlm/",
     "data/",
     "uploads/",
     "generated/",
-    "generated_media/"
+    "generated_media/",
+    "!dist/SafeTrace/checkpoints/mobile_sam.pt",
+    "!dist/SafeTrace/models/chat/*.gguf",
+    "!dist/SafeTrace/models/vlm/**"
   ],
-  "notes": "Prototype manifest only. Generated package output belongs under dist/SafeTrace/ and must not be committed."
+  "package_asset_allowlist": [
+    "dist/SafeTrace/checkpoints/mobile_sam.pt",
+    "dist/SafeTrace/models/chat/*.gguf",
+    "dist/SafeTrace/models/vlm/**"
+  ],
+  "notes": "Generated package output belongs under dist/SafeTrace/ and must not be committed. Ollama is optional, not required for the no-extra-steps release package."
 }

@@ -5,9 +5,11 @@ __pycache__/
 .venv/
 venv/
 build/
+dist/
 dist/backend/
 *.exe
 *.spec-generated
+frontend-react/dist/
 
 # Data / models / outputs
 dist/SafeTrace/
@@ -22,6 +24,7 @@ checkpoints/*
 models/chat/*.gguf
 models/chat/*.bin
 models/chat/*.safetensors
+models/vlm/**
 *.bin
 *.safetensors
 *.pt
