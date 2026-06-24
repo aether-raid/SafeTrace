@@ -27,6 +27,59 @@ def test_health_does_not_instantiate_pipeline(monkeypatch, tmp_path):
     assert response.json()["api"] == "safetrace-local"
 
 
+def test_cors_allows_local_dev_frontend_origin(tmp_path):
+    client = make_client(tmp_path)
+    origin = "http://127.0.0.1:5173"
+
+    response = client.options(
+        "/api/health",
+        headers={
+            "Origin": origin,
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == origin
+
+
+def test_cors_allows_configured_live_origin_with_private_network_header(monkeypatch, tmp_path):
+    origin = "https://safetrace-demo.pages.dev"
+    monkeypatch.setenv("SAFETRACE_ALLOWED_ORIGINS", origin)
+    client = make_client(tmp_path)
+
+    response = client.options(
+        "/api/system/status",
+        headers={
+            "Origin": origin,
+            "Access-Control-Request-Method": "GET",
+            "Access-Control-Request-Private-Network": "true",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == origin
+    assert response.headers["access-control-allow-private-network"] == "true"
+
+
+def test_cors_blocks_unconfigured_origin_and_private_network_header(monkeypatch, tmp_path):
+    monkeypatch.setenv("SAFETRACE_ALLOWED_ORIGINS", "https://safetrace-demo.pages.dev")
+    client = make_client(tmp_path)
+
+    response = client.options(
+        "/api/health",
+        headers={
+            "Origin": "https://example.invalid",
+            "Access-Control-Request-Method": "GET",
+            "Access-Control-Request-Private-Network": "true",
+        },
+    )
+
+    assert response.status_code == 400
+    assert "access-control-allow-origin" not in response.headers
+    assert "access-control-allow-private-network" not in response.headers
+
+
 def test_system_status_reports_missing_paths_without_loading_models(monkeypatch, tmp_path):
     monkeypatch.setattr(server_module, "_gpu_available", lambda: False)
     monkeypatch.setattr(server_module.SETTINGS, "device", "cpu")

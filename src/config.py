@@ -36,6 +36,11 @@ def _env_bool(key: str, default: bool) -> bool:
     return raw.strip().lower() in {"1", "true", "yes", "y", "on"}
 
 
+def _env_csv(key: str, default: str = "") -> tuple[str, ...]:
+    raw = os.environ.get(key, default)
+    return tuple(part.strip().rstrip("/") for part in raw.split(",") if part.strip())
+
+
 def _chat_speed_profile() -> str:
     return _env("SAFETRACE_CHAT_SPEED_PROFILE", "balanced").strip().lower() or "balanced"
 
@@ -107,6 +112,7 @@ class Settings:
     frontend_dist: Path = field(
         default_factory=lambda: Path(_env("SAFETRACE_FRONTEND_DIST", str(PROJECT_ROOT / "frontend-react" / "dist")))
     )
+    allowed_origins: tuple[str, ...] = field(default_factory=lambda: _env_csv("SAFETRACE_ALLOWED_ORIGINS"))
 
     # ---- Sampling / pipeline ----
     frame_fps: float = field(default_factory=lambda: _env_float("SAFETRACE_FPS", 1.0))

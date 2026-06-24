@@ -6,7 +6,7 @@ export type MediaStatus = 'ready' | 'processing' | 'completed' | 'error';
 
 export type DeviceMode = 'Auto' | 'CPU' | 'GPU';
 
-export type BackendConnectionState = 'connecting' | 'connected' | 'disconnected' | 'error';
+export type BackendConnectionState = 'live' | 'connecting' | 'connected' | 'disconnected' | 'incompatible' | 'error';
 
 export type AnalysisSettings = {
   fps: number;

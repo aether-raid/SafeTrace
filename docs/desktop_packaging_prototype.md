@@ -127,6 +127,21 @@ Rules:
 - Unknown frontend paths fall back to `index.html`.
 - Vite development mode remains supported when `SAFETRACE_SERVE_FRONTEND=false`.
 
+## Live Static Frontend
+
+The React bundle can also be deployed to a free static host while the backend
+continues running locally on the user's computer. In that mode, the website is
+locked until the local runtime responds at `http://127.0.0.1:8000/api`.
+
+Set the backend live-site allowlist with:
+
+```cmd
+set SAFETRACE_ALLOWED_ORIGINS=https://your-site.pages.dev
+```
+
+See `docs/live_frontend_deployment.md` for Cloudflare Pages, Netlify, Vercel,
+and GitHub Pages notes.
+
 ## Path To A Future EXE
 
 This prototype is a filesystem contract for later packaging work. Phase 6 adds

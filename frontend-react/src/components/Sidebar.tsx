@@ -47,8 +47,17 @@ function modelLabel(label: string, status?: BackendModelStatus) {
 
 function backendTone(state: BackendConnectionState) {
   if (state === 'connected') return 'success' as const;
-  if (state === 'connecting') return 'info' as const;
+  if (state === 'connecting' || state === 'live') return 'info' as const;
+  if (state === 'incompatible') return 'warning' as const;
   return 'danger' as const;
+}
+
+function backendLabel(state: BackendConnectionState) {
+  if (state === 'connected') return 'Local runtime connected';
+  if (state === 'connecting') return 'Local runtime connecting';
+  if (state === 'live') return 'Live website loaded';
+  if (state === 'incompatible') return 'Local runtime incompatible';
+  return 'Local runtime disconnected';
 }
 
 function checkTone(check?: RuntimeCheck) {
@@ -91,11 +100,7 @@ export function Sidebar({
   ].filter((item): item is [string, RuntimeCheck] => Boolean(item[1]));
   const systemStatuses = [
     {
-      label: backendState === 'connected'
-        ? 'Backend connected'
-        : backendState === 'connecting'
-          ? 'Backend connecting'
-          : 'Backend disconnected',
+      label: backendLabel(backendState),
       tone: backendTone(backendState),
     },
     {

@@ -93,6 +93,21 @@ SAFETRACE_FRONTEND_DIST=frontend\dist
 The real `config/safetrace.env` can override those defaults on an installed
 machine.
 
+## Live Frontend Bridge
+
+The backend executable should start the local API on `127.0.0.1:8000` so a
+public static SafeTrace website can discover it from the user's browser. The
+website remains locked until `/api/health` and `/api/system/status` respond.
+
+For a deployed live frontend, set:
+
+```cmd
+SAFETRACE_ALLOWED_ORIGINS=https://your-site.pages.dev
+```
+
+Do not switch the backend bind address to `0.0.0.0` for this flow. Keep the
+runtime local and update the allowed origin list instead.
+
 ## What Must Never Be Embedded Or Committed
 
 Do not bundle or commit:

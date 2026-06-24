@@ -89,7 +89,7 @@ export function SafeTraceAssistant({
   const assistantState: ChatStatus['state'] = !backendConnected ? 'unavailable' : status?.state ?? 'loading';
   const isAvailable = backendConnected && status?.state === 'available' && status.available;
   const copy = statusCopy(assistantState);
-  const statusDetail = backendConnected ? status?.message : 'Connect the SafeTrace backend to check assistant status.';
+  const statusDetail = backendConnected ? status?.message : 'Connect the SafeTrace Local Runtime to check assistant status.';
   const badgeClass = isAvailable
     ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
     : assistantState === 'loading'

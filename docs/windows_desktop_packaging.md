@@ -113,6 +113,33 @@ unknown frontend routes fall back to `index.html`. `/api/*` remains API-only.
 Vite development mode remains supported by leaving `SAFETRACE_SERVE_FRONTEND`
 unset or false.
 
+## Hybrid Live Frontend Mode
+
+Phase 7 also supports a public static React frontend that connects to the local
+SafeTrace runtime on the user's computer. The live website stays locked until
+the local backend responds on:
+
+```text
+http://127.0.0.1:8000/api/health
+http://127.0.0.1:8000/api/system/status
+```
+
+For local development, use:
+
+```cmd
+scripts\start_safetrace_windows.bat
+```
+
+For a deployed live frontend, configure the backend with the exact live origin:
+
+```cmd
+set SAFETRACE_ALLOWED_ORIGINS=https://your-site.pages.dev
+```
+
+The backend still binds to `127.0.0.1` by default. Do not expose it to the LAN
+or use unrestricted CORS origins for the public website flow. See
+`docs/live_frontend_deployment.md`.
+
 ## Update-Friendly Backend Executable Design
 
 The future backend executable should be a replaceable component, not a hard to

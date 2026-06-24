@@ -6,6 +6,7 @@ import type {
   AnalysisSettings,
   BatchAnalysisRequest,
   BatchStatus,
+  BackendConnectionState,
   BackendHealth,
   Detection,
   DeviceMode,
@@ -20,10 +21,12 @@ import type {
 
 const MOCK_DELAY_MS = 150;
 const DEFAULT_API_BASE = '/api';
+const LOCAL_RUNTIME_BASE_CANDIDATES = [
+  'http://127.0.0.1:8000',
+  'http://localhost:8000',
+];
+const DISCOVERY_TIMEOUT_MS = 2500;
 
-export const SAFETRACE_API_BASE = normalizeApiBase(
-  import.meta.env.VITE_SAFETRACE_API_BASE || DEFAULT_API_BASE,
-);
 export const SAFETRACE_REQUIRE_BACKEND = parseEnvBoolean(
   import.meta.env.VITE_SAFETRACE_REQUIRE_BACKEND,
   true,
@@ -38,6 +41,24 @@ type RunMockAnalysisInput = {
   media: MediaItem;
   settings: AnalysisSettings;
 };
+
+export type BackendDiscoveryResult = {
+  apiBase: string;
+  health: BackendHealth;
+  systemStatus: SystemStatus;
+};
+
+export class BackendDiscoveryError extends Error {
+  state: BackendConnectionState;
+  attemptedBases: string[];
+
+  constructor(message: string, state: BackendConnectionState, attemptedBases: string[]) {
+    super(message);
+    this.name = 'BackendDiscoveryError';
+    this.state = state;
+    this.attemptedBases = attemptedBases;
+  }
+}
 
 type BackendMedia = {
   id: string;
@@ -131,10 +152,6 @@ function parseEnvBoolean(value: string | boolean | undefined, fallback: boolean)
   return ['1', 'true', 'yes', 'on'].includes(value.trim().toLowerCase());
 }
 
-function normalizeApiBase(value: string): string {
-  return value.trim().replace(/\/+$/, '') || DEFAULT_API_BASE;
-}
-
 const trimTrailingSlash = (value: string) => value.replace(/\/+$/, '');
 const trimLeadingSlash = (value: string) => value.replace(/^\/+/, '');
 
@@ -142,15 +159,51 @@ function isAbsoluteHttpUrl(value: string): boolean {
   return /^https?:\/\//i.test(value);
 }
 
-export function buildApiUrl(path: string): string {
-  const base = trimTrailingSlash(SAFETRACE_API_BASE || DEFAULT_API_BASE);
+function normalizeApiBase(value: string): string {
+  const trimmed = trimTrailingSlash(value.trim());
+  if (!trimmed) return DEFAULT_API_BASE;
+  if (trimmed === DEFAULT_API_BASE || trimmed.endsWith('/api')) return trimmed;
+  if (trimmed === '/') return DEFAULT_API_BASE;
+  return `${trimmed}/api`;
+}
+
+function configuredApiBase(): string | null {
+  const value = import.meta.env.VITE_SAFETRACE_API_BASE_URL || import.meta.env.VITE_SAFETRACE_API_BASE;
+  return typeof value === 'string' && value.trim() ? normalizeApiBase(value) : null;
+}
+
+function unique(values: string[]): string[] {
+  return Array.from(new Set(values.filter(Boolean)));
+}
+
+function buildApiBaseCandidates(): string[] {
+  const configured = configuredApiBase();
+  if (configured) return [configured];
+  return unique(LOCAL_RUNTIME_BASE_CANDIDATES.map(normalizeApiBase));
+}
+
+export const SAFETRACE_API_BASE_CANDIDATES = buildApiBaseCandidates();
+let activeApiBase = SAFETRACE_API_BASE_CANDIDATES[0] || DEFAULT_API_BASE;
+
+export const SAFETRACE_API_BASE = activeApiBase;
+
+export function getActiveApiBase(): string {
+  return activeApiBase;
+}
+
+function setActiveApiBase(apiBase: string): void {
+  activeApiBase = normalizeApiBase(apiBase);
+}
+
+export function buildApiUrl(path: string, apiBase = activeApiBase): string {
+  const base = trimTrailingSlash(apiBase || DEFAULT_API_BASE);
   const cleanPath = trimLeadingSlash(path);
   return `${base}/${cleanPath}`;
 }
 
 export function getApiOrigin(): string {
-  if (isAbsoluteHttpUrl(SAFETRACE_API_BASE)) {
-    return new URL(SAFETRACE_API_BASE).origin;
+  if (isAbsoluteHttpUrl(activeApiBase)) {
+    return new URL(activeApiBase).origin;
   }
   return window.location.origin;
 }
@@ -161,8 +214,20 @@ function delay(ms: number): Promise<void> {
   });
 }
 
-async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(buildApiUrl(path), {
+function requestTimeoutSignal(timeoutMs: number): AbortSignal {
+  const controller = new AbortController();
+  window.setTimeout(() => controller.abort(), timeoutMs);
+  return controller.signal;
+}
+
+function apiErrorMessage(status: number): string {
+  if (status === 404) return 'SafeTrace API route was not found on the local runtime.';
+  if (status >= 500) return 'SafeTrace Local Runtime responded with a server error.';
+  return `SafeTrace API returned ${status}`;
+}
+
+async function apiFetchFromBase<T>(apiBase: string, path: string, options?: RequestInit): Promise<T> {
+  const response = await fetch(buildApiUrl(path, apiBase), {
     ...options,
     headers: {
       ...(options?.headers || {}),
@@ -170,7 +235,7 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    let message = `SafeTrace API returned ${response.status}`;
+    let message = apiErrorMessage(response.status);
     try {
       const body = await response.json();
       message = body?.detail?.message || body?.message || message;
@@ -182,6 +247,63 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   }
 
   return response.json() as Promise<T>;
+}
+
+async function probeApiBase(apiBase: string): Promise<BackendDiscoveryResult> {
+  const health = await apiFetchFromBase<BackendHealth>(apiBase, 'health', {
+    cache: 'no-store',
+    signal: requestTimeoutSignal(DISCOVERY_TIMEOUT_MS),
+  });
+  if (health.status !== 'ok' || health.api !== 'safetrace-local') {
+    throw new BackendDiscoveryError(
+      `A service responded at ${apiBase}, but it is not the SafeTrace Local Runtime.`,
+      'incompatible',
+      [apiBase],
+    );
+  }
+  const systemStatus = await apiFetchFromBase<SystemStatus>(apiBase, 'system/status', {
+    cache: 'no-store',
+    signal: requestTimeoutSignal(DISCOVERY_TIMEOUT_MS),
+  });
+  setActiveApiBase(apiBase);
+  return { apiBase: getActiveApiBase(), health, systemStatus };
+}
+
+export async function discoverBackendRuntime(): Promise<BackendDiscoveryResult> {
+  const attempted = [...SAFETRACE_API_BASE_CANDIDATES];
+  const messages: string[] = [];
+  let incompatibleMessage: string | null = null;
+
+  for (const candidate of attempted) {
+    try {
+      return await probeApiBase(candidate);
+    } catch (err) {
+      if (err instanceof BackendDiscoveryError && err.state === 'incompatible') {
+        incompatibleMessage = err.message;
+      }
+      if (err instanceof Error && err.name === 'AbortError') {
+        messages.push(`${candidate}: connection timed out`);
+      } else if (err instanceof Error) {
+        messages.push(`${candidate}: ${err.message}`);
+      } else {
+        messages.push(`${candidate}: local runtime did not respond`);
+      }
+    }
+  }
+
+  if (incompatibleMessage) {
+    throw new BackendDiscoveryError(incompatibleMessage, 'incompatible', attempted);
+  }
+
+  throw new BackendDiscoveryError(
+    `SafeTrace Local Runtime not connected. Tried ${attempted.join(', ')}.`,
+    'disconnected',
+    attempted,
+  );
+}
+
+async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+  return apiFetchFromBase<T>(activeApiBase, path, options);
 }
 
 function cloneResult(result: AnalysisResult): AnalysisResult {
@@ -403,7 +525,8 @@ export async function getMockMediaLibrary(): Promise<MediaItem[]> {
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
 export async function checkBackendHealth(): Promise<BackendHealth> {
-  return apiFetch<BackendHealth>('health');
+  const result = await discoverBackendRuntime();
+  return result.health;
 }
 
 export async function getSystemStatus(): Promise<SystemStatus> {
@@ -476,7 +599,7 @@ export function resolveBackendMediaUrl(imageUrl: string | null): string | null {
   if (!imageUrl) return null;
   if (/^(https?:|blob:|data:)/i.test(imageUrl)) return imageUrl;
 
-  const base = trimTrailingSlash(SAFETRACE_API_BASE || DEFAULT_API_BASE);
+  const base = trimTrailingSlash(activeApiBase || DEFAULT_API_BASE);
   const isAbsoluteApiBase = isAbsoluteHttpUrl(base);
   const origin = getApiOrigin();
 

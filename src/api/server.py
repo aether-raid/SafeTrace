@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -44,6 +45,56 @@ from .schemas import (
     ModelStatus,
     SystemStatusResponse,
 )
+
+
+LOCAL_FRONTEND_ORIGINS = (
+    "http://127.0.0.1:5173",
+    "http://localhost:5173",
+)
+
+
+def _split_origins(raw: str) -> tuple[str, ...]:
+    return tuple(part.strip().rstrip("/") for part in raw.split(",") if part.strip())
+
+
+def _normalize_origin(origin: str | None) -> str:
+    return (origin or "").strip().rstrip("/")
+
+
+def _cors_allowed_origins() -> list[str]:
+    origins = [
+        *LOCAL_FRONTEND_ORIGINS,
+        *getattr(SETTINGS, "allowed_origins", ()),
+        *_split_origins(os.environ.get("SAFETRACE_ALLOWED_ORIGINS", "")),
+    ]
+    return list(dict.fromkeys(_normalize_origin(origin) for origin in origins if _normalize_origin(origin)))
+
+
+def _is_cors_origin_allowed(origin: str | None) -> bool:
+    normalized = _normalize_origin(origin)
+    return bool(normalized and normalized in set(_cors_allowed_origins()))
+
+
+def _configure_cors(app: FastAPI) -> None:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_cors_allowed_origins(),
+        allow_credentials=False,
+        allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+        allow_headers=["*"],
+        max_age=600,
+    )
+
+    @app.middleware("http")
+    async def private_network_access_header(request: Request, call_next):
+        response = await call_next(request)
+        requested_private_network = (
+            request.method == "OPTIONS"
+            and request.headers.get("access-control-request-private-network", "").lower() == "true"
+        )
+        if requested_private_network and _is_cors_origin_allowed(request.headers.get("origin")):
+            response.headers["Access-Control-Allow-Private-Network"] = "true"
+        return response
 
 
 def _display_path(path: Path) -> str:
@@ -386,6 +437,7 @@ def create_app(job_store: JobStore | None = None, batch_store: BatchStore | None
     app = FastAPI(title="SafeTrace Local API", version=__version__)
     app.state.job_store = job_store or JobStore()
     app.state.batch_store = batch_store or BatchStore()
+    _configure_cors(app)
 
     @app.exception_handler(Exception)
     async def unhandled_exception_handler(request: Request, exc: Exception):  # noqa: ARG001

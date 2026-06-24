@@ -18,14 +18,16 @@ import { ViolationSummary } from './components/ViolationSummary';
 import { sampleMedia } from './data/mockAnalysis';
 import {
   SAFETRACE_API_BASE,
+  SAFETRACE_API_BASE_CANDIDATES,
   SAFETRACE_ENABLE_PREVIEW_MODE,
   SAFETRACE_REQUIRE_BACKEND,
-  checkBackendHealth,
+  BackendDiscoveryError,
+  discoverBackendRuntime,
   getBatchStatus,
+  getActiveApiBase,
   getJobResult,
   getJobStatus,
   getMockMediaLibrary,
-  getSystemStatus,
   runBackendAnalysis,
   runBackendBatchAnalysis,
   runMockAnalysis,
@@ -106,9 +108,10 @@ function App() {
   const [showAnnotation, setShowAnnotation] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [hoveredFrameId, setHoveredFrameId] = useState<string | null>(null);
-  const [backendState, setBackendState] = useState<BackendConnectionState>('connecting');
+  const [backendState, setBackendState] = useState<BackendConnectionState>('live');
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
   const [backendMessage, setBackendMessage] = useState<string | null>(null);
+  const [activeApiBase, setActiveApiBase] = useState(SAFETRACE_API_BASE);
   const [jobStatus, setJobStatus] = useState<JobStatus | null>(null);
   const [batchStatus, setBatchStatus] = useState<BatchStatus | null>(null);
   const [selectedBatchJobId, setSelectedBatchJobId] = useState<string | null>(null);
@@ -125,14 +128,20 @@ function App() {
     setBackendState('connecting');
     setBackendMessage(null);
     try {
-      const [, status] = await Promise.all([checkBackendHealth(), getSystemStatus()]);
-      setSystemStatus(status);
+      const runtime = await discoverBackendRuntime();
+      setActiveApiBase(runtime.apiBase);
+      setSystemStatus(runtime.systemStatus);
       setBackendState('connected');
       setBackendMessage(null);
     } catch (err) {
+      setActiveApiBase(getActiveApiBase());
       setSystemStatus(null);
-      setBackendState('disconnected');
-      setBackendMessage(err instanceof Error ? err.message : 'SafeTrace backend is not reachable.');
+      setBackendState(err instanceof BackendDiscoveryError ? err.state : 'disconnected');
+      setBackendMessage(
+        err instanceof Error
+          ? err.message
+          : 'SafeTrace Local Runtime is not reachable from this browser.',
+      );
       if (!previewMode) {
         setMediaLibrary([]);
         setSelectedMedia(null);
@@ -454,7 +463,7 @@ function App() {
   }
 
   const analyzeDisabledReason = !backendConnected && !previewMode
-    ? 'Start the SafeTrace backend and retry the connection.'
+    ? 'Start SafeTrace Local Runtime, then reconnect before analysis.'
     : !selectedFiles.length && !selectedFile && !canUsePreview
       ? 'Select a local image, video, ZIP archive, or video batch before analysis.'
       : !query.trim()
@@ -469,7 +478,7 @@ function App() {
           settings={settings}
           onSettingsChange={handleSettingsChange}
           backendState={backendState}
-          apiBase={SAFETRACE_API_BASE}
+          apiBase={activeApiBase}
           systemStatus={systemStatus}
           backendMessage={backendMessage}
           previewMode={previewMode}
@@ -507,7 +516,8 @@ function App() {
 
       {!backendConnected && !previewMode ? (
         <BackendUnavailableState
-          apiBase={SAFETRACE_API_BASE}
+          apiBase={activeApiBase}
+          apiBaseCandidates={SAFETRACE_API_BASE_CANDIDATES}
           state={backendState}
           message={backendMessage}
           onRetry={refreshBackendConnection}
@@ -628,16 +638,23 @@ function App() {
 
 function BackendUnavailableState({
   apiBase,
+  apiBaseCandidates,
   state,
   message,
   onRetry,
 }: {
   apiBase: string;
+  apiBaseCandidates: string[];
   state: BackendConnectionState;
   message: string | null;
   onRetry: () => void;
 }) {
-  const isConnecting = state === 'connecting';
+  const isConnecting = state === 'connecting' || state === 'live';
+  const title = state === 'incompatible'
+    ? 'SafeTrace Local Runtime incompatible'
+    : state === 'connecting'
+      ? 'Connecting to SafeTrace Local Runtime'
+      : 'SafeTrace Local Runtime not connected';
 
   return (
     <section className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-amber-950 shadow-soft">
@@ -647,17 +664,23 @@ function BackendUnavailableState({
             <Server className="h-6 w-6" aria-hidden="true" />
           </div>
           <div>
-            <h2 className="text-base font-bold">
-              {isConnecting ? 'Connecting to SafeTrace backend' : 'SafeTrace backend unavailable'}
-            </h2>
+            <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Live website loaded</p>
+            <h2 className="mt-1 text-base font-bold">{title}</h2>
             <p className="mt-2 max-w-3xl text-sm leading-6">
-              SafeTrace requires the local FastAPI backend before upload and analysis are enabled. Start the backend,
-              then retry the connection.
+              To use analysis, run SafeTrace.exe on this computer, keep the local runtime window open, then return here
+              and click Reconnect.
+            </p>
+            <p className="mt-2 max-w-3xl text-sm leading-6">
+              During development, run <span className="font-mono">scripts\start_safetrace_windows.bat</span> instead.
             </p>
             <dl className="mt-3 grid gap-1 text-xs">
               <div>
-                <dt className="font-semibold uppercase text-amber-700">API base</dt>
+                <dt className="font-semibold uppercase text-amber-700">Active API base</dt>
                 <dd className="break-all font-mono text-amber-900">{apiBase}</dd>
+              </div>
+              <div>
+                <dt className="font-semibold uppercase text-amber-700">Discovery candidates</dt>
+                <dd className="break-all font-mono text-amber-900">{apiBaseCandidates.join(', ')}</dd>
               </div>
               {message ? (
                 <div>
@@ -675,7 +698,7 @@ function BackendUnavailableState({
           className="focus-ring inline-flex items-center justify-center gap-2 rounded-lg bg-amber-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-800 disabled:opacity-60"
         >
           <RefreshCcw className={`h-4 w-4 ${isConnecting ? 'animate-spin' : ''}`} aria-hidden="true" />
-          Retry Connection
+          Reconnect to Local Runtime
         </button>
       </div>
     </section>
