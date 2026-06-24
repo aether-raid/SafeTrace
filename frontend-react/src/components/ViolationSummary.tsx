@@ -25,6 +25,11 @@ type ViolationOverviewRow = {
   lastTimestamp: string;
   representativeConfidence: number;
   supportingFrameCount: number;
+  supportingFrames: Array<{
+    frameId: string;
+    frameNumber: number;
+    timestamp: string;
+  }>;
   firstFrameId?: string;
 };
 
@@ -35,26 +40,63 @@ const severityRank: Record<Severity, number> = {
 };
 
 function groupViolations(result: AnalysisResult): GroupedViolation[] {
-  if (result.events && result.events.length > 0) {
-    return result.events.map((event) => ({
-      type: event.type,
-      name: event.name || formatViolationName(event.type),
-      severity: event.severity,
-      description: event.description,
-      affectedFrames: event.supportingFrames.map((frame) => ({
-        frameId: frame.frameId,
-        frameNumber: frame.frameNumber,
-        timestamp: frame.timestamp,
-      })),
-      confidences: event.supportingFrames.map((frame) => frame.confidence),
-      startTimestamp: event.startTimestamp,
-      endTimestamp: event.endTimestamp,
-      representativeConfidence: event.representativeConfidence,
-      supportingFrameCount: event.supportingFrameCount,
-    }));
+  const groups = new Map<string, GroupedViolation>();
+
+  function upsert(
+    key: string,
+    input: Omit<GroupedViolation, 'type' | 'affectedFrames' | 'confidences'> & {
+      affectedFrames: GroupedViolation['affectedFrames'];
+      confidences: number[];
+    },
+  ) {
+    const existing = groups.get(key);
+    if (!existing) {
+      groups.set(key, { type: key, ...input });
+      return;
+    }
+    const existingFrameIds = new Set(existing.affectedFrames.map((frame) => frame.frameId));
+    input.affectedFrames.forEach((frame) => {
+      if (!existingFrameIds.has(frame.frameId)) {
+        existing.affectedFrames.push(frame);
+      }
+    });
+    existing.confidences.push(...input.confidences);
+    existing.startTimestamp = existing.startTimestamp
+      ? earlierTimestamp(existing.startTimestamp, input.startTimestamp || existing.startTimestamp)
+      : input.startTimestamp;
+    existing.endTimestamp = existing.endTimestamp
+      ? laterTimestamp(existing.endTimestamp, input.endTimestamp || existing.endTimestamp)
+      : input.endTimestamp;
+    existing.representativeConfidence = Math.max(
+      existing.representativeConfidence ?? 0,
+      input.representativeConfidence ?? 0,
+    );
+    existing.supportingFrameCount = existing.affectedFrames.length;
+    if (severityRank[input.severity] > severityRank[existing.severity]) {
+      existing.severity = input.severity;
+    }
   }
 
-  const groups = new Map<string, GroupedViolation>();
+  if (result.events && result.events.length > 0) {
+    result.events.forEach((event) => {
+      upsert(event.type, {
+        name: event.name || formatViolationName(event.type),
+        severity: event.severity,
+        description: event.description,
+        affectedFrames: event.supportingFrames.map((frame) => ({
+          frameId: frame.frameId,
+          frameNumber: frame.frameNumber,
+          timestamp: frame.timestamp,
+        })),
+        confidences: event.supportingFrames.map((frame) => frame.confidence),
+        startTimestamp: event.startTimestamp,
+        endTimestamp: event.endTimestamp,
+        representativeConfidence: event.representativeConfidence,
+        supportingFrameCount: event.supportingFrameCount,
+      });
+    });
+    return Array.from(groups.values()).sort((a, b) => severityRank[b.severity] - severityRank[a.severity]);
+  }
 
   result.frames.forEach((frame) => {
     frame.violations.forEach((violation) => {
@@ -128,6 +170,13 @@ function buildOverviewRows(result: AnalysisResult): ViolationOverviewRow[] {
       input.representativeConfidence,
     );
     existing.supportingFrameCount += input.supportingFrameCount;
+    const existingFrameIds = new Set(existing.supportingFrames.map((frame) => frame.frameId));
+    input.supportingFrames.forEach((frame) => {
+      if (!existingFrameIds.has(frame.frameId)) {
+        existing.supportingFrames.push(frame);
+      }
+    });
+    existing.supportingFrameCount = existing.supportingFrames.length || existing.supportingFrameCount;
     if (severityRank[input.severity] > severityRank[existing.severity]) {
       existing.severity = input.severity;
     }
@@ -145,6 +194,11 @@ function buildOverviewRows(result: AnalysisResult): ViolationOverviewRow[] {
         lastTimestamp: event.endTimestamp,
         representativeConfidence: event.representativeConfidence,
         supportingFrameCount: event.supportingFrameCount,
+        supportingFrames: event.supportingFrames.map((frame) => ({
+          frameId: frame.frameId,
+          frameNumber: frame.frameNumber,
+          timestamp: frame.timestamp,
+        })),
         firstFrameId: event.supportingFrames[0]?.frameId,
       });
     });
@@ -160,6 +214,11 @@ function buildOverviewRows(result: AnalysisResult): ViolationOverviewRow[] {
         lastTimestamp: timestamps.reduce(laterTimestamp, timestamps[0] || '00:00:00'),
         representativeConfidence: violation.confidenceMax,
         supportingFrameCount: violation.affectedFrames.length,
+        supportingFrames: violation.affectedFrames.map((frame) => ({
+          frameId: frame.frameId,
+          frameNumber: frame.frameNumber,
+          timestamp: frame.timestamp,
+        })),
         firstFrameId: violation.affectedFrames[0]?.frameId,
       });
     });
@@ -175,6 +234,11 @@ function buildOverviewRows(result: AnalysisResult): ViolationOverviewRow[] {
           lastTimestamp: frame.timestamp,
           representativeConfidence: violation.confidence,
           supportingFrameCount: 1,
+          supportingFrames: [{
+            frameId: frame.id,
+            frameNumber: frame.frameNumber,
+            timestamp: frame.timestamp,
+          }],
           firstFrameId: frame.id,
         });
       });
@@ -182,6 +246,18 @@ function buildOverviewRows(result: AnalysisResult): ViolationOverviewRow[] {
   }
 
   return Array.from(rows.values()).sort((a, b) => severityRank[b.severity] - severityRank[a.severity]);
+}
+
+function FrameList({ frames }: { frames: ViolationOverviewRow['supportingFrames'] }) {
+  const visibleFrames = frames.slice(0, 4);
+  const remaining = Math.max(frames.length - visibleFrames.length, 0);
+
+  return (
+    <span className="text-sm leading-6 text-slate-700">
+      {visibleFrames.map((frame) => `Frame ${frame.frameNumber} at ${frame.timestamp}`).join(', ')}
+      {remaining > 0 ? `, +${remaining} more` : ''}
+    </span>
+  );
 }
 
 export function ViolationSummary({ result, onFrameSelect, timelineComponent, statisticsComponent }: ViolationSummaryProps) {
@@ -234,18 +310,17 @@ export function ViolationSummary({ result, onFrameSelect, timelineComponent, sta
       <div className="mb-6 overflow-hidden rounded-lg border border-slate-200">
         {overviewRows.length > 0 ? (
           <>
-            <div className="grid gap-3 bg-slate-50 px-4 py-3 text-xs font-bold uppercase text-slate-500 md:grid-cols-[1.5fr_0.8fr_0.9fr_0.9fr_0.8fr_0.9fr]">
+            <div className="grid gap-3 bg-slate-50 px-4 py-3 text-xs font-bold uppercase text-slate-500 md:grid-cols-[1.3fr_0.7fr_1.8fr_0.8fr_0.8fr]">
               <span>Violation type</span>
               <span>Events</span>
-              <span>First seen</span>
-              <span>Last seen</span>
+              <span>Frames</span>
+              <span>Span</span>
               <span>Confidence</span>
-              <span>Support</span>
             </div>
             {overviewRows.map((row) => (
               <div
                 key={row.type}
-                className="grid gap-3 border-t border-slate-200 px-4 py-3 text-sm md:grid-cols-[1.5fr_0.8fr_0.9fr_0.9fr_0.8fr_0.9fr] md:items-center"
+                className="grid gap-3 border-t border-slate-200 px-4 py-3 text-sm md:grid-cols-[1.3fr_0.7fr_1.8fr_0.8fr_0.8fr] md:items-center"
               >
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
@@ -253,12 +328,15 @@ export function ViolationSummary({ result, onFrameSelect, timelineComponent, sta
                     <SeverityBadge severity={row.severity} />
                   </div>
                 </div>
-                <span className="font-medium text-slate-700">{row.eventCount}</span>
-                <span className="font-mono text-xs text-slate-600">{row.firstTimestamp}</span>
-                <span className="font-mono text-xs text-slate-600">{row.lastTimestamp}</span>
-                <span className="font-semibold text-slate-900">{formatConfidence(row.representativeConfidence)}</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-slate-700">{row.supportingFrameCount} frame{row.supportingFrameCount === 1 ? '' : 's'}</span>
+                  <span className="font-medium text-slate-700">
+                    {row.eventCount} grouped event{row.eventCount === 1 ? '' : 's'}
+                  </span>
+                </div>
+                <FrameList frames={row.supportingFrames} />
+                <span className="font-mono text-xs text-slate-600">{row.firstTimestamp} - {row.lastTimestamp}</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-slate-900">{formatConfidence(row.representativeConfidence)}</span>
                   {row.firstFrameId ? (
                     <button
                       type="button"

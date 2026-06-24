@@ -1,4 +1,4 @@
-import { AlertTriangle, ClipboardCheck, RefreshCcw, Server, UploadCloud } from 'lucide-react';
+import { AlertTriangle, ClipboardCheck, Database, RefreshCcw, Server, Trash2, UploadCloud } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnalysisProgress } from './components/AnalysisProgress';
 import { AnalysisSummary } from './components/AnalysisSummary';
@@ -32,6 +32,16 @@ import {
   runBackendBatchAnalysis,
   runMockAnalysis,
 } from './services/analysisService';
+import {
+  type CachedResultEntry,
+  clearCachedResults,
+  deleteCachedResult,
+  isCacheEntryStale,
+  jobCacheKey,
+  loadCachedResults,
+  mediaCacheKey,
+  saveCachedResult,
+} from './services/resultCache';
 import type {
   AnalysisResult,
   AnalysisSettings,
@@ -117,12 +127,153 @@ function App() {
   const [selectedBatchJobId, setSelectedBatchJobId] = useState<string | null>(null);
   const [batchResultLoadingJobId, setBatchResultLoadingJobId] = useState<string | null>(null);
   const [analysisMode, setAnalysisMode] = useState<'backend' | 'preview' | null>(null);
+  const [cachedEntries, setCachedEntries] = useState<Record<string, CachedResultEntry>>({});
+  const [cacheMessage, setCacheMessage] = useState<string | null>(null);
   const localFilesRef = useRef<Record<string, File>>({});
   const localFileGroupsRef = useRef<Record<string, File[]>>({});
+  const selectedMediaIdRef = useRef<string | null>(selectedMedia?.id ?? null);
 
   const backendConnected = backendState === 'connected';
   const controlsLocked = SAFETRACE_REQUIRE_BACKEND && !backendConnected && !previewMode;
   const canUsePreview = previewMode && Boolean(selectedMedia);
+  const cachedEntryCount = Object.keys(cachedEntries).length;
+
+  useEffect(() => {
+    selectedMediaIdRef.current = selectedMedia?.id ?? null;
+  }, [selectedMedia?.id]);
+
+  useEffect(() => {
+    let isMounted = true;
+    loadCachedResults()
+      .then((entries) => {
+        if (!isMounted) return;
+        const next = Object.fromEntries(entries.map((entry) => [entry.cacheKey, entry]));
+        setCachedEntries(next);
+      })
+      .catch(() => {
+        if (isMounted) {
+          setCacheMessage('Local result cache could not be opened in this browser session.');
+        }
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  function rememberCachedEntry(entry: CachedResultEntry) {
+    setCachedEntries((current) => ({ ...current, [entry.cacheKey]: entry }));
+    void saveCachedResult(entry).then((result) => {
+      if (!result.saved && result.reason) {
+        setCacheMessage(result.reason);
+      }
+    }).catch(() => {
+      setCacheMessage('Result is available in this tab, but could not be saved to the local browser cache.');
+    });
+  }
+
+  function updateMediaStatus(mediaId: string, status: MediaItem['status']) {
+    setMediaLibrary((current) => current.map((item) => (
+      item.id === mediaId ? { ...item, status } : item
+    )));
+    setSelectedMedia((current) => (
+      current?.id === mediaId ? { ...current, status } : current
+    ));
+  }
+
+  function buildCacheEntry({
+    media,
+    result,
+    jobStatus: nextJobStatus,
+    batchStatus: nextBatchStatus,
+    selectedJobId,
+    source = 'backend',
+    status,
+  }: {
+    media: MediaItem;
+    result?: AnalysisResult;
+    jobStatus?: JobStatus | null;
+    batchStatus?: BatchStatus | null;
+    selectedJobId?: string | null;
+    source?: CachedResultEntry['source'];
+    status?: string;
+  }): CachedResultEntry {
+    const existing = cachedEntries[mediaCacheKey(media.id)];
+    return {
+      cacheKey: mediaCacheKey(media.id),
+      cacheVersion: 1,
+      mediaId: media.id,
+      mediaName: media.filename,
+      query: result?.query ?? query,
+      source,
+      status: status ?? result?.status ?? nextBatchStatus?.status ?? nextJobStatus?.status ?? media.status,
+      savedAt: existing?.savedAt ?? new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      jobId: result?.jobId ?? nextJobStatus?.jobId ?? existing?.jobId,
+      batchId: nextBatchStatus?.batchId ?? existing?.batchId,
+      selectedJobId: selectedJobId ?? existing?.selectedJobId,
+      result: result ?? existing?.result,
+      jobStatus: nextJobStatus ?? existing?.jobStatus ?? null,
+      batchStatus: nextBatchStatus ?? existing?.batchStatus ?? null,
+    };
+  }
+
+  function restoreCachedMedia(media: MediaItem): boolean {
+    const entry = cachedEntries[mediaCacheKey(media.id)];
+    const childEntry = entry?.selectedJobId ? cachedEntries[jobCacheKey(entry.selectedJobId)] : undefined;
+    const restoredResult = childEntry?.result ?? entry?.result;
+    if (!entry && !childEntry) return false;
+
+    setAnalysisResult(restoredResult ?? null);
+    setJobStatus(childEntry?.jobStatus ?? entry?.jobStatus ?? null);
+    setBatchStatus(entry?.batchStatus ?? null);
+    setSelectedBatchJobId(entry?.selectedJobId ?? childEntry?.jobId ?? null);
+    setAnalysisMode(restoredResult ? entry?.source ?? childEntry?.source ?? 'backend' : null);
+    if (entry && isCacheEntryStale(entry)) {
+      setCacheMessage('Showing an older cached result. Reconnect the local runtime to refresh it, or clear the cache.');
+    }
+    return true;
+  }
+
+  async function refreshCachedResultFromBackend(media: MediaItem) {
+    const entry = cachedEntries[mediaCacheKey(media.id)];
+    const jobId = entry?.selectedJobId ?? entry?.jobId;
+    if (!backendConnected || !jobId) return;
+    try {
+      const status = await getJobStatus(jobId);
+      const nextEntry = buildCacheEntry({ media, jobStatus: status, status: status.status });
+      rememberCachedEntry(nextEntry);
+      if (selectedMediaIdRef.current === media.id) setJobStatus(status);
+      if (status.status !== 'completed') return;
+
+      const result = await getJobResult(jobId);
+      result.settings = settings;
+      const jobEntry: CachedResultEntry = {
+        cacheKey: jobCacheKey(jobId),
+        cacheVersion: 1,
+        mediaId: media.id,
+        mediaName: media.filename,
+        query: result.query,
+        source: 'backend',
+        status: 'completed',
+        savedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        jobId,
+        batchId: entry?.batchId,
+        result,
+        jobStatus: status,
+      };
+      rememberCachedEntry(jobEntry);
+      rememberCachedEntry(buildCacheEntry({ media, result, jobStatus: status, selectedJobId: jobId, status: 'completed' }));
+      if (selectedMediaIdRef.current === media.id) {
+        setAnalysisResult(result);
+        setAnalysisMode('backend');
+      }
+    } catch {
+      if (entry?.result) {
+        setCacheMessage('Showing cached result; the local runtime could not refresh it right now.');
+      }
+    }
+  }
 
   const refreshBackendConnection = useCallback(async () => {
     setBackendState('connecting');
@@ -194,20 +345,34 @@ function App() {
     );
     setSelectedFiles(fileGroup);
     setSelectedFile(fileGroup.length === 1 ? fileGroup[0] : null);
-    setAnalysisResult(null);
     setError(null);
-    setJobStatus(null);
-    setBatchStatus(null);
-    setSelectedBatchJobId(null);
-    setAnalysisMode(null);
+    setCacheMessage(null);
+    const restored = restoreCachedMedia(media);
+    if (!restored) {
+      setAnalysisResult(null);
+      setJobStatus(null);
+      setBatchStatus(null);
+      setSelectedBatchJobId(null);
+      setAnalysisMode(null);
+    }
+    void refreshCachedResultFromBackend(media);
     if (suggestedQuery && knownSampleQueries.includes(query)) {
       setQuery(suggestedQuery);
     }
   }
 
   function handleDeleteMedia(mediaId: string) {
+    const entry = cachedEntries[mediaCacheKey(mediaId)];
     delete localFilesRef.current[mediaId];
     delete localFileGroupsRef.current[mediaId];
+    setCachedEntries((current) => {
+      const next = { ...current };
+      delete next[mediaCacheKey(mediaId)];
+      if (entry?.selectedJobId) delete next[jobCacheKey(entry.selectedJobId)];
+      return next;
+    });
+    void deleteCachedResult(mediaCacheKey(mediaId));
+    if (entry?.selectedJobId) void deleteCachedResult(jobCacheKey(entry.selectedJobId));
     setMediaLibrary((prev) => prev.filter((m) => m.id !== mediaId));
     if (selectedMedia?.id === mediaId && mediaLibrary.length > 1) {
       const next = mediaLibrary.find((m) => m.id !== mediaId);
@@ -280,14 +445,19 @@ function App() {
     return files.length > 1 || (files.length === 1 && isZipFile(files[0]));
   }
 
-  async function pollBackendJob(jobId: string): Promise<JobStatus> {
+  async function pollBackendJob(jobId: string, media?: MediaItem): Promise<JobStatus> {
     const startedAt = Date.now();
     const timeoutMs = 5 * 60 * 1000;
 
     while (Date.now() - startedAt < timeoutMs) {
       const status = await getJobStatus(jobId);
-      setJobStatus(status);
-      setActiveStep(progressToStep(status.progress));
+      if (!media || selectedMediaIdRef.current === media.id) {
+        setJobStatus(status);
+        setActiveStep(progressToStep(status.progress));
+      }
+      if (media) {
+        rememberCachedEntry(buildCacheEntry({ media, jobStatus: status, status: status.status }));
+      }
 
       if (status.status === 'completed') return status;
       if (status.status === 'failed' || status.status === 'cancelled') {
@@ -300,25 +470,38 @@ function App() {
     throw new Error('Analysis timed out while waiting for the backend job to finish.');
   }
 
-  async function pollBackendBatch(batchId: string): Promise<BatchStatus> {
+  async function pollBackendBatch(batchId: string, media?: MediaItem): Promise<BatchStatus> {
     const startedAt = Date.now();
     const timeoutMs = 10 * 60 * 1000;
 
     while (Date.now() - startedAt < timeoutMs) {
       const status = await getBatchStatus(batchId);
-      setBatchStatus(status);
+      if (!media || selectedMediaIdRef.current === media.id) {
+        setBatchStatus(status);
+      }
       const totalJobs = Math.max(status.acceptedFiles.length, 1);
       const completedJobs = status.acceptedFiles.filter((file) => (
         file.status === 'completed' || file.status === 'failed' || file.status === 'cancelled'
       )).length;
-      setActiveStep(progressToStep(completedJobs / totalJobs));
-      setJobStatus({
+      const progressStatus: JobStatus = {
         jobId: batchId,
         status: status.status === 'running' ? 'running' : status.status === 'queued' ? 'queued' : 'completed',
         progress: completedJobs / totalJobs,
         currentStep: `Batch analysis ${status.status}`,
         error: status.status === 'failed' ? 'No videos completed successfully.' : null,
-      });
+      };
+      if (!media || selectedMediaIdRef.current === media.id) {
+        setActiveStep(progressToStep(completedJobs / totalJobs));
+        setJobStatus(progressStatus);
+      }
+      if (media) {
+        rememberCachedEntry(buildCacheEntry({
+          media,
+          jobStatus: progressStatus,
+          batchStatus: status,
+          status: status.status,
+        }));
+      }
 
       if (status.status === 'completed' || status.status === 'partial') return status;
       if (status.status === 'failed' || status.status === 'cancelled') {
@@ -347,12 +530,13 @@ function App() {
     setSelectedBatchJobId(null);
 
     try {
+      const activeMedia = selectedMedia;
       const backendFiles = selectedFiles.length ? selectedFiles : selectedFile ? [selectedFile] : [];
 
       if (backendConnected && backendFiles.length) {
         setAnalysisMode('backend');
         setActiveStep(0);
-        setSelectedMedia((current) => current ? { ...current, status: 'processing' } : current);
+        if (activeMedia) updateMediaStatus(activeMedia.id, 'processing');
         if (isBatchSelection(backendFiles)) {
           const batch = await runBackendBatchAnalysis({
             files: backendFiles,
@@ -363,17 +547,51 @@ function App() {
             device: settings.deviceMode,
           });
           setBatchStatus(batch);
-          const finalBatch = await pollBackendBatch(batch.batchId);
+          if (activeMedia) {
+            rememberCachedEntry(buildCacheEntry({
+              media: activeMedia,
+              batchStatus: batch,
+              status: batch.status,
+            }));
+          }
+          const finalBatch = await pollBackendBatch(batch.batchId, activeMedia ?? undefined);
           const completedFile = finalBatch.acceptedFiles.find((file) => file.status === 'completed');
           if (!completedFile) {
             throw new Error('Batch analysis finished without a completed video result.');
           }
           const result = await getJobResult(completedFile.jobId);
           result.settings = settings;
-          setSelectedBatchJobId(completedFile.jobId);
-          setActiveStep(ANALYSIS_STEPS.length);
-          setAnalysisResult(result);
-          setSelectedMedia((current) => current ? { ...current, status: 'completed' } : current);
+          if (activeMedia) {
+            const jobEntry: CachedResultEntry = {
+              cacheKey: jobCacheKey(completedFile.jobId),
+              cacheVersion: 1,
+              mediaId: activeMedia.id,
+              mediaName: completedFile.filename,
+              query: result.query,
+              source: 'backend',
+              status: 'completed',
+              savedAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              jobId: completedFile.jobId,
+              batchId: finalBatch.batchId,
+              result,
+              batchStatus: finalBatch,
+            };
+            rememberCachedEntry(jobEntry);
+            rememberCachedEntry(buildCacheEntry({
+              media: activeMedia,
+              result,
+              batchStatus: finalBatch,
+              selectedJobId: completedFile.jobId,
+              status: finalBatch.status,
+            }));
+            updateMediaStatus(activeMedia.id, 'completed');
+          }
+          if (!activeMedia || selectedMediaIdRef.current === activeMedia.id) {
+            setSelectedBatchJobId(completedFile.jobId);
+            setActiveStep(ANALYSIS_STEPS.length);
+            setAnalysisResult(result);
+          }
           return;
         }
 
@@ -385,18 +603,36 @@ function App() {
           enableVlm: settings.vlmExplanations,
           device: settings.deviceMode,
         });
-        setJobStatus({
+        const queuedStatus: JobStatus = {
           ...job,
           progress: 0,
           currentStep: 'Queued for analysis',
           error: null,
-        });
-        await pollBackendJob(job.jobId);
+        };
+        setJobStatus(queuedStatus);
+        if (activeMedia) {
+          rememberCachedEntry(buildCacheEntry({
+            media: activeMedia,
+            jobStatus: queuedStatus,
+            status: queuedStatus.status,
+          }));
+        }
+        const completedStatus = await pollBackendJob(job.jobId, activeMedia ?? undefined);
         const result = await getJobResult(job.jobId);
         result.settings = settings;
-        setActiveStep(ANALYSIS_STEPS.length);
-        setAnalysisResult(result);
-        setSelectedMedia((current) => current ? { ...current, status: 'completed' } : current);
+        if (activeMedia) {
+          rememberCachedEntry(buildCacheEntry({
+            media: activeMedia,
+            result,
+            jobStatus: completedStatus,
+            status: 'completed',
+          }));
+          updateMediaStatus(activeMedia.id, 'completed');
+        }
+        if (!activeMedia || selectedMediaIdRef.current === activeMedia.id) {
+          setActiveStep(ANALYSIS_STEPS.length);
+          setAnalysisResult(result);
+        }
         return;
       }
 
@@ -409,6 +645,12 @@ function App() {
         const result = await runMockAnalysis({ query: trimmedQuery, media: selectedMedia, settings });
         setActiveStep(ANALYSIS_STEPS.length);
         setAnalysisResult(result);
+        rememberCachedEntry(buildCacheEntry({
+          media: selectedMedia,
+          result,
+          source: 'preview',
+          status: 'completed',
+        }));
         return;
       }
 
@@ -441,17 +683,78 @@ function App() {
     if (batchResultLoadingJobId === jobId) return;
     setBatchResultLoadingJobId(jobId);
     setError(null);
+    const cached = cachedEntries[jobCacheKey(jobId)];
+    if (cached?.result) {
+      setSelectedBatchJobId(jobId);
+      setAnalysisResult(cached.result);
+      setAnalysisMode(cached.source);
+      if (isCacheEntryStale(cached)) {
+        setCacheMessage('Showing an older cached batch result while SafeTrace refreshes from the local runtime.');
+      }
+    }
     try {
       const result = await getJobResult(jobId);
       result.settings = settings;
       setSelectedBatchJobId(jobId);
       setAnalysisResult(result);
       setActiveStep(ANALYSIS_STEPS.length);
+      if (selectedMedia) {
+        rememberCachedEntry({
+          cacheKey: jobCacheKey(jobId),
+          cacheVersion: 1,
+          mediaId: selectedMedia.id,
+          mediaName: selectedMedia.filename,
+          query: result.query,
+          source: 'backend',
+          status: 'completed',
+          savedAt: cached?.savedAt ?? new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          jobId,
+          batchId: batchStatus?.batchId,
+          result,
+          batchStatus,
+        });
+        rememberCachedEntry(buildCacheEntry({
+          media: selectedMedia,
+          result,
+          batchStatus,
+          selectedJobId: jobId,
+          status: batchStatus?.status ?? 'completed',
+        }));
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not load this batch result.');
+      if (!cached?.result) {
+        setError(err instanceof Error ? err.message : 'Could not load this batch result.');
+      } else {
+        setCacheMessage('Showing cached batch result; the local runtime could not refresh it right now.');
+      }
     } finally {
       setBatchResultLoadingJobId(null);
     }
+  }
+
+  async function handleClearResultCache() {
+    await clearCachedResults();
+    setCachedEntries({});
+    setCacheMessage('Local result cache cleared. Uploaded media files were not stored in the browser cache.');
+  }
+
+  async function handleClearSelectedResultCache() {
+    if (!selectedMedia) return;
+    const entry = cachedEntries[mediaCacheKey(selectedMedia.id)];
+    const next = { ...cachedEntries };
+    delete next[mediaCacheKey(selectedMedia.id)];
+    await deleteCachedResult(mediaCacheKey(selectedMedia.id));
+    if (entry?.selectedJobId) {
+      delete next[jobCacheKey(entry.selectedJobId)];
+      await deleteCachedResult(jobCacheKey(entry.selectedJobId));
+    }
+    setCachedEntries(next);
+    setAnalysisResult(null);
+    setJobStatus(null);
+    setBatchStatus(null);
+    setSelectedBatchJobId(null);
+    setCacheMessage(`Cleared cached result for ${selectedMedia.filename}.`);
   }
 
   function handleFrameSelect(frameId: string) {
@@ -523,6 +826,15 @@ function App() {
           onRetry={refreshBackendConnection}
         />
       ) : null}
+
+      <ResultCachePanel
+        entryCount={cachedEntryCount}
+        message={cacheMessage}
+        hasSelectedCachedResult={Boolean(selectedMedia && cachedEntries[mediaCacheKey(selectedMedia.id)])}
+        selectedMediaName={selectedMedia?.filename}
+        onClearAll={() => void handleClearResultCache()}
+        onClearSelected={() => void handleClearSelectedResultCache()}
+      />
 
       <SelectedMediaViewer
         media={selectedMedia}
@@ -791,6 +1103,70 @@ function BatchStatusPanel({
           </ul>
         </div>
       ) : null}
+    </section>
+  );
+}
+
+function ResultCachePanel({
+  entryCount,
+  message,
+  hasSelectedCachedResult,
+  selectedMediaName,
+  onClearAll,
+  onClearSelected,
+}: {
+  entryCount: number;
+  message: string | null;
+  hasSelectedCachedResult: boolean;
+  selectedMediaName?: string;
+  onClearAll: () => void;
+  onClearSelected: () => void;
+}) {
+  return (
+    <section className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-700 shadow-soft">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-safety-blue">
+            <Database className="h-5 w-5" aria-hidden="true" />
+          </div>
+          <div>
+            <p className="font-bold text-slate-950">Local result cache</p>
+            <p className="mt-1 leading-6">
+              Cached results stay on this computer/browser only. They are not uploaded to cloud storage.
+            </p>
+            <p className="mt-1 text-xs text-slate-500">
+              Stored: job and batch IDs, result JSON, evidence metadata, backend media/report URLs, and timestamps.
+              Not stored: raw uploaded videos, copied evidence image bytes, model files, credentials, or secrets.
+            </p>
+            {message ? <p className="mt-2 text-xs font-semibold text-safety-blue">{message}</p> : null}
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2 lg:justify-end">
+          <span className="inline-flex items-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold uppercase text-slate-600">
+            {entryCount} cached item{entryCount === 1 ? '' : 's'}
+          </span>
+          {hasSelectedCachedResult ? (
+            <button
+              type="button"
+              onClick={onClearSelected}
+              className="focus-ring inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-red-300 hover:text-red-700"
+              title={selectedMediaName ? `Clear cached result for ${selectedMediaName}` : 'Clear selected cached result'}
+            >
+              <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+              Clear selected
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={onClearAll}
+            disabled={entryCount === 0}
+            className="focus-ring inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+            Clear local result cache
+          </button>
+        </div>
+      </div>
     </section>
   );
 }

@@ -405,6 +405,53 @@ function mapViolations(violations: BackendViolation[]): Violation[] {
   }));
 }
 
+function violationReviewLine(violation: Violation): string {
+  const key = `${violation.type} ${violation.name}`.toLowerCase();
+  if (key.includes('helmet')) {
+    return "Helmet: the worker's head is visible, but no helmet was detected over it.";
+  }
+  if (key.includes('seatbelt') || key.includes('seat belt')) {
+    return "Seatbelt: the worker's torso is visible, but no seatbelt was detected across it.";
+  }
+  if (key.includes('phone')) {
+    return 'Phone use: a phone appears close to a detected hand and should be reviewed.';
+  }
+  if (key.includes('wheel') || key.includes('hand')) {
+    return 'Hands on controls: detected hands do not appear to be on the expected steering/control area.';
+  }
+  if (key.includes('restricted') || key.includes('zone')) {
+    return 'Restricted area: a person appears inside or close to a monitored restricted zone.';
+  }
+  if (key.includes('vest')) {
+    return 'High-visibility vest: the person is visible, but vest evidence appears weak or missing.';
+  }
+  return `${violation.name}: review this visible finding against the original footage.`;
+}
+
+function explanationLooksTechnical(value: string): boolean {
+  return /\b(iou|threshold|overlap|raw|internal|configured|metric|count|minimum|maximum|score|key)\b/i.test(value);
+}
+
+function buildVisualExplanation(violations: Violation[], rawExplanation: unknown): string | undefined {
+  const explanation = typeof rawExplanation === 'string' ? rawExplanation.trim() : '';
+  if (!violations.length) {
+    return explanation && !explanationLooksTechnical(explanation)
+      ? explanation
+      : 'SafeTrace did not find a matching safety issue in this frame. Review the original footage if camera angle, blur, glare, or shadows could hide important details.';
+  }
+  if (explanation && !explanationLooksTechnical(explanation)) return explanation;
+
+  const reviewLines = Array.from(new Set(violations.map(violationReviewLine)));
+  return [
+    'SafeTrace flagged this frame because visible scene evidence matches the selected safety query.',
+    '',
+    'What to review:',
+    ...reviewLines.map((line) => `- ${line}`),
+    '',
+    'Reviewer note: confirm the finding is not caused by camera angle, blur, glare, shadows, or hidden equipment.',
+  ].join('\n');
+}
+
 function mapEvents(events: BackendViolationEvent[] | undefined): ViolationEvent[] | undefined {
   if (!events) return undefined;
   return events.map((event) => ({
@@ -451,20 +498,23 @@ function mapBackendResult(result: BackendAnalysisResult): AnalysisResult {
     generatedAt: new Date().toISOString(),
     summaryText: result.summary.summaryText,
     settings: undefined,
-    frames: result.frames.map((frame) => ({
-      id: frame.id,
-      frameNumber: frame.frameNumber,
-      timestamp: frame.timestamp,
-      internalFilename: String(frame.technicalEvidence?.sourceFramePath || frame.id),
-      queryRelevance: frame.queryRelevance,
-      imageUrl: resolveBackendMediaUrl(frame.imageUrl ?? null) ?? undefined,
-      imageMessage: frame.imageMessage ?? undefined,
-      evidenceImageRequired: Boolean(frame.imageUrl || frame.imageMessage),
-      explanation: typeof frame.technicalEvidence?.explanation === 'string' ? frame.technicalEvidence.explanation : undefined,
-      violations: mapViolations(frame.violations),
-      detections: mapDetections(frame),
-      technicalEvidence: frame.technicalEvidence,
-    })),
+    frames: result.frames.map((frame) => {
+      const violations = mapViolations(frame.violations);
+      return {
+        id: frame.id,
+        frameNumber: frame.frameNumber,
+        timestamp: frame.timestamp,
+        internalFilename: String(frame.technicalEvidence?.sourceFramePath || frame.id),
+        queryRelevance: frame.queryRelevance,
+        imageUrl: resolveBackendMediaUrl(frame.imageUrl ?? null) ?? undefined,
+        imageMessage: frame.imageMessage ?? undefined,
+        evidenceImageRequired: Boolean(frame.imageUrl || frame.imageMessage),
+        explanation: buildVisualExplanation(violations, frame.technicalEvidence?.explanation),
+        violations,
+        detections: mapDetections(frame),
+        technicalEvidence: frame.technicalEvidence,
+      };
+    }),
     technicalDetails: result.technicalDetails,
   };
 }
@@ -495,10 +545,14 @@ export function buildMockAnalysisResult({
   }
   const result = cloneResult(template);
   const limitedFrames = result.frames.slice(0, settings.topK).map((frame) => {
+    const friendlyFrame = {
+      ...frame,
+      explanation: buildVisualExplanation(frame.violations, frame.explanation),
+    };
     if (media.source === 'local' && media.type === 'image' && media.previewUrl) {
-      return { ...frame, imageUrl: media.previewUrl, evidenceImageRequired: false };
+      return { ...friendlyFrame, imageUrl: media.previewUrl, evidenceImageRequired: false };
     }
-    return frame;
+    return friendlyFrame;
   });
 
   return {

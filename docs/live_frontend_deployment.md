@@ -97,6 +97,24 @@ During development, run:
 scripts\start_safetrace_windows.bat
 ```
 
+## Local Result Cache
+
+The React frontend keeps a local browser result cache so completed analysis
+results and batch child results can be restored when users switch queue items or
+reload the live site.
+
+The cache is local-only:
+
+- stored in the user's browser IndexedDB
+- not uploaded to SafeTrace cloud storage
+- not sent to any internet storage provider
+- clearable from the SafeTrace UI
+
+The cache may store result JSON, job IDs, batch IDs, query text, media names,
+evidence frame metadata, backend media/report URLs, and timestamps. It must not
+store raw uploaded video bytes, copied evidence image bytes, GGUF/model files,
+credentials, or secrets.
+
 ## SPA Fallbacks
 
 Netlify:

@@ -223,11 +223,16 @@ def _model_preflight_check(label: str, status: ModelStatus, *, optional: bool = 
             path=status.path,
             action_hint=f"Place the required {label} asset at the configured path.",
         )
+    action_hint = None if optional else f"Check the configured {label} path."
+    if optional and label == "MobileSAM":
+        action_hint = "Install checkpoints/mobile_sam.pt only if refined segmentation masks are needed."
+    if optional and label == "VLM":
+        action_hint = "Configure SAFETRACE_ENABLE_VLM=true and a local SAFETRACE_VLM_DIR only if visual explanations are required."
     return _runtime_check(
         "unavailable",
         status.message or f"{label} unavailable",
         path=status.path,
-        action_hint=None if optional else f"Check the configured {label} path.",
+        action_hint=action_hint,
     )
 
 
@@ -459,12 +464,22 @@ def create_app(job_store: JobStore | None = None, batch_store: BatchStore | None
     def system_status(store: JobStore = Depends(get_job_store)) -> SystemStatusResponse:
         gpu_available = _gpu_available()
         vlm_status = (
-            _path_status(SETTINGS.vlm_model_dir, optional=True, unavailable_message="VLM explanations disabled")
+            _path_status(
+                SETTINGS.vlm_model_dir,
+                optional=True,
+                unavailable_message=(
+                    "VLM explanations are optional. SafeTrace is using rule-based explanations because no VLM "
+                    "model is configured."
+                ),
+            )
             if SETTINGS.enable_vlm
             else ModelStatus(
                 status="unavailable",
                 path=_display_path(SETTINGS.vlm_model_dir),
-                message="VLM explanations disabled",
+                message=(
+                    "VLM explanations are optional. SafeTrace is using rule-based explanations because no VLM "
+                    "model is configured."
+                ),
             )
         )
         models = {
@@ -473,7 +488,10 @@ def create_app(job_store: JobStore | None = None, batch_store: BatchStore | None
             "mobileSam": _path_status(
                 SETTINGS.mobile_sam_checkpoint,
                 optional=True,
-                unavailable_message="Refinement disabled",
+                unavailable_message=(
+                    "MobileSAM is optional. It refines segmentation masks when checkpoints/mobile_sam.pt "
+                    "is installed. Analysis can still run without it."
+                ),
             ),
             "vlm": vlm_status,
         }

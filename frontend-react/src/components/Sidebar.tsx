@@ -90,6 +90,9 @@ export function Sidebar({
   const processingCost = settings.fps >= 3 ? 'High coverage' : settings.fps >= 1.5 ? 'Balanced coverage' : 'Fast preview';
   const preflightChecks = systemStatus?.preflight?.checks;
   const runtime = systemStatus?.runtime;
+  const vlmCheck = preflightChecks?.vlm;
+  const mobileSamCheck = preflightChecks?.mobileSam;
+  const vlmUnavailable = Boolean(vlmCheck && String(vlmCheck.status).toLowerCase() !== 'ready');
   const diagnosticChecks = [
     ['Assistant', preflightChecks?.assistant],
     ['Assistant model', preflightChecks?.assistantModel],
@@ -216,23 +219,27 @@ export function Sidebar({
             </span>
           </label>
 
-          <div>
-            <div className="flex items-start justify-between gap-3">
-              <div>
+          <div className="rounded-lg border border-white/10 bg-slate-950/30 p-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
                 <p className="inline-flex items-center gap-2 text-sm font-semibold text-white">
                   <Sparkles className="h-4 w-4 text-slate-300" aria-hidden="true" />
                   VLM explanations
                 </p>
                 <p className="mt-1 text-xs leading-5 text-slate-300">
-                  Adds natural-language explanations when an explanation model is available.
+                  {vlmUnavailable
+                    ? 'Optional VLM explanations are unavailable; SafeTrace will use rule-based explanations.'
+                    : 'Adds natural-language explanations when an explanation model is available.'}
                 </p>
               </div>
               <button
-                className="focus-ring relative mt-1 h-6 w-11 rounded-full border border-white/20 bg-slate-700 transition data-[checked=true]:bg-safety-teal"
+                className="focus-ring relative h-6 w-11 shrink-0 rounded-full border border-white/20 bg-slate-700 transition data-[checked=true]:bg-safety-teal disabled:cursor-not-allowed disabled:opacity-50"
                 type="button"
                 role="switch"
                 aria-checked={settings.vlmExplanations}
+                aria-label="Toggle VLM explanations"
                 data-checked={settings.vlmExplanations}
+                disabled={vlmUnavailable}
                 onClick={() => updateSettings({ vlmExplanations: !settings.vlmExplanations })}
               >
                 <span
@@ -242,6 +249,11 @@ export function Sidebar({
                 />
               </button>
             </div>
+            {vlmCheck?.message ? (
+              <p className="mt-2 rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs leading-5 text-slate-200">
+                {vlmCheck.message}
+              </p>
+            ) : null}
           </div>
 
           <label className="block">
@@ -353,6 +365,18 @@ export function Sidebar({
                     ))}
                   </ul>
                 </dd>
+              </div>
+            ) : null}
+            {mobileSamCheck?.message ? (
+              <div>
+                <dt className="font-semibold text-slate-200">MobileSAM note</dt>
+                <dd>{mobileSamCheck.message}</dd>
+              </div>
+            ) : null}
+            {vlmCheck?.message ? (
+              <div>
+                <dt className="font-semibold text-slate-200">VLM note</dt>
+                <dd>{vlmCheck.message}</dd>
               </div>
             ) : null}
           </dl>

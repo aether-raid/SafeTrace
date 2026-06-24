@@ -28,6 +28,8 @@ type ViolationCardProps = {
 export function ViolationCard({ violation, onFrameSelect }: ViolationCardProps) {
   const firstFrameId = violation.affectedFrames[0]?.frameId;
   const isAggregatedEvent = Boolean(violation.startTimestamp && violation.endTimestamp);
+  const visibleFrames = violation.affectedFrames.slice(0, 6);
+  const hiddenFrameCount = Math.max(violation.affectedFrames.length - visibleFrames.length, 0);
 
   return (
     <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft transition hover:border-slate-300">
@@ -53,7 +55,7 @@ export function ViolationCard({ violation, onFrameSelect }: ViolationCardProps) 
             </p>
           ) : null}
           <div className="mt-2 flex flex-wrap gap-2">
-            {violation.affectedFrames.map((frame) => (
+            {visibleFrames.map((frame) => (
               <button
                 key={`${violation.type}-${frame.frameNumber}`}
                 className="focus-ring inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:border-safety-blue hover:text-safety-blue"
@@ -64,6 +66,11 @@ export function ViolationCard({ violation, onFrameSelect }: ViolationCardProps) 
                 Frame {frame.frameNumber} at {frame.timestamp}
               </button>
             ))}
+            {hiddenFrameCount > 0 ? (
+              <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                +{hiddenFrameCount} more
+              </span>
+            ) : null}
           </div>
         </div>
 

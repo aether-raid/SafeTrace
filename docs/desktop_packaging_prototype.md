@@ -142,6 +142,14 @@ set SAFETRACE_ALLOWED_ORIGINS=https://your-site.pages.dev
 See `docs/live_frontend_deployment.md` for Cloudflare Pages, Netlify, Vercel,
 and GitHub Pages notes.
 
+## Local Browser Result Cache
+
+The React frontend may cache completed result JSON in the user's browser so
+queue switching and batch result review remain responsive. This cache is local
+to the browser and can be cleared from the UI. It stores result metadata and
+backend evidence URLs only; it must not store raw uploaded videos, copied
+evidence image bytes, model files, credentials, or secrets.
+
 ## Path To A Future EXE
 
 This prototype is a filesystem contract for later packaging work. Phase 6 adds

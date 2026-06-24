@@ -104,7 +104,9 @@ def test_system_status_reports_missing_paths_without_loading_models(monkeypatch,
     assert body["models"]["embeddingModel"]["status"] == "missing"
     assert body["models"]["detector"]["status"] == "missing"
     assert body["models"]["mobileSam"]["status"] == "unavailable"
+    assert "MobileSAM is optional" in body["models"]["mobileSam"]["message"]
     assert body["models"]["vlm"]["status"] == "unavailable"
+    assert "VLM explanations are optional" in body["models"]["vlm"]["message"]
     assert body["limits"]["maxUploadMb"] > 0
     assert body["limits"]["maxSampledFrames"] > 0
     assert body["limits"]["maxVideoDurationUnlimited"] is True

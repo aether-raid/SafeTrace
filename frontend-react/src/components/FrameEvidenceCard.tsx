@@ -83,7 +83,7 @@ export function FrameEvidenceCard({ frame, showExplanation, isHighlighted = fals
                 <Sparkles className="h-4 w-4" aria-hidden="true" />
                 Visual explanation
               </div>
-              {frame.explanation}
+              <p className="whitespace-pre-line">{frame.explanation}</p>
             </div>
           ) : null}
         </div>

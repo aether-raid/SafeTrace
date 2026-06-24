@@ -203,3 +203,7 @@ results = analyze_query("worker without helmet")
   pipeline degrades gracefully (YOLO masks only, deterministic explanations).
 - YOLO label spaces vary across checkpoints; `src/config.py` contains a
   configurable `CLASS_ALIASES` map normalizing labels for the rule engine.
+- The React frontend result cache is local to the user's browser. It can store
+  result JSON and backend evidence/report URLs for queue switching, but it does
+  not store raw uploaded videos, copied evidence image bytes, model files,
+  credentials, or secrets.
