@@ -26,6 +26,7 @@ dist/SafeTrace/
     safetrace.env.example
   models/
     chat/
+  checkpoints/
   data/
   logs/
   packaging_manifest.json
@@ -58,6 +59,9 @@ placeholder backend folder and a clear warning.
   otherwise a placeholder README is written.
 - External config example at `config/safetrace.env.example`.
 - Empty external folders for `data/`, `logs/`, and `models/chat/`.
+- External `checkpoints/` folder. If `checkpoints/mobile_sam.pt` exists
+  locally, the package builder copies it into `checkpoints/mobile_sam.pt`;
+  otherwise it writes a checkpoint README and uses detector-box fallback.
 - A generated `packaging_manifest.json`.
 
 ## What It Excludes
@@ -82,6 +86,16 @@ The prototype script intentionally excludes:
 Do not copy the GGUF chat model into the package from source control. A future
 installer may place approved model files into `models/chat/` outside the backend
 runtime folder.
+
+MobileSAM is the one optional checkpoint the prototype package can include from
+a local developer machine for release-package testing:
+
+```text
+dist/SafeTrace/checkpoints/mobile_sam.pt
+```
+
+The checkpoint remains ignored by Git and must never be committed. If it is
+absent, the package remains valid and SafeTrace uses detector-box evidence.
 
 ## External Config
 
@@ -108,6 +122,12 @@ SAFETRACE_CHAT_PROVIDER=packaged_llamacpp
 SAFETRACE_CHAT_MODEL_PATH=models/chat/safetrace-assistant-qwen2.5-1.5b-instruct-q4.gguf
 SAFETRACE_SERVE_FRONTEND=true
 SAFETRACE_FRONTEND_DIST=frontend/dist
+SAFETRACE_MOBILESAM_ENABLED=auto
+SAFETRACE_MOBILESAM_CHECKPOINT=checkpoints/mobile_sam.pt
+SAFETRACE_VLM_ENABLED=auto
+SAFETRACE_VLM_PROVIDER=auto
+SAFETRACE_VLM_OLLAMA_BASE_URL=http://127.0.0.1:11434
+SAFETRACE_VLM_MODEL=llava
 ```
 
 ## Frontend Static Serving
@@ -163,10 +183,15 @@ dependencies while preserving:
 - `config/`
 - `data/`
 - `models/`
+- `checkpoints/`
 - `logs/`
 
 The backend remains update-friendly because data, configuration, frontend assets,
 logs, checkpoints, and GGUF files are external to the backend runtime folder.
+For one-dir backend packaging, keep `checkpoints/mobile_sam.pt` beside the app
+layout rather than inside `backend/`. For one-file executables, embedding large
+checkpoints is not preferred because it makes backend updates slower and risks
+overwriting local model assets during replacement.
 
 See `docs/backend_executable_prototype.md` for the backend executable build
 prototype, risks, and rollback guidance.

@@ -81,14 +81,28 @@ def test_cors_blocks_unconfigured_origin_and_private_network_header(monkeypatch,
 
 
 def test_system_status_reports_missing_paths_without_loading_models(monkeypatch, tmp_path):
+    monkeypatch.delenv("SAFETRACE_BUILD_MODE", raising=False)
+    monkeypatch.delenv("SAFETRACE_RUNTIME_LAYOUT", raising=False)
     monkeypatch.setattr(server_module, "_gpu_available", lambda: False)
     monkeypatch.setattr(server_module.SETTINGS, "device", "cpu")
     monkeypatch.setattr(server_module.SETTINGS, "enable_vlm", True)
+    monkeypatch.setattr(server_module.SETTINGS, "mobile_sam_enabled", "auto")
+    monkeypatch.setattr(server_module, "_mobile_sam_runtime_available", lambda: False)
     monkeypatch.setattr(server_module.SETTINGS, "siglip_model_dir", tmp_path / "missing-siglip")
     monkeypatch.setattr(server_module.SETTINGS, "yolo_checkpoint", tmp_path / "missing-yolo.pt")
     monkeypatch.setattr(server_module.SETTINGS, "yolo_fallback_checkpoint", tmp_path / "missing-fallback.pt")
     monkeypatch.setattr(server_module.SETTINGS, "mobile_sam_checkpoint", tmp_path / "missing-mobile-sam.pt")
     monkeypatch.setattr(server_module.SETTINGS, "vlm_model_dir", tmp_path / "missing-vlm")
+    monkeypatch.setattr(
+        server_module,
+        "vlm_status_payload",
+        lambda: {
+            "status": "missing_runtime",
+            "message": "Local Ollama vision runtime is not reachable.",
+            "actionHint": "Start Ollama locally.",
+            "details": {"provider": "ollama"},
+        },
+    )
 
     client = make_client(tmp_path)
     response = client.get("/api/system/status")
@@ -103,10 +117,10 @@ def test_system_status_reports_missing_paths_without_loading_models(monkeypatch,
     assert body["gpuAvailable"] is False
     assert body["models"]["embeddingModel"]["status"] == "missing"
     assert body["models"]["detector"]["status"] == "missing"
-    assert body["models"]["mobileSam"]["status"] == "unavailable"
-    assert "MobileSAM is optional" in body["models"]["mobileSam"]["message"]
-    assert body["models"]["vlm"]["status"] == "unavailable"
-    assert "VLM explanations are optional" in body["models"]["vlm"]["message"]
+    assert body["models"]["mobileSam"]["status"] == "missing_checkpoint"
+    assert "detector-box evidence" in body["models"]["mobileSam"]["message"]
+    assert body["models"]["vlm"]["status"] == "missing_runtime"
+    assert "Ollama" in body["models"]["vlm"]["message"]
     assert body["limits"]["maxUploadMb"] > 0
     assert body["limits"]["maxSampledFrames"] > 0
     assert body["limits"]["maxVideoDurationUnlimited"] is True

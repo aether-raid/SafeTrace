@@ -9,7 +9,8 @@
     "config/",
     "data/",
     "models/",
-    "logs/"
+    "logs/",
+    "checkpoints/"
   ],
   "notes": "Example manifest only. Do not place model files in backend builds."
 }

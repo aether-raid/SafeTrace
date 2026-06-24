@@ -35,6 +35,12 @@ set SAFETRACE_CHAT_ENABLED=auto
 set SAFETRACE_CHAT_PROVIDER=packaged_llamacpp
 set SAFETRACE_CHAT_SPEED_PROFILE=fast
 set SAFETRACE_CHAT_MODEL_PATH=models\chat\safetrace-assistant-qwen2.5-1.5b-instruct-q4.gguf
+set SAFETRACE_MOBILESAM_ENABLED=auto
+set SAFETRACE_MOBILESAM_CHECKPOINT=checkpoints\mobile_sam.pt
+set SAFETRACE_VLM_ENABLED=auto
+set SAFETRACE_VLM_PROVIDER=auto
+set SAFETRACE_VLM_OLLAMA_BASE_URL=http://127.0.0.1:11434
+set SAFETRACE_VLM_MODEL=llava
 ```
 
 `KMP_DUPLICATE_LIB_OK=TRUE` is a local development workaround for duplicate
@@ -74,12 +80,16 @@ The script creates `dist/SafeTrace/` with:
 - `frontend/dist/`
 - `config/safetrace.env.example`
 - `models/chat/`
+- `checkpoints/`
 - `data/`
 - `logs/`
 - `packaging_manifest.json`
 
 The prototype does not build or copy a final backend `.exe`. It also does not
-copy local uploads, generated evidence, checkpoints, GGUF files, or model assets.
+copy local uploads, generated evidence, GGUF files, or model assets. It may copy
+the optional local `checkpoints/mobile_sam.pt` into the generated package when
+that file already exists locally; otherwise it writes a checkpoint README and
+uses detector-box fallback.
 
 Phase 6 adds a backend executable prototype. The dry-run command is:
 
@@ -165,10 +175,17 @@ SafeTrace/
   logs/
 ```
 
-Keep `config/`, `data/`, `models/`, and `logs/` outside the backend runtime
+Keep `config/`, `data/`, `models/`, `checkpoints/`, and `logs/` outside the backend runtime
 folder. The launcher should point the backend to those external paths with
 environment variables so a backend replacement never overwrites user data,
 generated reports, local model files, the GGUF chat model, or local settings.
+
+MobileSAM and VLM are optional. MobileSAM refinement uses
+`checkpoints/mobile_sam.pt` when present and otherwise falls back to detector-box
+evidence. VLM explanations use the existing local VLM provider first, optional
+local Ollama only when configured/available, and otherwise fall back to
+rule-based explanation text. The SafeTrace Assistant remains a separate chat
+feature.
 
 A future updater should:
 
@@ -198,6 +215,7 @@ Do not commit local model assets:
 - `*.safetensors`
 - `*.pt`
 - `*.pth`
+- `*.onnx`
 - `models/chat/*.gguf`
 - `data/`
 - `uploads/`

@@ -11,7 +11,9 @@ export type BackendConnectionState = 'live' | 'connecting' | 'connected' | 'disc
 export type AnalysisSettings = {
   fps: number;
   topK: number;
-  vlmExplanations: boolean;
+  visualExplanations: boolean;
+  enhancedVlmExplanations: boolean;
+  vlmExplanations?: boolean;
   deviceMode: DeviceMode;
 };
 
@@ -46,6 +48,7 @@ export type FrameResult = {
   evidenceImageRequired?: boolean;
   visualVariant?: 'worksite' | 'loading-bay' | 'maintenance';
   explanation?: string;
+  explanationSource?: 'vlm' | 'vlm_local' | 'vlm_ollama' | 'rule_based';
   violations: Violation[];
   detections: Detection[];
   technicalEvidence: Record<string, unknown>;
@@ -82,12 +85,14 @@ export type BackendHealth = {
 };
 
 export type BackendModelStatus = {
-  status: 'ready' | 'missing' | 'unavailable';
+  status: 'ready' | 'available' | 'missing' | 'missing_checkpoint' | 'missing_runtime' | 'disabled' | 'unavailable';
   path?: string | null;
   message?: string | null;
+  actionHint?: string | null;
+  details?: Record<string, unknown>;
 };
 
-export type RuntimeCheckStatus = 'ready' | 'available' | 'warning' | 'missing' | 'unavailable' | 'disabled' | 'loading';
+export type RuntimeCheckStatus = 'ready' | 'available' | 'warning' | 'missing' | 'missing_checkpoint' | 'missing_runtime' | 'unavailable' | 'disabled' | 'loading';
 
 export type RuntimeCheck = {
   status: RuntimeCheckStatus | string;
@@ -136,6 +141,11 @@ export type SystemRuntimeStatus = {
   uploadLimits?: Record<string, unknown>;
   batchLimits?: Record<string, unknown>;
   jobStorePath?: string;
+  visual_explanations?: RuntimeCheck & {
+    fallback?: 'rule_based';
+    explanationSource?: 'vlm' | 'rule_based';
+    enhancedVlmAvailable?: boolean;
+  };
 };
 
 export type SystemPreflightStatus = {

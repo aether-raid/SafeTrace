@@ -33,7 +33,7 @@ function getDeviceStatus(deviceMode: DeviceMode) {
 
 function getModelTone(status?: BackendModelStatus) {
   if (!status) return 'neutral' as const;
-  if (status.status === 'ready') return 'success' as const;
+  if (status.status === 'ready' || status.status === 'available') return 'success' as const;
   if (status.status === 'missing') return 'danger' as const;
   return 'warning' as const;
 }
@@ -41,7 +41,11 @@ function getModelTone(status?: BackendModelStatus) {
 function modelLabel(label: string, status?: BackendModelStatus) {
   if (!status) return `${label} unknown`;
   if (status.status === 'ready') return `${label} ready`;
+  if (status.status === 'available') return `${label} available`;
   if (status.status === 'missing') return `${label} missing`;
+  if (status.status === 'missing_checkpoint') return `${label} missing checkpoint`;
+  if (status.status === 'missing_runtime') return `${label} missing runtime`;
+  if (status.status === 'disabled') return `${label} disabled`;
   return `${label} unavailable`;
 }
 
@@ -65,7 +69,13 @@ function checkTone(check?: RuntimeCheck) {
   if (status === 'ready' || status === 'available') return 'success' as const;
   if (status === 'missing') return 'danger' as const;
   if (status === 'loading') return 'info' as const;
-  if (status === 'warning' || status === 'disabled' || status === 'unavailable') return 'warning' as const;
+  if (
+    status === 'warning'
+    || status === 'disabled'
+    || status === 'missing_checkpoint'
+    || status === 'missing_runtime'
+    || status === 'unavailable'
+  ) return 'warning' as const;
   return 'neutral' as const;
 }
 
@@ -76,6 +86,11 @@ function checkLabel(label: string, check?: RuntimeCheck) {
   if (label === 'Assistant runtime' && status === 'ready') return `${label}: installed`;
   if (label === 'OpenMP workaround' && status === 'ready') return `${label}: enabled`;
   return `${label}: ${status}`;
+}
+
+function checkAvailable(check?: RuntimeCheck) {
+  const status = String(check?.status || '').toLowerCase();
+  return status === 'ready' || status === 'available';
 }
 
 export function Sidebar({
@@ -91,15 +106,20 @@ export function Sidebar({
   const preflightChecks = systemStatus?.preflight?.checks;
   const runtime = systemStatus?.runtime;
   const vlmCheck = preflightChecks?.vlm;
+  const visualExplanationCheck = preflightChecks?.visualExplanations ?? runtime?.visual_explanations;
   const mobileSamCheck = preflightChecks?.mobileSam;
-  const vlmUnavailable = Boolean(vlmCheck && String(vlmCheck.status).toLowerCase() !== 'ready');
+  const enhancedVlmAvailable = Boolean(vlmCheck && checkAvailable(vlmCheck));
+  const enhancedVlmUnavailable = Boolean(vlmCheck && !enhancedVlmAvailable);
+  const showVisualExplanations = settings.visualExplanations ?? settings.vlmExplanations ?? true;
+  const useEnhancedVlmExplanations = settings.enhancedVlmExplanations ?? settings.vlmExplanations ?? true;
   const diagnosticChecks = [
     ['Assistant', preflightChecks?.assistant],
     ['Assistant model', preflightChecks?.assistantModel],
     ['Assistant runtime', preflightChecks?.assistantRuntime],
     ['OpenMP workaround', preflightChecks?.openmp],
+    ['Visual explanations', visualExplanationCheck],
     ['MobileSAM', preflightChecks?.mobileSam],
-    ['VLM', preflightChecks?.vlm],
+    ['Enhanced VLM', preflightChecks?.vlm],
   ].filter((item): item is [string, RuntimeCheck] => Boolean(item[1]));
   const systemStatuses = [
     {
@@ -139,8 +159,12 @@ export function Sidebar({
       tone: getModelTone(systemStatus?.models.mobileSam),
     },
     {
-      label: modelLabel('VLM', systemStatus?.models.vlm),
-      tone: getModelTone(systemStatus?.models.vlm),
+      label: showVisualExplanations ? 'Visual explanations: enabled' : 'Visual explanations: hidden',
+      tone: showVisualExplanations ? 'success' as const : 'neutral' as const,
+    },
+    {
+      label: enhancedVlmAvailable ? 'Enhanced VLM: available' : 'Enhanced VLM: unavailable',
+      tone: enhancedVlmAvailable ? 'success' as const : 'warning' as const,
     },
   ];
 
@@ -224,34 +248,76 @@ export function Sidebar({
               <div className="min-w-0">
                 <p className="inline-flex items-center gap-2 text-sm font-semibold text-white">
                   <Sparkles className="h-4 w-4 text-slate-300" aria-hidden="true" />
-                  VLM explanations
+                  Visual explanations
                 </p>
                 <p className="mt-1 text-xs leading-5 text-slate-300">
-                  {vlmUnavailable
-                    ? 'Optional VLM explanations are unavailable; SafeTrace will use rule-based explanations.'
-                    : 'Adds natural-language explanations when an explanation model is available.'}
+                  {showVisualExplanations
+                    ? 'Visual explanations are on. SafeTrace will use VLM when available, otherwise rule-based explanations.'
+                    : 'Visual explanations are hidden in the report view. Rule-based explanations remain available.'}
+                </p>
+              </div>
+              <button
+                className="focus-ring relative h-6 w-11 shrink-0 rounded-full border border-white/20 bg-slate-700 transition data-[checked=true]:bg-safety-teal"
+                type="button"
+                role="switch"
+                aria-checked={showVisualExplanations}
+                aria-label="Toggle visual explanations"
+                data-checked={showVisualExplanations}
+                onClick={() => updateSettings({ visualExplanations: !showVisualExplanations })}
+              >
+                <span
+                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition ${
+                    showVisualExplanations ? 'left-5' : 'left-0.5'
+                  }`}
+                />
+              </button>
+            </div>
+            {visualExplanationCheck?.message ? (
+              <p className="mt-2 rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs leading-5 text-slate-200">
+                {visualExplanationCheck.message}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="rounded-lg border border-white/10 bg-slate-950/30 p-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="inline-flex items-center gap-2 text-sm font-semibold text-white">
+                  <Sparkles className="h-4 w-4 text-slate-300" aria-hidden="true" />
+                  Enhanced VLM
+                </p>
+                <p className="mt-1 text-xs leading-5 text-slate-300">
+                  {enhancedVlmUnavailable
+                    ? 'Enhanced VLM unavailable. Rule-based explanations are still active.'
+                    : 'When available, enhanced VLM can generate natural-language evidence wording.'}
                 </p>
               </div>
               <button
                 className="focus-ring relative h-6 w-11 shrink-0 rounded-full border border-white/20 bg-slate-700 transition data-[checked=true]:bg-safety-teal disabled:cursor-not-allowed disabled:opacity-50"
                 type="button"
                 role="switch"
-                aria-checked={settings.vlmExplanations}
-                aria-label="Toggle VLM explanations"
-                data-checked={settings.vlmExplanations}
-                disabled={vlmUnavailable}
-                onClick={() => updateSettings({ vlmExplanations: !settings.vlmExplanations })}
+                aria-checked={useEnhancedVlmExplanations}
+                aria-label="Toggle enhanced VLM explanations"
+                data-checked={useEnhancedVlmExplanations}
+                disabled={enhancedVlmUnavailable}
+                onClick={() => updateSettings({ enhancedVlmExplanations: !useEnhancedVlmExplanations })}
               >
                 <span
                   className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition ${
-                    settings.vlmExplanations ? 'left-5' : 'left-0.5'
+                    useEnhancedVlmExplanations ? 'left-5' : 'left-0.5'
                   }`}
                 />
               </button>
             </div>
+            {useEnhancedVlmExplanations && enhancedVlmUnavailable ? (
+              <p className="mt-2 rounded-lg border border-amber-300/40 bg-amber-400/10 px-2 py-1.5 text-xs leading-5 text-amber-100">
+                VLM is not available right now, so SafeTrace is using rule-based explanations.
+              </p>
+            ) : null}
             {vlmCheck?.message ? (
               <p className="mt-2 rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs leading-5 text-slate-200">
                 {vlmCheck.message}
+                {vlmCheck.actionHint ? <span> {vlmCheck.actionHint}</span> : null}
               </p>
             ) : null}
           </div>

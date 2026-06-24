@@ -99,6 +99,7 @@ type BackendFrameResult = {
   status: 'violations_detected' | 'no_violations';
   imageUrl?: string | null;
   imageMessage?: string | null;
+  explanationSource?: 'vlm' | 'vlm_local' | 'vlm_ollama' | 'rule_based' | null;
   violations: BackendViolation[];
   technicalEvidence: Record<string, unknown>;
 };
@@ -452,6 +453,21 @@ function buildVisualExplanation(violations: Violation[], rawExplanation: unknown
   ].join('\n');
 }
 
+function explanationSourceFor(
+  rawSource: unknown,
+  rawExplanation: unknown,
+  violations: Violation[],
+): 'vlm' | 'vlm_local' | 'vlm_ollama' | 'rule_based' | undefined {
+  const source = String(rawSource || '').toLowerCase();
+  const explanation = typeof rawExplanation === 'string' ? rawExplanation.trim() : '';
+  if ((source === 'vlm_local' || source === 'vlm_ollama') && explanation && !explanationLooksTechnical(explanation)) {
+    return source;
+  }
+  if (source === 'vlm' && explanation && !explanationLooksTechnical(explanation)) return 'vlm';
+  if (violations.length || explanation) return 'rule_based';
+  return undefined;
+}
+
 function mapEvents(events: BackendViolationEvent[] | undefined): ViolationEvent[] | undefined {
   if (!events) return undefined;
   return events.map((event) => ({
@@ -500,6 +516,8 @@ function mapBackendResult(result: BackendAnalysisResult): AnalysisResult {
     settings: undefined,
     frames: result.frames.map((frame) => {
       const violations = mapViolations(frame.violations);
+      const rawExplanation = frame.technicalEvidence?.explanation;
+      const rawExplanationSource = frame.explanationSource ?? frame.technicalEvidence?.explanationSource;
       return {
         id: frame.id,
         frameNumber: frame.frameNumber,
@@ -509,7 +527,8 @@ function mapBackendResult(result: BackendAnalysisResult): AnalysisResult {
         imageUrl: resolveBackendMediaUrl(frame.imageUrl ?? null) ?? undefined,
         imageMessage: frame.imageMessage ?? undefined,
         evidenceImageRequired: Boolean(frame.imageUrl || frame.imageMessage),
-        explanation: buildVisualExplanation(violations, frame.technicalEvidence?.explanation),
+        explanation: buildVisualExplanation(violations, rawExplanation),
+        explanationSource: explanationSourceFor(rawExplanationSource, rawExplanation, violations),
         violations,
         detections: mapDetections(frame),
         technicalEvidence: frame.technicalEvidence,
@@ -548,6 +567,7 @@ export function buildMockAnalysisResult({
     const friendlyFrame = {
       ...frame,
       explanation: buildVisualExplanation(frame.violations, frame.explanation),
+      explanationSource: frame.explanationSource ?? 'rule_based',
     };
     if (media.source === 'local' && media.type === 'image' && media.previewUrl) {
       return { ...friendlyFrame, imageUrl: media.previewUrl, evidenceImageRequired: false };

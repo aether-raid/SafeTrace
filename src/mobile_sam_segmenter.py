@@ -19,6 +19,10 @@ from .utils import imread_rgb, resolve_device
 logger = logging.getLogger("safetrace.msam")
 
 
+def _is_disabled_mode(value: str | None) -> bool:
+    return (value or "").strip().lower() in {"0", "false", "no", "off", "disabled", "none"}
+
+
 class MobileSamSegmenter:
     def __init__(
         self,
@@ -30,6 +34,10 @@ class MobileSamSegmenter:
         self.checkpoint = Path(checkpoint or SETTINGS.mobile_sam_checkpoint)
         self._predictor = None
         self._available = False
+
+        if _is_disabled_mode(getattr(SETTINGS, "mobile_sam_enabled", "auto")):
+            logger.info("MobileSAM disabled by configuration.")
+            return
 
         if not self.checkpoint.exists():
             logger.warning(

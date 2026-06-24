@@ -107,7 +107,8 @@ function App() {
   const [settings, setSettings] = useState<AnalysisSettings>({
     fps: 1,
     topK: 5,
-    vlmExplanations: false,
+    visualExplanations: true,
+    enhancedVlmExplanations: true,
     deviceMode: 'Auto',
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -543,7 +544,7 @@ function App() {
             query: trimmedQuery,
             fps: settings.fps,
             topK: settings.topK,
-            enableVlm: settings.vlmExplanations,
+            enableVlm: settings.enhancedVlmExplanations,
             device: settings.deviceMode,
           });
           setBatchStatus(batch);
@@ -600,7 +601,7 @@ function App() {
           query: trimmedQuery,
           fps: settings.fps,
           topK: settings.topK,
-          enableVlm: settings.vlmExplanations,
+          enableVlm: settings.enhancedVlmExplanations,
           device: settings.deviceMode,
         });
         const queuedStatus: JobStatus = {
@@ -881,7 +882,7 @@ function App() {
 
       {analysisResult && !isLoading ? (
         <>
-          <AnalysisSummary result={analysisResult} showExplanations={settings.vlmExplanations} />
+          <AnalysisSummary result={analysisResult} showExplanations={settings.visualExplanations} />
           
           <ViolationSummary 
             result={analysisResult} 
@@ -900,7 +901,7 @@ function App() {
           
           <EvidenceFrames
             frames={analysisResult.frames}
-            showExplanations={settings.vlmExplanations}
+            showExplanations={settings.visualExplanations}
             highlightedFrameId={highlightedFrameId}
           />
           

@@ -26,6 +26,7 @@ EXTERNAL_ASSET_RULES = [
     "*.pth",
     "*.safetensors",
     "*.bin",
+    "*.onnx",
     "checkpoints/",
     "uploads/",
     "generated/",

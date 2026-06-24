@@ -2,7 +2,8 @@
 
 This script prepares a replaceable-runtime package layout under dist/SafeTrace.
 It does not build a final .exe and intentionally excludes local data, uploads,
-generated media, checkpoints, and model files.
+generated media, and model files. It may copy the optional local MobileSAM
+checkpoint into generated package output when that checkpoint already exists.
 """
 from __future__ import annotations
 
@@ -22,14 +23,18 @@ PROTECTED_ASSET_RULES = [
     "*.safetensors",
     "*.pt",
     "*.pth",
+    "*.onnx",
     "checkpoints/",
+    "!dist/SafeTrace/checkpoints/mobile_sam.pt",
     "data/",
     "uploads/",
     "generated/",
     "generated_media/",
     "models/chat/*.gguf",
 ]
-PRESERVE_PATHS = ["config/", "data/", "models/", "logs/"]
+PRESERVE_PATHS = ["config/", "data/", "models/", "logs/", "checkpoints/"]
+MOBILE_SAM_SOURCE = Path("checkpoints") / "mobile_sam.pt"
+MOBILE_SAM_PACKAGE_PATH = Path("checkpoints") / "mobile_sam.pt"
 
 
 LAUNCHER_TEXT = r"""@echo off
@@ -59,6 +64,12 @@ if not defined SAFETRACE_SERVE_FRONTEND set "SAFETRACE_SERVE_FRONTEND=true"
 if not defined SAFETRACE_FRONTEND_DIST set "SAFETRACE_FRONTEND_DIST=frontend\dist"
 if not defined SAFETRACE_BUILD_MODE set "SAFETRACE_BUILD_MODE=prototype"
 if not defined SAFETRACE_RUNTIME_LAYOUT set "SAFETRACE_RUNTIME_LAYOUT=packaged"
+if not defined SAFETRACE_MOBILESAM_ENABLED set "SAFETRACE_MOBILESAM_ENABLED=auto"
+if not defined SAFETRACE_MOBILESAM_CHECKPOINT set "SAFETRACE_MOBILESAM_CHECKPOINT=checkpoints\mobile_sam.pt"
+if not defined SAFETRACE_VLM_ENABLED set "SAFETRACE_VLM_ENABLED=auto"
+if not defined SAFETRACE_VLM_PROVIDER set "SAFETRACE_VLM_PROVIDER=auto"
+if not defined SAFETRACE_VLM_OLLAMA_BASE_URL set "SAFETRACE_VLM_OLLAMA_BASE_URL=http://127.0.0.1:11434"
+if not defined SAFETRACE_VLM_MODEL set "SAFETRACE_VLM_MODEL=llava"
 
 echo [SafeTrace] App root: "%APP_ROOT%"
 echo [SafeTrace] Backend health: http://127.0.0.1:8000/api/health
@@ -93,6 +104,18 @@ include frontend assets:
 
   cd frontend-react
   npm.cmd run build
+"""
+
+
+CHECKPOINT_README = """SafeTrace optional checkpoint folder.
+
+MobileSAM refinement is optional. To include refined segmentation masks in a
+local release package, place the checkpoint at:
+
+  checkpoints/mobile_sam.pt
+
+SafeTrace analysis still runs without this file using detector-box evidence.
+Do not commit checkpoints or model weights to Git.
 """
 
 
@@ -173,6 +196,7 @@ def copy_if_exists(source: Path, target: Path) -> bool:
             "*.safetensors",
             "*.pt",
             "*.pth",
+            "*.onnx",
             "data",
             "uploads",
             "generated",
@@ -203,6 +227,17 @@ def copy_backend_exe_if_exists(repo_root: Path, package: Path, backend_exe: Path
     return True
 
 
+def copy_mobile_sam_checkpoint(repo_root: Path, package: Path) -> bool:
+    source = repo_root / MOBILE_SAM_SOURCE
+    target = package / MOBILE_SAM_PACKAGE_PATH
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if not source.is_file():
+        write_text(package / "checkpoints" / "README.txt", CHECKPOINT_README)
+        return False
+    shutil.copy2(source, target)
+    return True
+
+
 def build_prototype(
     repo_root: Path,
     output_dir: Path | None = None,
@@ -223,6 +258,7 @@ def build_prototype(
             "frontend/dist",
             "config",
             "models/chat",
+            "checkpoints",
             "data",
             "logs",
         ],
@@ -238,10 +274,11 @@ def build_prototype(
     frontend_copied = copy_if_exists(repo_root / "frontend-react" / "dist", package / "frontend" / "dist")
     if not frontend_copied:
         write_text(package / "frontend" / "dist" / "README.txt", FRONTEND_README)
+    mobile_sam_checkpoint_included = copy_mobile_sam_checkpoint(repo_root, package)
 
     warnings = [
         "Excluded local data, uploads, generated reports, generated media, and cache folders.",
-        "Excluded checkpoints and model assets, including GGUF chat models.",
+        "Excluded model assets from Git-controlled package inputs, including GGUF chat models.",
     ]
     if not backend_exe_copied:
         warnings.append("Backend executable not found; created a placeholder backend folder only.")
@@ -249,6 +286,10 @@ def build_prototype(
         warnings.append("config/safetrace.env.example was not found in the source tree.")
     if not frontend_copied:
         warnings.append("frontend-react/dist was not found; created a frontend placeholder instead.")
+    if mobile_sam_checkpoint_included:
+        warnings.append("MobileSAM checkpoint included from local checkpoints/mobile_sam.pt.")
+    else:
+        warnings.append("MobileSAM checkpoint missing; package will use detector-box fallback.")
 
     return {
         "package_root": str(package),
@@ -256,6 +297,7 @@ def build_prototype(
         "backend_exe_copied": backend_exe_copied,
         "frontend_copied": frontend_copied,
         "config_copied": copied_config,
+        "mobile_sam_checkpoint_included": mobile_sam_checkpoint_included,
         "preserve_paths": PRESERVE_PATHS,
         "excluded_asset_rules": PROTECTED_ASSET_RULES,
         "warnings": warnings,
@@ -270,6 +312,14 @@ def print_summary(summary: dict) -> None:
     print(f"Backend executable copied: {summary['backend_exe_copied']}")
     print(f"Frontend dist copied: {summary['frontend_copied']}")
     print(f"Config example copied: {summary['config_copied']}")
+    print(
+        "MobileSAM checkpoint included: "
+        f"{summary['mobile_sam_checkpoint_included']}"
+    )
+    if summary["mobile_sam_checkpoint_included"]:
+        print("MobileSAM checkpoint included")
+    else:
+        print("MobileSAM checkpoint missing; package will use detector-box fallback")
     print("Preserved external paths:")
     for path in summary["preserve_paths"]:
         print(f"  - {path}")
@@ -303,6 +353,13 @@ def main() -> int:
         print(f"Would create SafeTrace desktop prototype at: {package}")
         backend_exe = args.backend_exe or repo_root / DEFAULT_BACKEND_EXE
         print(f"Would copy backend exe if present: {backend_exe}")
+        mobile_sam = repo_root / MOBILE_SAM_SOURCE
+        print(f"Would copy MobileSAM checkpoint if present: {mobile_sam}")
+        print(
+            "MobileSAM checkpoint included"
+            if mobile_sam.is_file()
+            else "MobileSAM checkpoint missing; package will use detector-box fallback"
+        )
         print("Would exclude:")
         for rule in PROTECTED_ASSET_RULES:
             print(f"  - {rule}")

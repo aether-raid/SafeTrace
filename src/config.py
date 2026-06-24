@@ -15,6 +15,14 @@ def _env(key: str, default: str) -> str:
     return os.environ.get(key, default)
 
 
+def _env_first(keys: tuple[str, ...], default: str) -> str:
+    for key in keys:
+        value = os.environ.get(key)
+        if value is not None:
+            return value
+    return default
+
+
 def _env_float(key: str, default: float) -> float:
     try:
         return float(os.environ.get(key, default))
@@ -95,7 +103,10 @@ class Settings:
     )
     mobile_sam_checkpoint: Path = field(
         default_factory=lambda: Path(
-            _env("SAFETRACE_MSAM_CKPT", str(PROJECT_ROOT / "checkpoints" / "mobile_sam.pt"))
+            _env_first(
+                ("SAFETRACE_MOBILESAM_CHECKPOINT", "SAFETRACE_MSAM_CKPT"),
+                str(PROJECT_ROOT / "checkpoints" / "mobile_sam.pt"),
+            )
         )
     )
     vlm_model_dir: Path = field(
@@ -103,11 +114,21 @@ class Settings:
             _env("SAFETRACE_VLM_DIR", str(PROJECT_ROOT / "checkpoints" / "vlm_model"))
         )
     )
+    vlm_provider: str = field(default_factory=lambda: _env("SAFETRACE_VLM_PROVIDER", "auto"))
+    vlm_ollama_base_url: str = field(
+        default_factory=lambda: _env("SAFETRACE_VLM_OLLAMA_BASE_URL", "http://127.0.0.1:11434")
+    )
+    vlm_model: str = field(default_factory=lambda: _env("SAFETRACE_VLM_MODEL", "llava"))
+    vlm_timeout_seconds: float = field(default_factory=lambda: _env_float("SAFETRACE_VLM_TIMEOUT_SECONDS", 30.0))
+    vlm_max_frames: int = field(default_factory=lambda: _env_int("SAFETRACE_VLM_MAX_FRAMES", 3))
+    vlm_max_tokens: int = field(default_factory=lambda: _env_int("SAFETRACE_VLM_MAX_TOKENS", 180))
 
     # ---- Runtime ----
     device: str = field(default_factory=lambda: _env("SAFETRACE_DEVICE", "auto"))
     offline: bool = field(default_factory=lambda: _env_bool("SAFETRACE_OFFLINE", True))
     enable_vlm: bool = field(default_factory=lambda: _env_bool("SAFETRACE_ENABLE_VLM", False))
+    mobile_sam_enabled: str = field(default_factory=lambda: _env("SAFETRACE_MOBILESAM_ENABLED", "auto"))
+    vlm_enabled: str = field(default_factory=lambda: _env("SAFETRACE_VLM_ENABLED", "auto"))
     serve_frontend: bool = field(default_factory=lambda: _env_bool("SAFETRACE_SERVE_FRONTEND", False))
     frontend_dist: Path = field(
         default_factory=lambda: Path(_env("SAFETRACE_FRONTEND_DIST", str(PROJECT_ROOT / "frontend-react" / "dist")))

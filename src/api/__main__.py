@@ -45,6 +45,15 @@ def apply_packaged_defaults(app_root: Path) -> None:
     os.environ.setdefault("SAFETRACE_RUNTIME_LAYOUT", "packaged")
     os.environ.setdefault("SAFETRACE_DATA_DIR", str(app_root / "data"))
     os.environ.setdefault("SAFETRACE_CHECKPOINTS_DIR", str(app_root / "checkpoints"))
+    os.environ.setdefault("SAFETRACE_MOBILESAM_ENABLED", "auto")
+    os.environ.setdefault("SAFETRACE_MOBILESAM_CHECKPOINT", str(Path("checkpoints") / "mobile_sam.pt"))
+    os.environ.setdefault("SAFETRACE_VLM_ENABLED", "auto")
+    os.environ.setdefault("SAFETRACE_VLM_PROVIDER", "auto")
+    os.environ.setdefault("SAFETRACE_VLM_OLLAMA_BASE_URL", "http://127.0.0.1:11434")
+    os.environ.setdefault("SAFETRACE_VLM_MODEL", "llava")
+    os.environ.setdefault("SAFETRACE_VLM_TIMEOUT_SECONDS", "30")
+    os.environ.setdefault("SAFETRACE_VLM_MAX_FRAMES", "3")
+    os.environ.setdefault("SAFETRACE_VLM_MAX_TOKENS", "180")
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:

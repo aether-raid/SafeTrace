@@ -26,6 +26,7 @@ models/chat/*.safetensors
 *.safetensors
 *.pt
 *.pth
+*.onnx
 logs/*.log
 config/safetrace.env
 

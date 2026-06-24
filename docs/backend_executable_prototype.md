@@ -88,6 +88,9 @@ SAFETRACE_DATA_DIR=<app root>\data
 SAFETRACE_CHECKPOINTS_DIR=<app root>\checkpoints
 SAFETRACE_SERVE_FRONTEND=true
 SAFETRACE_FRONTEND_DIST=frontend\dist
+SAFETRACE_MOBILESAM_CHECKPOINT=checkpoints\mobile_sam.pt
+SAFETRACE_VLM_PROVIDER=auto
+SAFETRACE_VLM_OLLAMA_BASE_URL=http://127.0.0.1:11434
 ```
 
 The real `config/safetrace.env` can override those defaults on an installed
@@ -129,6 +132,18 @@ Do not bundle or commit:
 The packaged local LLM remains optional. Main SafeTrace upload, ZIP/batch
 upload, and analysis flows must still start if the chat model or llama-cpp
 runtime is missing.
+
+MobileSAM and VLM assets also remain external to the executable. A one-dir
+PyInstaller backend should not embed `checkpoints/mobile_sam.pt`; the desktop
+package may place it at `SafeTrace/checkpoints/mobile_sam.pt` instead. A
+one-file executable is not preferred for checkpoints because replacing the
+backend should not overwrite data, config, logs, GGUF chat models, or safety
+model assets.
+
+The optional VLM provider is local-only. Auto mode preserves the existing local
+transformer VLM provider first and may call a local Ollama vision runtime on
+`127.0.0.1` only as an optional provider. It must not use cloud VLM APIs or
+upload frames/images/videos to internet services.
 
 ## PyTorch And CUDA Risks
 

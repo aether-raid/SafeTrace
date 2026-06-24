@@ -15,6 +15,9 @@ type FrameEvidenceCardProps = {
 
 export function FrameEvidenceCard({ frame, showExplanation, isHighlighted = false }: FrameEvidenceCardProps) {
   const hasViolations = frame.violations.length > 0;
+  const explanationLabel = frame.explanationSource && frame.explanationSource !== 'rule_based'
+    ? 'VLM explanation'
+    : 'Rule-based explanation';
 
   return (
     <article
@@ -81,7 +84,7 @@ export function FrameEvidenceCard({ frame, showExplanation, isHighlighted = fals
             <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm leading-6 text-blue-900">
               <div className="mb-1 flex items-center gap-2 font-semibold">
                 <Sparkles className="h-4 w-4" aria-hidden="true" />
-                Visual explanation
+                {explanationLabel}
               </div>
               <p className="whitespace-pre-line">{frame.explanation}</p>
             </div>

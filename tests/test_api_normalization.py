@@ -31,6 +31,7 @@ def test_normalization_creates_frontend_friendly_result(tmp_path):
                     }
                 ],
                 "explanation": "A visible worker has no helmet overlap.",
+                "explanation_source": "vlm_local",
                 "annotated_path": str(annotated),
             },
             {
@@ -62,6 +63,8 @@ def test_normalization_creates_frontend_friendly_result(tmp_path):
         "/api/media/job_20260618_123456_abcd/video_20260618_000046_annotated.jpg"
     )
     assert result["frames"][0]["technicalEvidence"]["detections"][0]["label"] == "person"
+    assert result["frames"][0]["explanationSource"] == "vlm_local"
+    assert result["frames"][0]["technicalEvidence"]["explanationSource"] == "vlm_local"
     assert result["frames"][1]["imageUrl"] is None
     assert "No annotated evidence image" in result["frames"][1]["imageMessage"]
     assert result["technicalDetails"]["processingMetadata"]["sampledFrameCount"] == 2

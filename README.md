@@ -36,7 +36,7 @@ Rule engine
    • seatbelt_missing     IoU(seatbelt, torso)     < 0.20
         │
         ▼
-Optional VLM (Phi-3-Vision / MiniCPM-V) — natural language summary
+Optional local VLM — natural language summary
         │
         ▼
 Streamlit UI: overlays, evidence table, JSON download
@@ -83,7 +83,7 @@ Place each checkpoint under `checkpoints/`:
 | YOLOv9-seg  | `checkpoints/yolov9c-seg.pt`                            | Ultralytics release asset                   |
 | YOLOv8-seg* | `checkpoints/yolov8s-seg.pt` *(fallback)*               | Ultralytics release asset                   |
 | MobileSAM   | `checkpoints/mobile_sam.pt`                             | https://github.com/ChaoningZhang/MobileSAM  |
-| VLM (opt.)  | `checkpoints/vlm_model/`                                | e.g. `microsoft/Phi-3-vision-128k-instruct` |
+| VLM (opt.)  | `checkpoints/vlm_model/` or local Ollama at `http://127.0.0.1:11434` | Existing local VLM snapshot, or optional Ollama vision model outside Git |
 
 All paths are overridable via environment variables — see `src/config.py`.
 
@@ -154,11 +154,17 @@ All settings live in `src/config.py` and accept environment overrides:
 | `SAFETRACE_DEVICE`           | `auto`                                           | `auto` / `cuda` / `cpu` (also switchable from the UI sidebar) |
 | `SAFETRACE_OFFLINE`          | `1`                                              | Force HF + transformers offline  |
 | `SAFETRACE_ENABLE_VLM`       | `0`                                              | Enable optional VLM explanations |
+| `SAFETRACE_VLM_ENABLED`      | `auto`                                           | Optional local VLM availability mode |
+| `SAFETRACE_VLM_PROVIDER`     | `auto`                                           | Prefer local VLM, then optional Ollama, then rule-based fallback |
+| `SAFETRACE_VLM_OLLAMA_BASE_URL` | `http://127.0.0.1:11434`                      | Local Ollama vision runtime URL |
+| `SAFETRACE_VLM_MODEL`        | `llava`                                          | Local Ollama vision model name |
 | `SAFETRACE_FPS`              | `1.0`                                            | Frame sampling FPS               |
 | `SAFETRACE_TOPK`             | `5`                                              | Default semantic-search k        |
 | `SAFETRACE_SIGLIP_DIR`       | `checkpoints/siglip-base-patch16-224`            | Embedding model dir              |
 | `SAFETRACE_YOLO_CKPT`        | `checkpoints/yolov9c-seg.pt`                     | Detector weights                 |
-| `SAFETRACE_MSAM_CKPT`        | `checkpoints/mobile_sam.pt`                      | MobileSAM weights                |
+| `SAFETRACE_MOBILESAM_ENABLED` | `auto`                                          | Optional MobileSAM refinement mode |
+| `SAFETRACE_MOBILESAM_CHECKPOINT` | `checkpoints/mobile_sam.pt`                   | Optional MobileSAM weights       |
+| `SAFETRACE_MSAM_CKPT`        | `checkpoints/mobile_sam.pt`                      | Legacy MobileSAM checkpoint env  |
 | `SAFETRACE_VLM_DIR`          | `checkpoints/vlm_model`                          | Optional VLM dir                 |
 | `STREAMLIT_SERVER_MAX_UPLOAD_SIZE` | `51200`                                    | Per-file upload limit in **MB** (default 50 GB) |
 | `STREAMLIT_SERVER_MAX_MESSAGE_SIZE`| `51200`                                    | Streamlit websocket message cap in **MB**       |
@@ -201,6 +207,10 @@ results = analyze_query("worker without helmet")
   are set in both the container and `src/config.py`.
 - MobileSAM and the VLM are **optional**: if checkpoints are missing the
   pipeline degrades gracefully (YOLO masks only, deterministic explanations).
+- Packaged releases may include `checkpoints/mobile_sam.pt` locally, but Git
+  must not track checkpoints or model weights. VLM explanations default to
+  `auto`: existing local VLM provider first, optional local Ollama second, then
+  rule-based fallback. SafeTrace never uses cloud VLM APIs.
 - YOLO label spaces vary across checkpoints; `src/config.py` contains a
   configurable `CLASS_ALIASES` map normalizing labels for the rule engine.
 - The React frontend result cache is local to the user's browser. It can store

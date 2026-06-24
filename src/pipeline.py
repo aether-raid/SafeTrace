@@ -130,9 +130,11 @@ class SafeTracePipeline:
         violations = evaluate_rules(detections)
 
         explanation: Optional[str] = None
+        explanation_source: Optional[str] = None
         if violations:
             try:
                 explanation = self.vlm.explain_violation(image, violations)
+                explanation_source = getattr(self.vlm, "last_explanation_source", "rule_based")
             except Exception as exc:  # pragma: no cover - defensive
                 logger.warning("VLM explanation failed: %s", exc)
 
@@ -152,6 +154,7 @@ class SafeTracePipeline:
             detections=detections,
             violations=violations,
             explanation=explanation,
+            explanation_source=explanation_source,
             annotated_path=annotated_path,
         )
 

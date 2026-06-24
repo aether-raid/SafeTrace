@@ -48,6 +48,22 @@ Each check has a `status`, `message`, and optional `path`, `actionHint`, and
 `details`. Missing optional features such as VLM, MobileSAM, or chat should not
 block upload or analysis.
 
+Optional model statuses include:
+
+- `available`: optional runtime and model/checkpoint are ready.
+- `disabled`: feature is intentionally disabled by environment configuration.
+- `missing_checkpoint`: an optional checkpoint such as `checkpoints/mobile_sam.pt`
+  is absent.
+- `missing_runtime`: the local runtime dependency or local service is absent.
+- `unavailable`: a non-blocking optional readiness issue was detected.
+
+MobileSAM details include checkpoint existence, runtime availability, and the
+packaged expected path. VLM details include `provider`, `selectedProvider`,
+`availableProviders`, provider-specific runtime/model readiness, and action
+hints. With `SAFETRACE_VLM_PROVIDER=auto`, SafeTrace prefers the existing local
+transformer VLM provider, then optional local Ollama, then rule-based fallback.
+VLM status is independent from SafeTrace Assistant status.
+
 ## Chat Status Safety
 
 System preflight calls chat status in no-load mode. Even when

@@ -16,7 +16,8 @@
     "config/",
     "data/",
     "models/",
-    "logs/"
+    "logs/",
+    "checkpoints/"
   ],
   "excluded_asset_rules": [
     "*.gguf",
@@ -24,7 +25,9 @@
     "*.safetensors",
     "*.pt",
     "*.pth",
+    "*.onnx",
     "checkpoints/",
+    "!dist/SafeTrace/checkpoints/mobile_sam.pt",
     "data/",
     "uploads/",
     "generated/",

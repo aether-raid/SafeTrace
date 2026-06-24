@@ -54,6 +54,7 @@ class FrameAnalysis:
     detections: List[Detection] = field(default_factory=list)
     violations: List[Violation] = field(default_factory=list)
     explanation: Optional[str] = None
+    explanation_source: Optional[str] = None
     annotated_path: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
@@ -64,5 +65,6 @@ class FrameAnalysis:
             "detections": [d.to_dict() for d in self.detections],
             "violations": [v.to_dict() for v in self.violations],
             "explanation": self.explanation,
+            "explanation_source": self.explanation_source,
             "annotated_path": self.annotated_path,
         }

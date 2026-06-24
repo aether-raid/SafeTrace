@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os
 import sys
+from importlib import util as importlib_util
 from pathlib import Path
 from typing import Optional
 
@@ -20,6 +21,7 @@ from src.chat_service import (
     warmup_chat_provider,
 )
 from src.config import SETTINGS
+from src.vlm_reasoner import vlm_status_payload
 
 from .batches import BatchStore, BatchValidationError
 from .jobs import (
@@ -161,6 +163,65 @@ def _path_status(path: Path, *, optional: bool = False, unavailable_message: Opt
     )
 
 
+def _optional_mode(value: str | None) -> str:
+    raw = (value or "auto").strip().lower()
+    if raw in {"0", "false", "no", "off", "disabled", "none"}:
+        return "disabled"
+    if raw in {"1", "true", "yes", "on", "enabled"}:
+        return "enabled"
+    return "auto"
+
+
+def _mobile_sam_runtime_available() -> bool:
+    return importlib_util.find_spec("mobile_sam") is not None
+
+
+def _mobile_sam_status() -> ModelStatus:
+    checkpoint = SETTINGS.mobile_sam_checkpoint
+    display = _display_path(checkpoint)
+    mode = _optional_mode(getattr(SETTINGS, "mobile_sam_enabled", "auto"))
+    checkpoint_exists = checkpoint.is_file()
+    runtime_available = _mobile_sam_runtime_available()
+    details = {
+        "enabledMode": mode,
+        "checkpointExists": checkpoint_exists,
+        "runtimeAvailable": runtime_available,
+        "packagedExpectedPath": "checkpoints/mobile_sam.pt",
+    }
+    if mode == "disabled":
+        return ModelStatus(
+            status="disabled",
+            path=display,
+            message="MobileSAM refinement is disabled. Detector-box evidence remains available.",
+            actionHint="Set SAFETRACE_MOBILESAM_ENABLED=auto to allow optional refinement.",
+            details=details,
+        )
+    if not checkpoint_exists:
+        return ModelStatus(
+            status="missing_checkpoint",
+            path=display,
+            message=(
+                "MobileSAM checkpoint is missing. SafeTrace will use detector-box evidence without refined masks."
+            ),
+            actionHint="Place the optional checkpoint at checkpoints/mobile_sam.pt for refined segmentation masks.",
+            details=details,
+        )
+    if not runtime_available:
+        return ModelStatus(
+            status="missing_runtime",
+            path=display,
+            message="MobileSAM checkpoint exists, but the mobile-sam Python runtime is unavailable.",
+            actionHint="Install the MobileSAM runtime in the local environment, or keep using detector-box fallback.",
+            details=details,
+        )
+    return ModelStatus(
+        status="available",
+        path=display,
+        message="MobileSAM refinement is available as an optional detector-box mask refinement.",
+        details=details,
+    )
+
+
 def _gpu_available() -> bool:
     try:
         import torch
@@ -187,11 +248,16 @@ def _detector_status() -> ModelStatus:
 
 
 def _model_status_payload(status: ModelStatus) -> dict:
-    return {
+    payload = {
         "status": status.status,
         "path": status.path,
         "message": status.message,
     }
+    if status.actionHint:
+        payload["actionHint"] = status.actionHint
+    if status.details:
+        payload["details"] = status.details
+    return payload
 
 
 def _runtime_check(
@@ -214,8 +280,30 @@ def _runtime_check(
 
 
 def _model_preflight_check(label: str, status: ModelStatus, *, optional: bool = False) -> dict:
-    if status.status == "ready":
-        return _runtime_check("ready", f"{label} ready", path=status.path)
+    if status.status in {"ready", "available"}:
+        return _runtime_check(
+            status.status,
+            status.message or f"{label} ready",
+            path=status.path,
+            action_hint=status.actionHint,
+            details=status.details,
+        )
+    if status.status == "disabled":
+        return _runtime_check(
+            "disabled",
+            status.message or f"{label} disabled",
+            path=status.path,
+            action_hint=status.actionHint,
+            details=status.details,
+        )
+    if status.status in {"missing_checkpoint", "missing_runtime"}:
+        return _runtime_check(
+            status.status,
+            status.message or f"{label} {status.status.replace('_', ' ')}",
+            path=status.path,
+            action_hint=status.actionHint,
+            details=status.details,
+        )
     if status.status == "missing":
         return _runtime_check(
             "missing",
@@ -227,12 +315,42 @@ def _model_preflight_check(label: str, status: ModelStatus, *, optional: bool = 
     if optional and label == "MobileSAM":
         action_hint = "Install checkpoints/mobile_sam.pt only if refined segmentation masks are needed."
     if optional and label == "VLM":
-        action_hint = "Configure SAFETRACE_ENABLE_VLM=true and a local SAFETRACE_VLM_DIR only if visual explanations are required."
+        action_hint = "Use SAFETRACE_VLM_PROVIDER=auto to prefer the local VLM provider, or explicitly choose ollama."
     return _runtime_check(
         "unavailable",
         status.message or f"{label} unavailable",
         path=status.path,
-        action_hint=action_hint,
+        action_hint=status.actionHint or action_hint,
+        details=status.details,
+    )
+
+
+def _visual_explanations_payload(vlm_status: ModelStatus) -> dict:
+    enhanced_available = vlm_status.status in {"ready", "available"}
+    source = "vlm" if enhanced_available else "rule_based"
+    return {
+        "status": "available",
+        "fallback": "rule_based",
+        "explanationSource": source,
+        "enhancedVlmAvailable": enhanced_available,
+        "message": (
+            "Visual explanations are enabled. SafeTrace will use VLM when available, "
+            "otherwise rule-based explanations."
+        ),
+    }
+
+
+def _visual_explanations_preflight_check(vlm_status: ModelStatus) -> dict:
+    payload = _visual_explanations_payload(vlm_status)
+    return _runtime_check(
+        "available",
+        payload["message"],
+        details={
+            "fallback": payload["fallback"],
+            "explanationSource": payload["explanationSource"],
+            "enhancedVlmAvailable": payload["enhancedVlmAvailable"],
+            "enhancedVlmStatus": vlm_status.status,
+        },
     )
 
 
@@ -316,6 +434,7 @@ def _preflight_payload(*, models: dict[str, ModelStatus], chat: dict, openmp: di
         ),
         "embeddingModel": _model_preflight_check("embedding model", models["embeddingModel"]),
         "detector": _model_preflight_check("detector", models["detector"]),
+        "visualExplanations": _visual_explanations_preflight_check(models["vlm"]),
         "mobileSam": _model_preflight_check("MobileSAM", models["mobileSam"], optional=True),
         "vlm": _model_preflight_check("VLM", models["vlm"], optional=True),
         "assistant": _assistant_preflight_check(chat),
@@ -352,6 +471,7 @@ def _runtime_payload(
             "gpuAvailable": gpu_available,
         },
         "models": {key: _model_status_payload(value) for key, value in models.items()},
+        "visual_explanations": _visual_explanations_payload(models["vlm"]),
         "chat": chat,
         "openmp": openmp,
         "frontend": _frontend_status_payload(),
@@ -463,37 +583,11 @@ def create_app(job_store: JobStore | None = None, batch_store: BatchStore | None
     @app.get("/api/system/status", response_model=SystemStatusResponse)
     def system_status(store: JobStore = Depends(get_job_store)) -> SystemStatusResponse:
         gpu_available = _gpu_available()
-        vlm_status = (
-            _path_status(
-                SETTINGS.vlm_model_dir,
-                optional=True,
-                unavailable_message=(
-                    "VLM explanations are optional. SafeTrace is using rule-based explanations because no VLM "
-                    "model is configured."
-                ),
-            )
-            if SETTINGS.enable_vlm
-            else ModelStatus(
-                status="unavailable",
-                path=_display_path(SETTINGS.vlm_model_dir),
-                message=(
-                    "VLM explanations are optional. SafeTrace is using rule-based explanations because no VLM "
-                    "model is configured."
-                ),
-            )
-        )
         models = {
             "embeddingModel": _path_status(SETTINGS.siglip_model_dir),
             "detector": _detector_status(),
-            "mobileSam": _path_status(
-                SETTINGS.mobile_sam_checkpoint,
-                optional=True,
-                unavailable_message=(
-                    "MobileSAM is optional. It refines segmentation masks when checkpoints/mobile_sam.pt "
-                    "is installed. Analysis can still run without it."
-                ),
-            ),
-            "vlm": vlm_status,
+            "mobileSam": _mobile_sam_status(),
+            "vlm": ModelStatus(**vlm_status_payload()),
         }
         limits = {
             "maxUploadMb": SETTINGS.max_upload_mb,

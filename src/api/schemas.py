@@ -20,9 +20,11 @@ class HealthResponse(BaseModel):
 
 
 class ModelStatus(BaseModel):
-    status: Literal["ready", "missing", "unavailable"]
+    status: Literal["ready", "available", "missing", "missing_checkpoint", "missing_runtime", "disabled", "unavailable"]
     path: Optional[str] = None
     message: Optional[str] = None
+    actionHint: Optional[str] = None
+    details: Optional[Dict[str, Any]] = None
 
 
 class SystemStatusResponse(BaseModel):
@@ -188,6 +190,7 @@ class FrameResult(BaseModel):
     status: Literal["violations_detected", "no_violations"]
     imageUrl: Optional[str] = None
     imageMessage: Optional[str] = None
+    explanationSource: Optional[Literal["vlm", "vlm_local", "vlm_ollama", "rule_based"]] = None
     violations: List[FrameViolation]
     technicalEvidence: Dict[str, Any]
 

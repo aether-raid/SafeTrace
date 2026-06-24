@@ -22,6 +22,9 @@ def test_config_example_exists_with_packaged_defaults():
     assert "SAFETRACE_CHAT_PROVIDER=packaged_llamacpp" in content
     assert "SAFETRACE_SERVE_FRONTEND=true" in content
     assert "SAFETRACE_FRONTEND_DIST=frontend/dist" in content
+    assert "SAFETRACE_MOBILESAM_CHECKPOINT=checkpoints/mobile_sam.pt" in content
+    assert "SAFETRACE_VLM_PROVIDER=auto" in content
+    assert "SAFETRACE_VLM_MODEL=llava" in content
 
 
 def test_desktop_manifest_example_shape():
@@ -33,7 +36,9 @@ def test_desktop_manifest_example_shape():
     assert payload["frontend"]["dist_path"] == "frontend/dist"
     assert payload["backend"]["entrypoint"] == "safetrace-backend.exe"
     assert "config/" in payload["preserve_paths"]
+    assert "checkpoints/" in payload["preserve_paths"]
     assert "*.gguf" in payload["excluded_asset_rules"]
+    assert "*.onnx" in payload["excluded_asset_rules"]
 
 
 def test_package_script_creates_layout_without_protected_assets(tmp_path):
@@ -58,12 +63,16 @@ def test_package_script_creates_layout_without_protected_assets(tmp_path):
     assert (package / "frontend" / "dist" / "index.html").is_file()
     assert (package / "config" / "safetrace.env.example").is_file()
     assert (package / "models" / "chat").is_dir()
+    assert (package / "checkpoints").is_dir()
+    assert (package / "checkpoints" / "README.txt").is_file()
     assert (package / "data").is_dir()
     assert (package / "logs").is_dir()
     assert (package / "packaging_manifest.json").is_file()
     assert not list(package.rglob("*.gguf"))
+    assert not list(package.rglob("*.pt"))
     assert not (package / "data" / "upload.mp4").exists()
     assert summary["backend_exe_copied"] is False
+    assert summary["mobile_sam_checkpoint_included"] is False
     assert "*.gguf" in summary["excluded_asset_rules"]
     assert PROTECTED_ASSET_RULES == summary["excluded_asset_rules"]
 
@@ -83,6 +92,23 @@ def test_package_script_copies_existing_backend_exe_only_when_present(tmp_path):
     assert not list(package.rglob("*.gguf"))
     assert not list(package.rglob("*.pt"))
     assert not list(package.rglob("*.safetensors"))
+
+
+def test_package_script_copies_optional_mobilesam_checkpoint_when_present(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    checkpoint = repo / "checkpoints" / "mobile_sam.pt"
+    checkpoint.parent.mkdir(parents=True)
+    checkpoint.write_bytes(b"mobile sam checkpoint placeholder")
+    (repo / "checkpoints" / "other_model.pt").write_bytes(b"do not copy")
+
+    summary = build_prototype(repo, tmp_path / "out", clean=True)
+    package = Path(summary["package_root"])
+
+    assert summary["mobile_sam_checkpoint_included"] is True
+    assert (package / "checkpoints" / "mobile_sam.pt").read_bytes() == b"mobile sam checkpoint placeholder"
+    assert not (package / "checkpoints" / "other_model.pt").exists()
+    assert not list(package.rglob("*.gguf"))
 
 
 def test_backend_entrypoint_imports_and_loads_env(monkeypatch, tmp_path):
@@ -118,6 +144,9 @@ def test_backend_entrypoint_packaged_defaults(monkeypatch, tmp_path):
         "SAFETRACE_PROJECT_ROOT",
         "SAFETRACE_DATA_DIR",
         "SAFETRACE_CHECKPOINTS_DIR",
+        "SAFETRACE_MOBILESAM_CHECKPOINT",
+        "SAFETRACE_VLM_PROVIDER",
+        "SAFETRACE_VLM_MODEL",
         "SAFETRACE_SERVE_FRONTEND",
         "SAFETRACE_RUNTIME_LAYOUT",
     ):
@@ -128,6 +157,9 @@ def test_backend_entrypoint_packaged_defaults(monkeypatch, tmp_path):
     assert Path(os.environ["SAFETRACE_PROJECT_ROOT"]) == tmp_path
     assert Path(os.environ["SAFETRACE_DATA_DIR"]) == tmp_path / "data"
     assert Path(os.environ["SAFETRACE_CHECKPOINTS_DIR"]) == tmp_path / "checkpoints"
+    assert Path(os.environ["SAFETRACE_MOBILESAM_CHECKPOINT"]) == Path("checkpoints") / "mobile_sam.pt"
+    assert os.environ["SAFETRACE_VLM_PROVIDER"] == "auto"
+    assert os.environ["SAFETRACE_VLM_MODEL"] == "llava"
     assert os.environ["SAFETRACE_SERVE_FRONTEND"] == "true"
     assert os.environ["SAFETRACE_RUNTIME_LAYOUT"] == "packaged"
 
