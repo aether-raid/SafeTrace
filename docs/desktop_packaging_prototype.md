@@ -8,8 +8,20 @@ Phase 9 prepares the package contract for the no-extra-steps user flow:
 3. Click Reconnect and use SafeTrace.
 ```
 
-The backend executable remains update-friendly. MobileSAM, chat, and VLM assets
-are bundled beside the runtime package, not embedded inside the backend binary.
+The backend executable remains update-friendly. SigLIP, YOLO, MobileSAM, chat,
+and lightweight VLM assets are bundled beside the runtime package, not embedded
+inside the backend binary.
+
+Phase 13 main tester package:
+
+```text
+SafeTrace_RC_SafeMode_RuleBased
+```
+
+This package defaults to CPU Safe Mode, rule-based visual explanations, improved
+object/rule frame ranking, packaged chatbot support, MobileSAM disabled, and VLM
+disabled. MobileSAM and Lightweight VLM assets may still be copied as optional
+package assets, but Enhanced VLM assets are excluded.
 
 ## Create The Prototype Package
 
@@ -52,12 +64,16 @@ dist/SafeTrace/
     safetrace.env
     safetrace.env.example
   checkpoints/
+    siglip-base-patch16-224/
+    yolov8s-seg.pt
     mobile_sam.pt
+    yolov9c-seg.pt              optional, when present
   models/
     chat/
       safetrace-assistant-qwen2.5-1.5b-instruct-q4.gguf
     vlm/
-      <local/non-Ollama VLM assets>
+      lightweight-256m/
+        <local/non-Ollama VLM assets>
   data/
   logs/
   packaging_manifest.json
@@ -72,9 +88,12 @@ the developer machine:
 
 - `dist/backend/safetrace-backend.exe` -> `backend/safetrace-backend.exe`
 - `config/safetrace.env` -> `config/safetrace.env`
+- `checkpoints/siglip-base-patch16-224/` -> `checkpoints/siglip-base-patch16-224/`
+- `checkpoints/yolov8s-seg.pt` -> `checkpoints/yolov8s-seg.pt`
+- `checkpoints/yolov9c-seg.pt` -> `checkpoints/yolov9c-seg.pt` when present
 - `checkpoints/mobile_sam.pt` -> `checkpoints/mobile_sam.pt`
 - `models/chat/*.gguf` -> `models/chat/`
-- `models/vlm/**` -> `models/vlm/`
+- `models/vlm/lightweight-256m/**` -> `models/vlm/lightweight-256m/`
 
 Missing assets do not fail non-strict mode. The builder writes README
 placeholders in generated package folders and writes:
@@ -92,9 +111,18 @@ status, and whether strict mode requires it.
 
 - backend executable
 - `config/safetrace.env`
+- `checkpoints/siglip-base-patch16-224/`
+- `checkpoints/yolov8s-seg.pt`
 - `checkpoints/mobile_sam.pt`
 - packaged chat GGUF when `SAFETRACE_CHAT_ENABLED` is not disabled and provider is `packaged_llamacpp`
-- local VLM assets under `models/vlm/` when `SAFETRACE_VLM_ENABLED` is not disabled and provider is `auto`/local
+
+`checkpoints/yolov9c-seg.pt` is copied when present but is not required by
+strict validation. The packaged default detector fallback remains
+`checkpoints/yolov8s-seg.pt`.
+
+`models/vlm/lightweight-256m/` is copied when present as an optional asset, but
+the main Safe Mode release keeps `SAFETRACE_VLM_ENABLED=false`, so Lightweight
+VLM is not required for the stable package to start or analyze.
 
 Strict mode is allowed to fail on developer machines that do not have release
 assets. The failure message names the missing paths.
@@ -107,16 +135,57 @@ The release launcher resolves paths from the local SafeTrace folder:
 set SAFETRACE_PROJECT_ROOT=%APP_ROOT%
 set SAFETRACE_DATA_DIR=%APP_ROOT%\data
 set SAFETRACE_CHECKPOINTS_DIR=%APP_ROOT%\checkpoints
+set SAFETRACE_DEVICE=cpu
+set SAFETRACE_ANALYSIS_SAFE_MODE=true
+set SAFETRACE_SIGLIP_DIR=%APP_ROOT%\checkpoints\siglip-base-patch16-224
+set SAFETRACE_YOLO_CKPT=%APP_ROOT%\checkpoints\yolov9c-seg.pt
+set SAFETRACE_YOLO_FALLBACK_CKPT=%APP_ROOT%\checkpoints\yolov8s-seg.pt
+set SAFETRACE_MOBILESAM_ENABLED=false
 set SAFETRACE_MOBILESAM_CHECKPOINT=%APP_ROOT%\checkpoints\mobile_sam.pt
 set SAFETRACE_CHAT_MODEL_PATH=%APP_ROOT%\models\chat\safetrace-assistant-qwen2.5-1.5b-instruct-q4.gguf
+set SAFETRACE_VLM_ENABLED=false
+set SAFETRACE_VLM_PROFILE=rule_based
 set SAFETRACE_VLM_MODEL_PATH=%APP_ROOT%\models\vlm
 set SAFETRACE_VLM_DIR=%APP_ROOT%\models\vlm
 set SAFETRACE_VLM_PROVIDER=auto
 ```
 
-`SAFETRACE_VLM_PROVIDER=auto` prefers packaged local/non-Ollama VLM assets,
-then optional local Ollama only if explicitly configured and available, then
-rule-based explanations. Ollama is not required for the no-extra-steps release.
+The main release keeps `SAFETRACE_VLM_ENABLED=false`. Lightweight local VLM
+assets are optional package contents for later explicit experimental activation;
+they are not loaded by the Safe Mode release. Enhanced VLM assets are not
+included in this prototype package. Ollama is not required for the no-extra-steps
+release.
+
+`SafeTraceLauncher.bat` starts a small backend supervisor with `--app-root`
+pointed at the local package folder, writes backend stdout/stderr under
+`logs/`, restarts the backend if it exits unexpectedly, and waits for
+`http://127.0.0.1:8000/api/health`. The packaged health wait is 90 seconds and
+prints progress every 5 seconds because the PyInstaller runtime and local ML
+imports can take a while to initialize on Windows. If health never becomes
+ready, the launcher exits with an error and prints process status, the port 8000
+occupant, Safe Mode environment values, the backend command, and the last log
+lines. Use foreground mode to debug startup failures directly:
+
+```cmd
+dist\SafeTrace\SafeTraceLauncher.bat --foreground
+```
+
+When the frozen backend executable is launched directly from `backend/`, it
+also infers the parent `SafeTrace/` folder as its app root. The launcher remains
+the recommended path because it applies environment defaults, logging, and the
+health check.
+
+If the assistant model is found but the assistant runtime is missing, rebuild
+the backend executable from the Python environment that has `llama-cpp-python`
+installed:
+
+```cmd
+.venv\Scripts\python.exe scripts\build_backend_exe.py --run
+```
+
+The assistant remains optional; missing `llama_cpp` does not block upload,
+single-video analysis, batch analysis, MobileSAM, or rule-based explanation
+fallback.
 
 ## Live Frontend Flow
 

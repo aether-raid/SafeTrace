@@ -11,13 +11,43 @@ type FrameEvidenceCardProps = {
   frame: FrameResult;
   showExplanation: boolean;
   isHighlighted?: boolean;
+  jobId?: string | null;
 };
 
-export function FrameEvidenceCard({ frame, showExplanation, isHighlighted = false }: FrameEvidenceCardProps) {
+function mobileSamRefinement(frame: FrameResult): Record<string, unknown> | null {
+  const searchMetadata = frame.technicalEvidence?.searchMetadata;
+  if (!searchMetadata || typeof searchMetadata !== 'object') return null;
+  const refinement = (searchMetadata as Record<string, unknown>).mobileSamRefinement;
+  return refinement && typeof refinement === 'object' ? refinement as Record<string, unknown> : null;
+}
+
+function lightweightVlmExplanation(frame: FrameResult): Record<string, unknown> | null {
+  const searchMetadata = frame.technicalEvidence?.searchMetadata;
+  if (!searchMetadata || typeof searchMetadata !== 'object') return null;
+  const explanation = (searchMetadata as Record<string, unknown>).lightweightVlmExplanation;
+  return explanation && typeof explanation === 'object' ? explanation as Record<string, unknown> : null;
+}
+
+export function FrameEvidenceCard({ frame, showExplanation, isHighlighted = false, jobId }: FrameEvidenceCardProps) {
   const hasViolations = frame.violations.length > 0;
-  const explanationLabel = frame.explanationSource && frame.explanationSource !== 'rule_based'
-    ? 'VLM explanation'
-    : 'Rule-based explanation';
+  const refinement = mobileSamRefinement(frame);
+  const vlmWorker = lightweightVlmExplanation(frame);
+  const detectorBoxFallbackUsed = refinement?.mobileSamRefinementSource === 'fallback';
+  const vlmWorkerFallbackUsed = Boolean(
+    vlmWorker?.lightweightVlmWorkerEnabled
+    && vlmWorker?.lightweightVlmWorkerAttempted
+    && !vlmWorker?.lightweightVlmWorkerSucceeded,
+  );
+  const vlmFallbackReason = typeof vlmWorker?.lightweightVlmFallbackReason === 'string'
+    ? vlmWorker.lightweightVlmFallbackReason
+    : null;
+  const explanationLabel = frame.explanationSource === 'vlm_lightweight'
+    ? 'Lightweight VLM explanation'
+    : frame.explanationSource === 'vlm_enhanced'
+      ? 'Enhanced VLM explanation'
+      : frame.explanationSource && frame.explanationSource !== 'rule_based'
+        ? 'VLM explanation'
+        : 'Rule-based explanation';
 
   return (
     <article
@@ -34,6 +64,21 @@ export function FrameEvidenceCard({ frame, showExplanation, isHighlighted = fals
               Frame {frame.frameNumber} - {frame.timestamp}
             </h3>
             <p className="mt-1 text-sm text-slate-500">Query relevance: {formatQueryRelevance(frame.queryRelevance)}</p>
+            {frame.selectionReason ? (
+              <p className="mt-2 inline-flex rounded-lg border border-blue-100 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-900">
+                Selected because {frame.selectionReason}
+              </p>
+            ) : null}
+            {detectorBoxFallbackUsed ? (
+              <p className="mt-2 inline-flex rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-900">
+                Detector-box fallback used
+              </p>
+            ) : null}
+            {vlmWorkerFallbackUsed ? (
+              <p className="mt-2 inline-flex rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-900">
+                VLM fallback: {vlmFallbackReason || 'rule-based explanation used'}
+              </p>
+            ) : null}
           </div>
           <StatusBadge
             label={hasViolations ? 'Violations detected' : 'No violations detected'}
@@ -93,7 +138,7 @@ export function FrameEvidenceCard({ frame, showExplanation, isHighlighted = fals
       </div>
 
       <div className="border-t border-slate-200 p-4">
-        <TechnicalDetails frame={frame} />
+        <TechnicalDetails frame={frame} jobId={jobId} />
       </div>
     </article>
   );

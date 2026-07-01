@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 import shutil
@@ -18,6 +19,10 @@ from src.config import SETTINGS
 from .normalization import normalize_pipeline_results
 
 JobState = Literal["queued", "running", "completed", "failed", "cancelled"]
+VLM_PROFILE_RULE_BASED = "rule_based"
+VLM_PROFILE_LIGHTWEIGHT = "lightweight_256m"
+VLM_PROFILE_ENHANCED = "enhanced_2b"
+VLM_PROFILE_IDS = {VLM_PROFILE_RULE_BASED, VLM_PROFILE_LIGHTWEIGHT, VLM_PROFILE_ENHANCED}
 MEDIA_EXTENSIONS = {
     ".jpg": "image",
     ".jpeg": "image",
@@ -35,9 +40,11 @@ ACTIVE_STATES = {"queued", "running"}
 MANIFEST_FILENAME = "manifest.json"
 RESULT_FILENAME = "result.json"
 LOCK_FILENAME = "execution.lock"
+ANALYSIS_HEARTBEAT_SECONDS = 8.0
 
 _PIPELINE_SETTINGS_LOCK = threading.Lock()
 _EXECUTION_SEMAPHORE = threading.BoundedSemaphore(max(int(SETTINGS.worker_concurrency), 1))
+logger = logging.getLogger("safetrace.api.jobs")
 
 
 class UploadValidationError(ValueError):
@@ -47,12 +54,19 @@ class UploadValidationError(ValueError):
         self.status_code = status_code
 
 
+class PipelineTimeoutError(TimeoutError):
+    """Raised when an analysis job exceeds the configured backend timeout."""
+
+
 @dataclass
 class AnalysisSettings:
     fps: float
     top_k: int
     enable_vlm: bool
     device: str
+    vlm_profile: str = VLM_PROFILE_RULE_BASED
+    vlm_enabled: bool = False
+    safe_mode: bool = False
 
 
 @dataclass
@@ -86,13 +100,22 @@ class JobRecord:
         return self.job_dir / MANIFEST_FILENAME
 
     def status_payload(self) -> Dict[str, Any]:
+        updated_at = _to_iso(self.updated_at)
         return {
             "jobId": self.job_id,
             "status": self.status,
             "progress": self.progress,
+            "progressPercent": max(0, min(100, round(self.progress * 100))),
+            "stage": _stage_for_status(self.status, self.current_step),
+            "message": self.current_step,
             "currentStep": self.current_step,
             "error": self.error,
             "metrics": self.metrics,
+            "componentDiagnostics": self.metrics.get("componentDiagnostics"),
+            "updatedAt": updated_at,
+            "startedAt": _to_iso(self.started_at),
+            "finishedAt": _to_iso(self.finished_at),
+            "heartbeatAt": updated_at if self.status in ACTIVE_STATES else None,
         }
 
 
@@ -114,6 +137,19 @@ def _parse_datetime(value: Any) -> Optional[datetime]:
     if parsed.tzinfo is None:
         return parsed.replace(tzinfo=timezone.utc)
     return parsed.astimezone(timezone.utc)
+
+
+def _stage_for_status(status: JobState, current_step: str) -> str:
+    if status in TERMINAL_STATES:
+        return status
+    step = (current_step or "").lower()
+    if "prepar" in step:
+        return "preparing"
+    if "normaliz" in step or "report" in step:
+        return "normalizing"
+    if "analysis" in step or "safetrace" in step:
+        return "analyzing"
+    return status
 
 
 def _safe_relative_path(path: Path, root: Path) -> Optional[str]:
@@ -195,6 +231,9 @@ def _settings_to_manifest(settings: AnalysisSettings) -> Dict[str, Any]:
         "topK": settings.top_k,
         "enableVlm": settings.enable_vlm,
         "device": settings.device,
+        "vlmProfile": normalize_vlm_profile(settings.vlm_profile),
+        "vlmEnabled": bool(settings.vlm_enabled),
+        "safeMode": bool(settings.safe_mode),
     }
 
 
@@ -204,7 +243,200 @@ def _settings_from_manifest(payload: Dict[str, Any]) -> AnalysisSettings:
         top_k=int(payload.get("topK") or payload.get("top_k") or 5),
         enable_vlm=bool(payload.get("enableVlm") or payload.get("enable_vlm") or False),
         device=str(payload.get("device") or "auto"),
+        vlm_profile=normalize_vlm_profile(payload.get("vlmProfile") or payload.get("vlm_profile")),
+        vlm_enabled=bool(payload.get("vlmEnabled") or payload.get("vlm_enabled") or False),
+        safe_mode=bool(payload.get("safeMode") or payload.get("safe_mode") or False),
     )
+
+
+def normalize_vlm_profile(value: Any) -> str:
+    raw = str(value or VLM_PROFILE_RULE_BASED).strip().lower()
+    return raw if raw in VLM_PROFILE_IDS else VLM_PROFILE_RULE_BASED
+
+
+def resolve_configured_path(path: Path) -> Path:
+    if path.is_absolute():
+        return path
+    cwd_candidate = (Path.cwd() / path).resolve()
+    if cwd_candidate.exists():
+        return cwd_candidate
+    return (SETTINGS.project_root / path).resolve()
+
+
+def resolve_vlm_profile_model_dir(profile: Any) -> Optional[Path]:
+    selected = normalize_vlm_profile(profile)
+    if selected == VLM_PROFILE_LIGHTWEIGHT:
+        return resolve_configured_path(Path(SETTINGS.vlm_lightweight_model_path))
+    if selected == VLM_PROFILE_ENHANCED:
+        return resolve_configured_path(Path(SETTINGS.vlm_enhanced_model_path))
+    return None
+
+
+def vlm_hard_disabled() -> bool:
+    return str(getattr(SETTINGS, "vlm_enabled", "auto") or "").strip().lower() in {
+        "0",
+        "false",
+        "no",
+        "off",
+        "disabled",
+        "none",
+    }
+
+
+def analysis_safe_mode() -> bool:
+    return bool(getattr(SETTINGS, "analysis_safe_mode", False))
+
+
+def lightweight_vlm_worker_requested(settings: AnalysisSettings) -> bool:
+    safe_mode = bool(settings.safe_mode or analysis_safe_mode())
+    profile = normalize_vlm_profile(settings.vlm_profile)
+    return bool(
+        safe_mode
+        and getattr(SETTINGS, "lightweight_vlm_worker_enabled", False)
+        and not vlm_hard_disabled()
+        and settings.enable_vlm
+        and settings.vlm_enabled
+        and profile == VLM_PROFILE_LIGHTWEIGHT
+    )
+
+
+def should_enable_vlm(settings: AnalysisSettings) -> bool:
+    profile = normalize_vlm_profile(settings.vlm_profile)
+    if lightweight_vlm_worker_requested(settings):
+        return True
+    return bool(
+        not analysis_safe_mode()
+        and not settings.safe_mode
+        and not vlm_hard_disabled()
+        and settings.enable_vlm
+        and settings.vlm_enabled
+        and profile != VLM_PROFILE_RULE_BASED
+    )
+
+
+def _detector_checkpoint_candidate() -> Optional[str]:
+    if SETTINGS.yolo_checkpoint.exists():
+        return str(SETTINGS.yolo_checkpoint)
+    if SETTINGS.yolo_fallback_checkpoint.exists():
+        return str(SETTINGS.yolo_fallback_checkpoint)
+    return None
+
+
+def _mobile_sam_requested(settings: AnalysisSettings) -> bool:
+    safe_mode = bool(settings.safe_mode or analysis_safe_mode())
+    safe_mode_allowed = bool(getattr(SETTINGS, "safe_mode_allow_mobilesam", False))
+    if safe_mode and not safe_mode_allowed:
+        return False
+    return str(getattr(SETTINGS, "mobile_sam_enabled", "disabled") or "").strip().lower() not in {
+        "0",
+        "false",
+        "no",
+        "off",
+        "disabled",
+        "none",
+    }
+
+
+def _base_component_diagnostics(settings: AnalysisSettings, *, stage: str = "queued") -> Dict[str, Any]:
+    effective_vlm = should_enable_vlm(settings)
+    requested_profile = normalize_vlm_profile(settings.vlm_profile)
+    mobile_sam_requested = _mobile_sam_requested(settings)
+    mobile_sam_worker_enabled = bool(
+        mobile_sam_requested and getattr(SETTINGS, "mobile_sam_worker_enabled", False)
+    )
+    safe_mode = bool(settings.safe_mode or analysis_safe_mode())
+    lightweight_vlm_worker_enabled = lightweight_vlm_worker_requested(settings)
+    return {
+        "safeMode": safe_mode,
+        "device": "cpu" if safe_mode else settings.device,
+        "requestedVisualExplanationMode": requested_profile,
+        "effectiveExplanationMode": (
+            VLM_PROFILE_LIGHTWEIGHT
+            if lightweight_vlm_worker_enabled
+            else
+            "rule_based_with_mobilesam"
+            if safe_mode and mobile_sam_requested
+            else requested_profile
+            if effective_vlm
+            else VLM_PROFILE_RULE_BASED
+        ),
+        "vlmRequested": bool(settings.vlm_enabled and requested_profile != VLM_PROFILE_RULE_BASED),
+        "vlmEffectiveEnabled": effective_vlm,
+        "vlmAttempted": False,
+        "vlmLoaded": False,
+        "vlmSuppressedReason": (
+            None
+            if lightweight_vlm_worker_enabled
+            else "safe_mode"
+            if settings.safe_mode or analysis_safe_mode()
+            else "hard_disabled"
+            if vlm_hard_disabled()
+            else "rule_based"
+            if requested_profile == VLM_PROFILE_RULE_BASED
+            else "not_requested"
+            if not settings.enable_vlm or not settings.vlm_enabled
+            else None
+        ),
+        "lightweightVlmWorkerEnabled": lightweight_vlm_worker_enabled,
+        "lightweightVlmWorkerTimeoutSeconds": float(
+            getattr(SETTINGS, "lightweight_vlm_worker_timeout_seconds", 60.0) or 60.0
+        ),
+        "lightweightVlmWorkerAttempted": False,
+        "lightweightVlmWorkerSucceeded": False,
+        "lightweightVlmWorkerTimedOut": False,
+        "lightweightVlmWorkerExitCode": None,
+        "lightweightVlmFallbackReason": None,
+        "lightweightVlmExplanationSource": "rule_based" if lightweight_vlm_worker_enabled else "disabled",
+        "lightweightVlmQualityIssue": None,
+        "lightweightVlmRawTextPreview": None,
+        "lightweightVlmCleanTextPreview": None,
+        "lightweightVlmGenerationTimeoutSeconds": None,
+        "lightweightVlmMaxTokens": None,
+        "safeModeMobileSamAllowed": bool(safe_mode and getattr(SETTINGS, "safe_mode_allow_mobilesam", False)),
+        "mobileSamRequested": mobile_sam_requested,
+        "mobileSamAttempted": False,
+        "mobileSamLoaded": False,
+        "mobileSamFallbackReason": None,
+        "mobileSamWorkerEnabled": mobile_sam_worker_enabled,
+        "mobileSamWorkerTimeoutSeconds": float(getattr(SETTINGS, "mobile_sam_worker_timeout_seconds", 60.0) or 60.0),
+        "mobileSamWorkerAttempted": False,
+        "mobileSamWorkerSucceeded": False,
+        "mobileSamWorkerTimedOut": False,
+        "mobileSamWorkerExitCode": None,
+        "mobileSamRefinementSource": "disabled",
+        "embeddingRequested": not safe_mode,
+        "embeddingLoaded": False,
+        "detectorRequested": True,
+        "detectorLoaded": False,
+        "detectorCheckpointUsed": _detector_checkpoint_candidate(),
+        "currentPipelineStage": stage,
+        "stageTimings": {},
+        "lastHeartbeat": None,
+        "errorType": None,
+        "errorMessage": None,
+    }
+
+
+def _merge_component_diagnostics(
+    metrics: Dict[str, Any],
+    settings: AnalysisSettings,
+    *,
+    stage: Optional[str] = None,
+    updates: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    diagnostics = _base_component_diagnostics(settings, stage=stage or "queued")
+    diagnostics.update(dict(metrics.get("componentDiagnostics") or {}))
+    if stage:
+        diagnostics["currentPipelineStage"] = stage
+    if updates:
+        existing_timings = dict(diagnostics.get("stageTimings") or {})
+        incoming = dict(updates)
+        if "stageTimings" in incoming:
+            existing_timings.update(dict(incoming.pop("stageTimings") or {}))
+            diagnostics["stageTimings"] = existing_timings
+        diagnostics.update(incoming)
+    metrics["componentDiagnostics"] = diagnostics
+    return diagnostics
 
 
 class JobStore:
@@ -254,6 +486,7 @@ class JobStore:
             created_at=now,
             updated_at=now,
         )
+        record.metrics["componentDiagnostics"] = _base_component_diagnostics(settings)
         self._refresh_metrics(record)
         with self._lock:
             self._jobs[job_id] = record
@@ -287,6 +520,7 @@ class JobStore:
         error: Optional[str] = None,
         technical_error: Optional[str] = None,
         error_type: Optional[str] = None,
+        diagnostic_updates: Optional[Dict[str, Any]] = None,
     ) -> None:
         with self._lock:
             record = self._jobs[job_id]
@@ -302,8 +536,46 @@ class JobStore:
             record.technical_error = technical_error
             record.error_type = error_type
             record.updated_at = now
+            _merge_component_diagnostics(
+                record.metrics,
+                record.settings,
+                stage=_stage_for_status(status, current_step),
+                updates={
+                    **(diagnostic_updates or {}),
+                    **({"errorType": error_type, "errorMessage": error} if error_type or error else {}),
+                },
+            )
             self._refresh_metrics(record)
             self.persist_job(record)
+
+    def heartbeat(
+        self,
+        job_id: str,
+        *,
+        current_step: str,
+        progress: Optional[float] = None,
+        diagnostic_updates: Optional[Dict[str, Any]] = None,
+    ) -> bool:
+        with self._lock:
+            record = self._jobs.get(job_id)
+            if record is None or record.status not in ACTIVE_STATES:
+                return False
+            if progress is not None:
+                record.progress = max(0.0, min(1.0, progress))
+            record.current_step = current_step
+            record.updated_at = _utc_now()
+            _merge_component_diagnostics(
+                record.metrics,
+                record.settings,
+                stage=_stage_for_status(record.status, current_step),
+                updates={
+                    "lastHeartbeat": _to_iso(record.updated_at),
+                    **(diagnostic_updates or {}),
+                },
+            )
+            self._refresh_metrics(record)
+            self.persist_job(record)
+            return True
 
     def complete_job(self, job_id: str, result: Dict[str, Any]) -> None:
         with self._lock:
@@ -316,6 +588,12 @@ class JobStore:
             record.error_type = None
             record.finished_at = now
             record.updated_at = now
+            _merge_component_diagnostics(
+                record.metrics,
+                record.settings,
+                stage="completed",
+                updates={"lastHeartbeat": None, "errorType": None, "errorMessage": None},
+            )
             self._refresh_metrics(record)
 
             normalized = dict(result)
@@ -538,6 +816,7 @@ class JobStore:
 
     def _refresh_metrics(self, record: JobRecord) -> None:
         metrics = dict(record.metrics)
+        _merge_component_diagnostics(metrics, record.settings)
         metrics.update(
             {
                 "queuedAt": _to_iso(record.created_at),
@@ -595,6 +874,12 @@ class JobStore:
         record.error_type = "InterruptedJob"
         record.finished_at = _utc_now()
         record.updated_at = record.finished_at
+        _merge_component_diagnostics(
+            record.metrics,
+            record.settings,
+            stage="failed",
+            updates={"errorType": record.error_type, "errorMessage": record.error},
+        )
         self._refresh_metrics(record)
         self.persist_job(record)
 
@@ -607,6 +892,10 @@ def run_pipeline(
     top_k: int,
     device: str,
     enable_vlm: bool,
+    vlm_profile: str = VLM_PROFILE_RULE_BASED,
+    vlm_model_dir: Optional[Path] = None,
+    safe_mode: bool = False,
+    component_diagnostics: Optional[Dict[str, Any]] = None,
 ):
     """Run the existing SafeTrace pipeline lazily.
 
@@ -616,16 +905,121 @@ def run_pipeline(
     from src.pipeline import SafeTracePipeline
 
     with _PIPELINE_SETTINGS_LOCK:
+        normalized_profile = normalize_vlm_profile(vlm_profile)
         old_device = SETTINGS.device
         old_enable_vlm = SETTINGS.enable_vlm
-        SETTINGS.device = device
-        SETTINGS.enable_vlm = enable_vlm
+        old_vlm_profile = getattr(SETTINGS, "vlm_profile", VLM_PROFILE_RULE_BASED)
+        old_vlm_model_dir = SETTINGS.vlm_model_dir
+        old_mobile_sam_enabled = getattr(SETTINGS, "mobile_sam_enabled", "disabled")
+        old_analysis_safe_mode = getattr(SETTINGS, "analysis_safe_mode", False)
+        old_safe_mode_allow_mobilesam = getattr(SETTINGS, "safe_mode_allow_mobilesam", False)
+        effective_safe_mode = bool(safe_mode or analysis_safe_mode())
+        SETTINGS.analysis_safe_mode = effective_safe_mode
+        SETTINGS.device = "cpu" if effective_safe_mode else device
+        lightweight_worker_effective = bool(
+            effective_safe_mode
+            and getattr(SETTINGS, "lightweight_vlm_worker_enabled", False)
+            and not vlm_hard_disabled()
+            and enable_vlm
+            and normalized_profile == VLM_PROFILE_LIGHTWEIGHT
+        )
+        SETTINGS.enable_vlm = bool(
+            (
+                lightweight_worker_effective
+                or (
+                    not effective_safe_mode
+                    and not vlm_hard_disabled()
+                    and enable_vlm
+                    and normalized_profile != VLM_PROFILE_RULE_BASED
+                )
+            )
+        )
+        SETTINGS.vlm_profile = normalized_profile
+        if effective_safe_mode and not bool(getattr(SETTINGS, "safe_mode_allow_mobilesam", False)):
+            SETTINGS.mobile_sam_enabled = "disabled"
+        if SETTINGS.enable_vlm:
+            resolved_model_dir = vlm_model_dir or resolve_vlm_profile_model_dir(normalized_profile)
+            if resolved_model_dir is not None:
+                SETTINGS.vlm_model_dir = resolved_model_dir
         try:
             pipeline = SafeTracePipeline()
-            return pipeline.run([upload_path], query=query, fps=fps, k=top_k)
+            try:
+                return pipeline.run([upload_path], query=query, fps=fps, k=top_k)
+            finally:
+                if component_diagnostics is not None:
+                    component_diagnostics.update(dict(getattr(pipeline, "component_diagnostics", {}) or {}))
         finally:
             SETTINGS.device = old_device
             SETTINGS.enable_vlm = old_enable_vlm
+            SETTINGS.vlm_profile = old_vlm_profile
+            SETTINGS.vlm_model_dir = old_vlm_model_dir
+            SETTINGS.mobile_sam_enabled = old_mobile_sam_enabled
+            SETTINGS.analysis_safe_mode = old_analysis_safe_mode
+            SETTINGS.safe_mode_allow_mobilesam = old_safe_mode_allow_mobilesam
+
+
+def _run_pipeline_with_timeout(
+    *,
+    timeout_seconds: float,
+    component_diagnostics: Dict[str, Any],
+    **kwargs,
+):
+    timeout = max(0.0, float(timeout_seconds or 0.0))
+    if timeout <= 0:
+        return run_pipeline(component_diagnostics=component_diagnostics, **kwargs)
+
+    outcome: Dict[str, Any] = {}
+
+    def target() -> None:
+        try:
+            outcome["value"] = run_pipeline(component_diagnostics=component_diagnostics, **kwargs)
+        except BaseException as exc:  # pragma: no cover - re-raised in caller thread
+            outcome["error"] = exc
+
+    thread = threading.Thread(target=target, daemon=True)
+    thread.start()
+    thread.join(timeout)
+    if thread.is_alive():
+        stage = component_diagnostics.get("currentPipelineStage") or "unknown"
+        raise PipelineTimeoutError(
+            f"SafeTrace analysis exceeded {timeout:.0f}s while stage '{stage}' was active."
+        )
+    if "error" in outcome:
+        raise outcome["error"]
+    return outcome.get("value")
+
+
+def _format_elapsed(seconds: float) -> str:
+    total = max(0, int(seconds))
+    minutes, secs = divmod(total, 60)
+    if minutes:
+        return f"{minutes}m {secs:02d}s"
+    return f"{secs}s"
+
+
+def _analysis_heartbeat_loop(
+    store: JobStore,
+    job_id: str,
+    stop_event: threading.Event,
+    started: float,
+    *,
+    interval_seconds: float = ANALYSIS_HEARTBEAT_SECONDS,
+) -> None:
+    while not stop_event.wait(max(float(interval_seconds), 0.1)):
+        elapsed = _format_elapsed(time.perf_counter() - started)
+        record = store.get(job_id)
+        diagnostics = dict((record.metrics if record else {}).get("componentDiagnostics") or {})
+        current_stage = diagnostics.get("currentPipelineStage") or "pipeline_running"
+        if not store.heartbeat(
+            job_id,
+            progress=0.35,
+            current_step=(
+                "Running SafeTrace analysis. Still working locally after "
+                f"{elapsed}; current stage: {current_stage}."
+            ),
+            diagnostic_updates=diagnostics,
+        ):
+            return
 
 
 def execute_analysis_job(store: JobStore, job_id: str) -> None:
@@ -644,32 +1038,66 @@ def execute_analysis_job(store: JobStore, job_id: str) -> None:
             if record.status in TERMINAL_STATES:
                 return
             started = time.perf_counter()
+            component_diagnostics = _base_component_diagnostics(record.settings, stage="preparing")
             store.update_status(
                 job_id,
                 status="running",
                 progress=0.15,
                 current_step="Preparing selected media",
+                diagnostic_updates={"currentPipelineStage": "preparing"},
             )
             try:
                 store.update_status(
                     job_id,
                     status="running",
                     progress=0.35,
-                    current_step="Running SafeTrace analysis",
+                    current_step="Running SafeTrace analysis. This stage may take a few minutes.",
+                    diagnostic_updates={"currentPipelineStage": "pipeline_starting"},
                 )
-                raw_result = run_pipeline(
-                    upload_path=record.upload_path,
-                    query=record.query,
-                    fps=record.settings.fps,
-                    top_k=record.settings.top_k,
-                    device=record.settings.device,
-                    enable_vlm=record.settings.enable_vlm,
+                heartbeat_stop = threading.Event()
+                heartbeat_thread = threading.Thread(
+                    target=_analysis_heartbeat_loop,
+                    args=(store, job_id, heartbeat_stop, time.perf_counter()),
+                    daemon=True,
+                )
+                heartbeat_thread.start()
+                vlm_profile = normalize_vlm_profile(record.settings.vlm_profile)
+                effective_vlm_enabled = should_enable_vlm(record.settings)
+                component_diagnostics = _merge_component_diagnostics(
+                    dict(record.metrics),
+                    record.settings,
+                    stage="pipeline_starting",
+                )
+                try:
+                    raw_result = _run_pipeline_with_timeout(
+                        timeout_seconds=float(getattr(SETTINGS, "analysis_job_timeout_seconds", 600.0) or 0.0),
+                        component_diagnostics=component_diagnostics,
+                        upload_path=record.upload_path,
+                        query=record.query,
+                        fps=record.settings.fps,
+                        top_k=record.settings.top_k,
+                        device="cpu" if record.settings.safe_mode else record.settings.device,
+                        enable_vlm=effective_vlm_enabled,
+                        vlm_profile=vlm_profile,
+                        vlm_model_dir=resolve_vlm_profile_model_dir(vlm_profile) if effective_vlm_enabled else None,
+                        safe_mode=record.settings.safe_mode,
+                    )
+                finally:
+                    heartbeat_stop.set()
+                    heartbeat_thread.join(timeout=0.5)
+                store.update_status(
+                    job_id,
+                    status="running",
+                    progress=0.8,
+                    current_step="SafeTrace pipeline completed; preparing report",
+                    diagnostic_updates=component_diagnostics,
                 )
                 store.update_status(
                     job_id,
                     status="running",
                     progress=0.85,
                     current_step="Normalizing evidence report",
+                    diagnostic_updates={"currentPipelineStage": "normalizing"},
                 )
                 result = normalize_pipeline_results(
                     job_id=job_id,
@@ -682,8 +1110,21 @@ def execute_analysis_job(store: JobStore, job_id: str) -> None:
                     register_media=lambda filename, path: store.register_media_file(job_id, filename, path),
                 )
                 result.setdefault("technicalDetails", {})["pipelineWallClockSeconds"] = time.perf_counter() - started
+                result.setdefault("technicalDetails", {})["componentDiagnostics"] = component_diagnostics
                 store.complete_job(job_id, result)
             except Exception as exc:  # pragma: no cover - exercised through API tests
+                logger.exception("SafeTrace analysis job %s failed with %s", job_id, type(exc).__name__)
+                persisted = store.get(job_id)
+                failure_diagnostics = dict(
+                    component_diagnostics
+                    or ((persisted.metrics if persisted else {}).get("componentDiagnostics") or {})
+                )
+                failure_diagnostics.update(
+                    {
+                        "errorType": type(exc).__name__,
+                        "errorMessage": str(exc),
+                    }
+                )
                 store.update_status(
                     job_id,
                     status="failed",
@@ -692,6 +1133,7 @@ def execute_analysis_job(store: JobStore, job_id: str) -> None:
                     error="Analysis could not be completed. Please try again.",
                     technical_error=str(exc),
                     error_type=type(exc).__name__,
+                    diagnostic_updates=failure_diagnostics,
                 )
     finally:
         store.release_execution_lock(job_id)

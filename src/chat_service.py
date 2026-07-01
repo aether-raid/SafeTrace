@@ -1,8 +1,10 @@
 """Optional SafeTrace-only assistant service."""
 from __future__ import annotations
 
+import importlib
 import importlib.util
 import re
+import sys
 import threading
 from dataclasses import dataclass
 from pathlib import Path
@@ -81,7 +83,13 @@ CHAT_ENABLE_HINT = (
 PACKAGED_MODEL_HINT = (
     "Place the GGUF model at models/chat/safetrace-assistant-qwen2.5-1.5b-instruct-q4.gguf."
 )
-PACKAGED_RUNTIME_HINT = "Install llama-cpp-python in the SafeTrace virtual environment."
+PACKAGED_RUNTIME_HINT = (
+    "Install llama-cpp-python in the SafeTrace virtual environment with "
+    ".venv\\Scripts\\python.exe -m pip install llama-cpp-python, then restart the backend with "
+    ".venv\\Scripts\\python.exe -m uvicorn src.api.server:app --host 127.0.0.1 --port 8000 --log-level info."
+)
+PACKAGED_RUNTIME_SETUP_COMMAND = ".venv\\Scripts\\python.exe -m pip install llama-cpp-python"
+PACKAGED_RUNTIME_RESTART_REQUIRED = "Restart the SafeTrace backend after installing llama-cpp-python."
 
 _PACKAGED_MODEL: Any | None = None
 _PACKAGED_MODEL_PATH: Path | None = None
@@ -100,6 +108,7 @@ def chat_status_payload(*, allow_model_load: bool = True) -> Dict[str, Any]:
     enabled, mode = _chat_enabled()
     if not enabled:
         model_path = _packaged_model_path() if provider == "packaged_llamacpp" else None
+        runtime_diagnostics = _llama_cpp_runtime_diagnostics() if provider == "packaged_llamacpp" else None
         reason = f"SafeTrace Assistant disabled by SAFETRACE_CHAT_ENABLED={mode}."
         return _status_payload(
             state="disabled",
@@ -110,7 +119,8 @@ def chat_status_payload(*, allow_model_load: bool = True) -> Dict[str, Any]:
             model=_provider_model_name(provider),
             model_path=_display_model_path(model_path) if model_path else None,
             model_exists=model_path.is_file() if model_path else None,
-            runtime_available=_llama_cpp_runtime_available() if provider == "packaged_llamacpp" else None,
+            runtime_available=runtime_diagnostics["importOk"] if runtime_diagnostics else None,
+            runtime_diagnostics=runtime_diagnostics,
             message=reason,
             reason=reason,
             action_hint=CHAT_ENABLE_HINT,
@@ -159,7 +169,11 @@ def _status_payload(
     model_path: Optional[str] = None,
     model_exists: Optional[bool] = None,
     runtime_available: Optional[bool] = None,
+    fallback_available: bool = False,
+    fallback_label: Optional[str] = None,
+    runtime_diagnostics: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
+    diagnostics = runtime_diagnostics or {}
     return {
         "enabled": enabled,
         "available": available,
@@ -173,6 +187,18 @@ def _status_payload(
         "runtime_available": runtime_available,
         "speed_profile": _speed_profile(),
         "warmup_on_open": bool(getattr(SETTINGS, "chat_warmup_on_open", False)),
+        "fallback_available": fallback_available,
+        "fallback_label": fallback_label,
+        "runtime_diagnostics": diagnostics or None,
+        "python_executable": diagnostics.get("backendPythonExecutable"),
+        "expected_venv_python": diagnostics.get("expectedVenvPython"),
+        "running_in_expected_venv": diagnostics.get("runningInExpectedVenv"),
+        "llama_cpp_import_status": diagnostics.get("importStatus"),
+        "llama_cpp_spec_found": diagnostics.get("specFound"),
+        "llama_cpp_import_error_type": diagnostics.get("importErrorType"),
+        "llama_cpp_import_error_message": diagnostics.get("importErrorMessage"),
+        "setup_command": diagnostics.get("setupCommand"),
+        "restart_required": diagnostics.get("restartRequired"),
         "message": message,
         "reason": reason or message,
         "action_hint": action_hint,
@@ -233,10 +259,31 @@ def answer_chat(
             "modelProvider": provider,
         }
 
-    _ensure_provider_ready(provider)
-
     selected_record = job_store.get(job_id) if job_id and include_current_result else None
     selected_batch = batch_store.get(batch_id, job_store) if batch_id else None
+
+    result_answer = _result_aware_answer(message=message, record=selected_record)
+    if result_answer:
+        sources = ["docs"]
+        if selected_record is not None and _record_result(selected_record):
+            sources.append("job_result")
+        return {
+            "answer": _postprocess_answer(result_answer),
+            "sources": sources,
+            "safeTraceOnly": True,
+            "modelProvider": provider,
+        }
+
+    provider_ready = True
+    provider_error: ChatProviderUnavailableError | None = None
+    try:
+        _ensure_provider_ready(provider)
+    except ChatProviderUnavailableError as exc:
+        if not _deterministic_fallback_available(provider):
+            raise
+        provider_ready = False
+        provider_error = exc
+
     templated_answer = _template_answer(message=message, record=selected_record, batch=selected_batch)
     if templated_answer:
         sources = ["docs"]
@@ -248,7 +295,17 @@ def answer_chat(
             "answer": _postprocess_answer(templated_answer),
             "sources": sources,
             "safeTraceOnly": True,
-            "modelProvider": provider,
+            "modelProvider": provider if provider_ready else _fallback_provider_name(provider),
+        }
+
+    if not provider_ready:
+        return {
+            "answer": _postprocess_answer(
+                _limited_deterministic_fallback_answer(message=message, provider_error=provider_error)
+            ),
+            "sources": ["docs"],
+            "safeTraceOnly": True,
+            "modelProvider": _fallback_provider_name(provider),
         }
 
     context = build_chat_context(
@@ -275,6 +332,36 @@ def answer_chat(
         "safeTraceOnly": True,
         "modelProvider": provider,
     }
+
+
+def _deterministic_fallback_available(provider: str) -> bool:
+    return (
+        provider == "packaged_llamacpp"
+        and _packaged_model_path().is_file()
+        and not _llama_cpp_runtime_available()
+    )
+
+
+def _fallback_provider_name(provider: str) -> str:
+    return f"{provider}_deterministic_fallback"
+
+
+def _limited_deterministic_fallback_answer(
+    *,
+    message: str,  # noqa: ARG001
+    provider_error: ChatProviderUnavailableError | None,
+) -> str:
+    detail = str(provider_error or "The packaged llama.cpp runtime is not available.")
+    return f"""
+Limited SafeTrace help is available, but the packaged local chat model is not running.
+
+- Runtime status: {detail}
+- Analysis, uploads, batch jobs, exports, and rule-based explanations still work.
+- For full local assistant answers, install the runtime with `.venv\\Scripts\\python.exe -m pip install llama-cpp-python`, then restart the backend.
+- I can still answer built-in SafeTrace usage questions such as confidence, ZIP upload, evidence frames, exports, progress, and assistant setup.
+
+Next: use `/api/chat/status` to confirm `runtime_available`, then retry after installing the runtime.
+""".strip()
 
 
 def _chat_enabled() -> tuple[bool, str]:
@@ -338,15 +425,85 @@ def _packaged_model_path() -> Path:
     return SETTINGS.project_root / raw_path
 
 
+def _expected_venv_python() -> Path:
+    if sys.platform.startswith("win"):
+        return SETTINGS.project_root / ".venv" / "Scripts" / "python.exe"
+    return SETTINGS.project_root / ".venv" / "bin" / "python"
+
+
+def _same_resolved_path(left: Path, right: Path) -> bool:
+    try:
+        return left.resolve() == right.resolve()
+    except OSError:
+        return str(left).lower() == str(right).lower()
+
+
+def _llama_cpp_runtime_diagnostics() -> Dict[str, Any]:
+    backend_python = Path(sys.executable)
+    expected_python = _expected_venv_python()
+    spec_found = importlib.util.find_spec("llama_cpp") is not None
+    import_ok = False
+    import_error_type: str | None = None
+    import_error_message: str | None = None
+
+    try:
+        importlib.import_module("llama_cpp")
+        import_ok = True
+    except Exception as exc:  # pragma: no cover - native DLL failures are environment-specific
+        import_error_type = type(exc).__name__
+        import_error_message = str(exc) or repr(exc)
+
+    if import_ok:
+        import_status = "ok"
+    elif spec_found:
+        import_status = "import_error"
+    else:
+        import_status = "missing"
+
+    return {
+        "backendPythonExecutable": str(backend_python),
+        "expectedVenvPython": str(expected_python),
+        "expectedVenvPythonExists": expected_python.is_file(),
+        "runningInExpectedVenv": expected_python.is_file() and _same_resolved_path(backend_python, expected_python),
+        "specFound": spec_found,
+        "importOk": import_ok,
+        "importStatus": import_status,
+        "importErrorType": import_error_type,
+        "importErrorMessage": import_error_message,
+        "setupCommand": PACKAGED_RUNTIME_SETUP_COMMAND,
+        "restartRequired": PACKAGED_RUNTIME_RESTART_REQUIRED,
+    }
+
+
 def _llama_cpp_runtime_available() -> bool:
-    return importlib.util.find_spec("llama_cpp") is not None
+    return bool(_llama_cpp_runtime_diagnostics()["importOk"])
+
+
+def _llama_cpp_unavailable_reason(diagnostics: Dict[str, Any]) -> str:
+    if diagnostics.get("importStatus") == "import_error":
+        error_type = diagnostics.get("importErrorType") or "ImportError"
+        error_message = diagnostics.get("importErrorMessage") or "No import error message was provided."
+        return (
+            "llama-cpp-python is visible to this backend Python, but importing llama_cpp failed "
+            f"with {error_type}: {error_message}. This is often a native DLL/runtime issue."
+        )
+    if diagnostics.get("expectedVenvPythonExists") and not diagnostics.get("runningInExpectedVenv"):
+        return (
+            "llama_cpp is not importable from the Python running this backend. The repo .venv exists, "
+            "so start the backend with .venv\\Scripts\\python.exe and restart after installing llama-cpp-python."
+        )
+    return (
+        "Packaged chat runtime is missing. Limited deterministic SafeTrace help is available, "
+        "but full local model chat requires llama-cpp-python."
+    )
 
 
 def _packaged_status_payload(enabled_mode: str, *, allow_model_load: bool = True) -> Dict[str, Any]:
     model_path = _packaged_model_path()
     model_name = _display_model_path(model_path)
     model_exists = model_path.is_file()
-    runtime_available = _llama_cpp_runtime_available()
+    runtime_diagnostics = _llama_cpp_runtime_diagnostics()
+    runtime_available = bool(runtime_diagnostics["importOk"])
     if not model_exists:
         reason = f"Packaged chat model is missing at {model_name}."
         return _status_payload(
@@ -359,12 +516,13 @@ def _packaged_status_payload(enabled_mode: str, *, allow_model_load: bool = True
             model_path=model_name,
             model_exists=False,
             runtime_available=runtime_available,
+            runtime_diagnostics=runtime_diagnostics,
             message=reason,
             reason=reason,
             action_hint=PACKAGED_MODEL_HINT,
         )
     if not runtime_available:
-        reason = "Packaged chat runtime is missing. Install llama-cpp-python to enable local chat."
+        reason = _llama_cpp_unavailable_reason(runtime_diagnostics)
         return _status_payload(
             state="missing_runtime",
             enabled=True,
@@ -375,9 +533,12 @@ def _packaged_status_payload(enabled_mode: str, *, allow_model_load: bool = True
             model_path=model_name,
             model_exists=True,
             runtime_available=False,
+            runtime_diagnostics=runtime_diagnostics,
             message=reason,
             reason=reason,
             action_hint=PACKAGED_RUNTIME_HINT,
+            fallback_available=True,
+            fallback_label="Limited SafeTrace help",
         )
     if _PACKAGED_MODEL_LOADING:
         return _status_payload(
@@ -390,6 +551,7 @@ def _packaged_status_payload(enabled_mode: str, *, allow_model_load: bool = True
             model_path=model_name,
             model_exists=True,
             runtime_available=True,
+            runtime_diagnostics=runtime_diagnostics,
             message="Packaged SafeTrace Assistant model is loading.",
             reason="The local GGUF is present and llama-cpp runtime is loading it.",
             action_hint="Wait a moment, then retry the assistant.",
@@ -408,6 +570,7 @@ def _packaged_status_payload(enabled_mode: str, *, allow_model_load: bool = True
                 model_path=model_name,
                 model_exists=True,
                 runtime_available=True,
+                runtime_diagnostics=runtime_diagnostics,
                 message=str(exc),
                 reason=str(exc),
                 action_hint="Check the configured GGUF file and llama-cpp-python installation.",
@@ -422,6 +585,7 @@ def _packaged_status_payload(enabled_mode: str, *, allow_model_load: bool = True
         model_path=model_name,
         model_exists=True,
         runtime_available=True,
+        runtime_diagnostics=runtime_diagnostics,
         message="SafeTrace Assistant packaged local model is available.",
         reason="Packaged model file and llama-cpp runtime are available.",
         action_hint=None,
@@ -597,6 +761,34 @@ def _template_answer(*, message: str, record=None, batch=None) -> Optional[str]:
     return None
 
 
+def _result_aware_answer(*, message: str, record=None) -> Optional[str]:
+    question = _normalized_question(message)
+    if not _is_result_aware_question(question):
+        return None
+
+    result = _record_result(record)
+    if not result:
+        return _no_selected_result_answer()
+
+    if _is_phone_question(question):
+        return _specific_violation_answer(record, result, labels=("phone", "mobile", "cell phone"))
+    if _is_seatbelt_question(question):
+        return _specific_violation_answer(record, result, labels=("seatbelt", "seat belt", "belt"))
+    if _is_helmet_question(question):
+        return _specific_violation_answer(record, result, labels=("helmet", "hard hat", "hardhat"))
+    if _is_safe_or_unsafe_question(question):
+        return _safe_or_unsafe_answer(record, result)
+    if _is_frames_analyzed_question(question):
+        return _frames_analyzed_answer(record, result)
+    if _is_frame_or_timestamp_question(question):
+        return _supporting_frames_answer(record)
+    if _is_result_confidence_question(question):
+        return _result_confidence_answer(record, result)
+    if _is_violations_overview_question(question):
+        return _violations_detected_answer(record, result)
+    return None
+
+
 def _normalized_question(message: str) -> str:
     return re.sub(r"\s+", " ", message.strip().lower())
 
@@ -607,6 +799,59 @@ def _is_explain_result_question(question: str) -> bool:
 
 def _is_supporting_frames_question(question: str) -> bool:
     return "frame" in question and any(word in question for word in ("support", "supporting", "top finding", "evidence"))
+
+
+def _is_result_aware_question(question: str) -> bool:
+    if _is_zip_upload_question(question) or _is_batch_implementation_question(question):
+        return False
+    if _is_confidence_question(question) and "mean" in question:
+        return False
+    return (
+        _is_seatbelt_question(question)
+        or _is_helmet_question(question)
+        or _is_phone_question(question)
+        or _is_safe_or_unsafe_question(question)
+        or _is_frames_analyzed_question(question)
+        or _is_frame_or_timestamp_question(question)
+        or _is_result_confidence_question(question)
+        or _is_violations_overview_question(question)
+    )
+
+
+def _is_seatbelt_question(question: str) -> bool:
+    return "seatbelt" in question or "seat belt" in question
+
+
+def _is_helmet_question(question: str) -> bool:
+    return "helmet" in question or "hard hat" in question or "hardhat" in question
+
+
+def _is_phone_question(question: str) -> bool:
+    return "phone" in question or "mobile" in question or "cell phone" in question
+
+
+def _is_safe_or_unsafe_question(question: str) -> bool:
+    return bool(re.search(r"\b(?:safe|unsafe)\b", question))
+
+
+def _is_frames_analyzed_question(question: str) -> bool:
+    return "frame" in question and any(term in question for term in ("analyzed", "analysed", "sampled", "checked"))
+
+
+def _is_frame_or_timestamp_question(question: str) -> bool:
+    if _is_supporting_frames_question(question):
+        return True
+    if "timestamp" in question or "time" in question:
+        return any(term in question for term in ("violation", "finding", "occur", "happen", "detected"))
+    return "frame" in question and any(term in question for term in ("violation", "finding", "detected", "had"))
+
+
+def _is_result_confidence_question(question: str) -> bool:
+    return "confidence" in question and "mean" not in question
+
+
+def _is_violations_overview_question(question: str) -> bool:
+    return any(term in question for term in ("violation", "violations", "detected", "findings", "finding"))
 
 
 def _is_zip_upload_question(question: str) -> bool:
@@ -632,7 +877,23 @@ def _question_needs_result_context(message: str) -> bool:
     question = _normalized_question(message)
     if _is_zip_upload_question(question) or _is_batch_implementation_question(question):
         return False
-    return any(word in question for word in ("result", "finding", "frame", "evidence", "violation", "confidence"))
+    return any(
+        word in question
+        for word in (
+            "result",
+            "finding",
+            "frame",
+            "evidence",
+            "violation",
+            "confidence",
+            "seatbelt",
+            "seat belt",
+            "helmet",
+            "phone",
+            "timestamp",
+            "unsafe",
+        )
+    )
 
 
 def _question_asks_technical(message: str) -> bool:
@@ -695,6 +956,274 @@ Next: open /api/chat/status and use its action_hint field.
 """.strip()
 
 
+def _no_selected_result_answer() -> str:
+    return """
+I do not have a selected completed SafeTrace result to inspect yet.
+
+- Open a completed job/result in the frontend, or pass its job_id to /api/chat.
+- Then ask about violations, seatbelts, helmets, phone use, frames, timestamps, or confidence.
+- I will answer from that result JSON first.
+
+Next: select a completed result and ask again.
+""".strip()
+
+
+def _specific_violation_answer(record, result: Dict[str, Any], *, labels: tuple[str, ...]) -> str:
+    topic = _violation_topic(labels)
+    findings = _findings_matching(result, labels)
+    if not findings:
+        return _missing_specific_violation_answer(record, result, topic=topic)
+
+    finding = findings[0]
+    frames = _unique_frames(finding["frames"])
+    frame_text = _frame_list_text(frames)
+    lines = _result_identity_lines(record, result)
+    lines.append(f"SafeTrace flagged {finding['name']}.")
+    lines.extend(
+        [
+            f"- Violation type: {finding['name']}",
+            f"- Severity: {_display_value(finding.get('severity'))}",
+            f"- Confidence: {_format_confidence(finding.get('confidence'))}",
+            f"- Evidence count: {finding.get('support_count', len(frames))} supporting frame"
+            f"{'' if int(finding.get('support_count') or len(frames) or 0) == 1 else 's'}",
+        ]
+    )
+    if frame_text:
+        lines.append(f"- Evidence: {frame_text}")
+
+    if topic == "seatbelt":
+        lines.append(
+            "This suggests a seatbelt may not be visible in the sampled evidence, but it requires manual confirmation."
+        )
+    elif topic == "helmet":
+        lines.append(
+            "This suggests a helmet may not be visible in the sampled evidence, but it requires manual confirmation."
+        )
+    elif topic == "phone":
+        lines.append(
+            "This suggests possible phone-use evidence in the sampled frames, but it requires manual confirmation."
+        )
+    else:
+        lines.append("Treat this as an automated review aid and confirm against the original footage.")
+    return "\n".join(lines)
+
+
+def _missing_specific_violation_answer(record, result: Dict[str, Any], *, topic: str) -> str:
+    lines = _result_identity_lines(record, result)
+    frames_analyzed = _summary_value(result, "framesAnalyzed", 0)
+    frames_with_findings = _summary_value(result, "framesWithViolations", 0)
+    if topic == "phone":
+        lines.extend(
+            [
+                "SafeTrace did not detect a phone-use violation in this result.",
+                f"- Evidence checked: {frames_analyzed} sampled frame{'' if frames_analyzed == 1 else 's'}; "
+                f"{frames_with_findings} frame{'' if frames_with_findings == 1 else 's'} had findings.",
+                "- Current detector/rules may not reliably support phone-use detection unless a configured violation type/evidence is present.",
+                "- Recommendation: manually review the original footage, or add future custom model support for phone-use evidence.",
+                "SafeTrace is an automated review aid, not final proof.",
+            ]
+        )
+        return "\n".join(lines)
+
+    if topic == "seatbelt":
+        label = "Missing Seatbelt"
+        caveat = "A seatbelt could still be hidden by camera angle, clothing, blur, glare, or occlusion."
+    elif topic == "helmet":
+        label = "Missing Helmet"
+        caveat = "A helmet could still be hidden by camera angle, blur, glare, or occlusion."
+    else:
+        label = "the requested violation"
+        caveat = "Important evidence can still be missed by sampling, camera angle, blur, glare, or occlusion."
+    lines.extend(
+        [
+            f"SafeTrace did not find a {label} violation in the sampled evidence for this result.",
+            f"- Evidence checked: {frames_analyzed} sampled frame{'' if frames_analyzed == 1 else 's'}; "
+            f"{frames_with_findings} frame{'' if frames_with_findings == 1 else 's'} had findings.",
+            f"- Caveat: {caveat}",
+            "SafeTrace is an automated review aid; confirm important findings manually.",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def _violations_detected_answer(record, result: Dict[str, Any]) -> str:
+    findings = _result_findings(result)
+    lines = _result_identity_lines(record, result)
+    if not findings:
+        lines.extend(
+            [
+                "SafeTrace did not detect matching violation findings in this result.",
+                f"- Frames analyzed: {_summary_value(result, 'framesAnalyzed', 0)}",
+                "SafeTrace is an automated review aid; confirm against the original footage if the scene is unclear.",
+            ]
+        )
+        return "\n".join(lines)
+
+    lines.append(f"SafeTrace detected {len(findings)} violation type{'' if len(findings) == 1 else 's'}:")
+    for finding in findings[:6]:
+        frames = _unique_frames(finding["frames"])
+        lines.append(
+            f"- {finding['name']}: {finding.get('severity', 'unknown')} severity, "
+            f"{_format_confidence(finding.get('confidence'))}, "
+            f"{finding.get('support_count', len(frames))} supporting frame"
+            f"{'' if int(finding.get('support_count') or len(frames) or 0) == 1 else 's'}"
+        )
+    lines.append("SafeTrace is an automated review aid; confirm important findings manually.")
+    return "\n".join(lines)
+
+
+def _frames_analyzed_answer(record, result: Dict[str, Any]) -> str:
+    lines = _result_identity_lines(record, result)
+    frames_analyzed = _summary_value(result, "framesAnalyzed", 0)
+    frames_with_findings = _summary_value(result, "framesWithViolations", 0)
+    lines.extend(
+        [
+            f"SafeTrace analyzed {frames_analyzed} sampled frame{'' if frames_analyzed == 1 else 's'} for this result.",
+            f"- Frames with findings: {frames_with_findings}",
+            f"- Evidence count: {len(_all_unique_finding_frames(result))} unique supporting frame"
+            f"{'' if len(_all_unique_finding_frames(result)) == 1 else 's'}",
+            "SafeTrace samples evidence frames, so confirm important findings against the original footage.",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def _result_confidence_answer(record, result: Dict[str, Any]) -> str:
+    lines = _result_identity_lines(record, result)
+    findings = _result_findings(result)
+    overall = _summary_confidence(result, findings)
+    lines.append(f"Overall confidence for this result is {_format_confidence(overall)}.")
+    if findings:
+        top = findings[0]
+        lines.append(
+            f"- Top finding: {top['name']} at {_format_confidence(top.get('confidence'))} "
+            f"with {top.get('support_count', len(top['frames']))} supporting frame"
+            f"{'' if int(top.get('support_count') or len(top['frames']) or 0) == 1 else 's'}."
+        )
+        frame_text = _frame_list_text(_unique_frames(top["frames"])[:4])
+        if frame_text:
+            lines.append(f"- Evidence: {frame_text}")
+    lines.append("Confidence is a review signal, not certainty; confirm the evidence manually.")
+    return "\n".join(lines)
+
+
+def _safe_or_unsafe_answer(record, result: Dict[str, Any]) -> str:
+    findings = _result_findings(result)
+    lines = _result_identity_lines(record, result)
+    if findings:
+        names = ", ".join(finding["name"] for finding in findings[:4])
+        lines.extend(
+            [
+                "Treat this video as unsafe or requiring review based on the sampled evidence.",
+                f"- Detected finding{'' if len(findings) == 1 else 's'}: {names}",
+                f"- Evidence count: {len(_all_unique_finding_frames(result))} unique supporting frame"
+                f"{'' if len(_all_unique_finding_frames(result)) == 1 else 's'}",
+                "SafeTrace is an automated review aid; confirm before taking operational action.",
+            ]
+        )
+        return "\n".join(lines)
+
+    lines.extend(
+        [
+            "SafeTrace did not detect matching violation findings in the sampled evidence.",
+            "- Do not treat that as a guarantee that the full video is safe.",
+            "SafeTrace is an automated review aid; manually confirm unclear or high-risk scenes.",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def _result_identity_lines(record, result: Dict[str, Any]) -> list[str]:
+    job_id = str(result.get("jobId") or getattr(record, "job_id", "") or "unknown")
+    short_job = _short_job_id(job_id)
+    return [
+        f"Video: {_result_media_name(record, result)}",
+        f"Job: {job_id}" + (f" ({short_job})" if short_job != job_id else ""),
+    ]
+
+
+def _result_media_name(record, result: Dict[str, Any]) -> str:
+    media = dict(result.get("media") or {})
+    return str(media.get("name") or media.get("filename") or getattr(record, "original_filename", "") or "selected media")
+
+
+def _short_job_id(job_id: str) -> str:
+    match = re.match(r"^job_\d{8}_(.+)$", job_id)
+    if match:
+        return match.group(1)
+    if len(job_id) > 18:
+        return f"job_...{job_id[-8:]}"
+    return job_id
+
+
+def _summary_value(result: Dict[str, Any], key: str, default: int) -> int:
+    value = dict(result.get("summary") or {}).get(key, default)
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _display_value(value: Any) -> str:
+    text = str(value or "unknown").strip()
+    return text or "unknown"
+
+
+def _violation_topic(labels: tuple[str, ...]) -> str:
+    joined = " ".join(labels).lower()
+    if "seat" in joined or "belt" in joined:
+        return "seatbelt"
+    if "helmet" in joined or "hard" in joined:
+        return "helmet"
+    if "phone" in joined or "mobile" in joined or "cell" in joined:
+        return "phone"
+    return "violation"
+
+
+def _findings_matching(result: Dict[str, Any], labels: tuple[str, ...]) -> list[Dict[str, Any]]:
+    return [finding for finding in _result_findings(result) if _finding_matches(finding, labels)]
+
+
+def _finding_matches(finding: Dict[str, Any], labels: tuple[str, ...]) -> bool:
+    haystack = " ".join(
+        str(finding.get(key) or "")
+        for key in ("key", "name", "description")
+    ).lower().replace("_", " ").replace("-", " ")
+    return any(label.lower().replace("_", " ") in haystack for label in labels)
+
+
+def _all_unique_finding_frames(result: Dict[str, Any]) -> list[Dict[str, Any]]:
+    frames = []
+    for finding in _result_findings(result):
+        frames.extend(finding.get("frames") or [])
+    return _unique_frames(frames)
+
+
+def _frame_list_text(frames: list[Dict[str, Any]], *, limit: int = 5) -> str:
+    pieces = []
+    for frame in frames[:limit]:
+        frame_number = frame.get("frame_number", "?")
+        timestamp = frame.get("timestamp", "unknown")
+        confidence = _format_confidence(frame.get("confidence"))
+        if confidence == "not reported":
+            pieces.append(f"Frame {frame_number} at {timestamp}")
+        else:
+            pieces.append(f"Frame {frame_number} at {timestamp} ({confidence})")
+    if len(frames) > limit:
+        pieces.append(f"{len(frames) - limit} more")
+    return "; ".join(pieces)
+
+
+def _format_confidence(value: Any) -> str:
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError):
+        return "not reported"
+    if numeric <= 1.0:
+        numeric *= 100.0
+    return f"{round(numeric)}%"
+
+
 def _explain_result_answer(record) -> str:
     result = _record_result(record)
     if not result:
@@ -741,25 +1270,29 @@ def _supporting_frames_answer(record) -> str:
     result = _record_result(record)
     findings = _result_findings(result) if result else []
     if not findings:
-        return """
-I do not have a supported top finding selected yet.
-
-- Open a completed result with violations.
-- Check the Video Violation Overview.
-- Then ask which frames support the top finding.
-
-Next: open a completed result and review its evidence frames.
-""".strip()
+        return _no_selected_result_answer()
 
     top = findings[0]
     frames = _unique_frames(top["frames"])[:5]
-    lines = [f"The top finding is {top['name']}.", "", "Supporting frames:"]
+    lines = _result_identity_lines(record, result)
+    lines.extend(
+        [
+            f"The top finding is {top['name']}.",
+            f"- Severity: {_display_value(top.get('severity'))}",
+            f"- Confidence: {_format_confidence(top.get('confidence'))}",
+            f"- Evidence count: {top.get('support_count', len(frames))} supporting frame"
+            f"{'' if int(top.get('support_count') or len(frames) or 0) == 1 else 's'}",
+            "Supporting frames:",
+        ]
+    )
     if frames:
         for frame in frames:
-            lines.append(f"- Frame {frame['frame_number']} - {frame['timestamp']}")
+            confidence = _format_confidence(frame.get("confidence"))
+            suffix = "" if confidence == "not reported" else f" ({confidence})"
+            lines.append(f"- Frame {frame['frame_number']} at {frame['timestamp']}{suffix}")
     else:
         lines.append("- No supporting frame timestamps were reported.")
-    lines.extend(["", "Next: click the evidence frames to inspect the annotations."])
+    lines.append("SafeTrace is an automated review aid; inspect the annotated evidence manually.")
     return "\n".join(lines)
 
 
@@ -793,6 +1326,7 @@ def _result_findings(result: Dict[str, Any]) -> list[Dict[str, Any]]:
             item["event_count"] += 1
             item["support_count"] += int(event.get("supportingFrameCount") or len(event.get("supportingFrames") or []))
             item["confidence"] = max(float(event.get("representativeConfidence") or 0.0), item["confidence"])
+            item["description"] = str(event.get("description") or item.get("description") or "")
             for frame in event.get("supportingFrames") or []:
                 item["frames"].append(_frame_ref(frame))
         return _sort_findings(list(findings.values()))
@@ -804,6 +1338,7 @@ def _result_findings(result: Dict[str, Any]) -> list[Dict[str, Any]]:
         item["event_count"] += 1
         item["support_count"] += len(frames)
         item["confidence"] = max(float(violation.get("confidenceMax") or 0.0), item["confidence"])
+        item["description"] = str(violation.get("description") or item.get("description") or "")
         for frame in frames:
             item["frames"].append(_frame_ref(frame))
 
@@ -817,7 +1352,8 @@ def _result_findings(result: Dict[str, Any]) -> list[Dict[str, Any]]:
             item["event_count"] = max(1, item["event_count"])
             item["support_count"] += 1
             item["confidence"] = max(float(violation.get("confidence") or 0.0), item["confidence"])
-            item["frames"].append(_frame_ref(frame))
+            item["description"] = str(violation.get("description") or item.get("description") or "")
+            item["frames"].append(_frame_ref({**frame, "confidence": violation.get("confidence")}))
 
     return _sort_findings(list(findings.values()))
 
@@ -839,6 +1375,7 @@ def _frame_ref(frame: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "frame_number": frame.get("frameNumber", "?"),
         "timestamp": frame.get("timestamp", "unknown"),
+        "confidence": frame.get("confidence"),
     }
 
 
@@ -893,6 +1430,7 @@ def _build_prompt(*, message: str, context: ChatContext) -> str:
     return f"""
 You are SafeTrace Assistant. Answer only from the SafeTrace context below.
 If the answer is not supported by the context, say what can be checked in SafeTrace instead.
+When selected-result facts are present, treat them as authoritative and do not override them.
 Do not answer unrelated questions.
 
 Answer style rules:
@@ -902,10 +1440,11 @@ Answer style rules:
 4. Use at most 5 bullets unless the user asks for detail.
 5. Keep most answers under 120 words.
 6. For result interpretation, include only the most important evidence.
-7. For how-to questions, explain frontend steps first, API second only if useful.
-8. Do not include raw floating point values unless they are meaningful to the user.
-9. Do not mention technical JSON unless the user asks for debugging/export details.
-10. End with one practical next step.
+7. Use only the provided result facts for violation type, severity, frame, timestamp, confidence, and job ID.
+8. For how-to questions, explain frontend steps first, API second only if useful.
+9. Do not include raw floating point values unless they are meaningful to the user.
+10. Do not mention technical JSON unless the user asks for debugging/export details.
+11. End with one practical next step.
 
 Context:
 {context.text}
@@ -942,10 +1481,9 @@ def _get_packaged_model():
     model_name = _display_model_path(model_path)
     if not model_path.is_file():
         raise ChatProviderUnavailableError(f"Packaged chat model is missing at {model_name}.")
-    if not _llama_cpp_runtime_available():
-        raise ChatProviderUnavailableError(
-            "Packaged chat runtime is missing. Install llama-cpp-python to enable local chat."
-        )
+    runtime_diagnostics = _llama_cpp_runtime_diagnostics()
+    if not runtime_diagnostics["importOk"]:
+        raise ChatProviderUnavailableError(_llama_cpp_unavailable_reason(runtime_diagnostics))
 
     with _PACKAGED_MODEL_LOCK:
         if _PACKAGED_MODEL is not None and _PACKAGED_MODEL_PATH == model_path:
@@ -954,7 +1492,8 @@ def _get_packaged_model():
             from llama_cpp import Llama
         except Exception as exc:
             raise ChatProviderUnavailableError(
-                "Packaged chat runtime is missing. Install llama-cpp-python to enable local chat."
+                "Packaged chat runtime import failed after diagnostics succeeded "
+                f"with {type(exc).__name__}: {exc}. {PACKAGED_RUNTIME_RESTART_REQUIRED}"
             ) from exc
 
         _PACKAGED_MODEL_LOADING = True

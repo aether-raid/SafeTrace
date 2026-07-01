@@ -8,7 +8,9 @@ Install the backend/API dependencies from the Docker requirements file, then run
 
 ```cmd
 python -m pip install -r docker\requirements.txt
-python -m uvicorn src.api.server:app --host 127.0.0.1 --port 8000
+set KMP_DUPLICATE_LIB_OK=TRUE
+set OMP_NUM_THREADS=1
+.venv\Scripts\python.exe -m uvicorn src.api.server:app --host 127.0.0.1 --port 8000
 ```
 
 The API is designed for offline local use. It does not upload media to cloud services and should be bound to `127.0.0.1` for desktop development.

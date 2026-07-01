@@ -99,6 +99,7 @@ def extract_frames_with_metadata(
     max_frames: int = 600,
     prefix: Optional[str] = None,
     max_duration_seconds: float | None = None,
+    uniform_over_video: bool = False,
 ) -> Tuple[List[Path], dict]:
     """Sample frames and return explicit sampling metadata."""
     video_path = Path(video_path)
@@ -123,25 +124,45 @@ def extract_frames_with_metadata(
     prefix = prefix or video_path.stem
 
     saved: List[Path] = []
-    idx = 0
     sampled = 0
-    while True:
-        ok, frame = cap.read()
-        if not ok:
-            break
-        if idx % step == 0:
-            out_path = out_dir / f"{prefix}_{sampled:06d}.jpg"
+    if uniform_over_video and source_frame_count > 0:
+        candidate_indices = list(range(0, source_frame_count, step))
+        if len(candidate_indices) > max_frames:
+            chosen_positions = np.linspace(0, len(candidate_indices) - 1, max_frames)
+            target_indices = [candidate_indices[int(round(pos))] for pos in chosen_positions]
+        else:
+            target_indices = candidate_indices
+        for frame_index in dict.fromkeys(target_indices):
+            cap.set(cv2.CAP_PROP_POS_FRAMES, int(frame_index))
+            ok, frame = cap.read()
+            if not ok:
+                continue
+            timestamp_seconds = int(round(float(frame_index) / max(src_fps, 1e-6)))
+            out_path = out_dir / f"{prefix}_{timestamp_seconds:06d}.jpg"
             cv2.imwrite(str(out_path), frame)
             saved.append(out_path)
             sampled += 1
             if sampled >= max_frames:
                 break
-        idx += 1
+    else:
+        idx = 0
+        while True:
+            ok, frame = cap.read()
+            if not ok:
+                break
+            if idx % step == 0:
+                out_path = out_dir / f"{prefix}_{sampled:06d}.jpg"
+                cv2.imwrite(str(out_path), frame)
+                saved.append(out_path)
+                sampled += 1
+                if sampled >= max_frames:
+                    break
+            idx += 1
     cap.release()
     logger.info("Extracted %d frames from %s", len(saved), video_path.name)
     metadata = build_processing_metadata(
         sampled_frame_count=len(saved),
-        sampling_strategy="fixed_fps",
+        sampling_strategy="uniform_fixed_fps" if uniform_over_video else "fixed_fps",
         fps=fps,
         max_frames=max_frames,
         embedding_batch_size=1,
@@ -157,6 +178,7 @@ def extract_frames_with_metadata(
             "sourceVideoPath": str(video_path),
             "sourceVideoFps": src_fps,
             "frameStep": step,
+            "uniformOverVideo": bool(uniform_over_video),
         }
     )
     return saved, metadata

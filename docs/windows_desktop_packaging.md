@@ -15,7 +15,7 @@ scripts\start_safetrace_windows.bat
 ```
 
 The launcher can be called from any current directory. It changes into the repo
-root, verifies `.venv\Scripts\activate.bat`, verifies
+root, verifies `.venv\Scripts\python.exe`, verifies
 `frontend-react\package.json`, then starts:
 
 - FastAPI backend at `http://127.0.0.1:8000`
@@ -31,14 +31,20 @@ The launcher sets local Windows-safe defaults:
 ```cmd
 set KMP_DUPLICATE_LIB_OK=TRUE
 set OMP_NUM_THREADS=1
+set SAFETRACE_DEVICE=cpu
+set SAFETRACE_ANALYSIS_SAFE_MODE=true
 set SAFETRACE_CHAT_ENABLED=auto
 set SAFETRACE_CHAT_PROVIDER=packaged_llamacpp
 set SAFETRACE_CHAT_SPEED_PROFILE=fast
 set SAFETRACE_CHAT_MODEL_PATH=%APP_ROOT%\models\chat\safetrace-assistant-qwen2.5-1.5b-instruct-q4.gguf
-set SAFETRACE_MOBILESAM_ENABLED=auto
+set SAFETRACE_SIGLIP_DIR=%APP_ROOT%\checkpoints\siglip-base-patch16-224
+set SAFETRACE_YOLO_CKPT=%APP_ROOT%\checkpoints\yolov9c-seg.pt
+set SAFETRACE_YOLO_FALLBACK_CKPT=%APP_ROOT%\checkpoints\yolov8s-seg.pt
+set SAFETRACE_MOBILESAM_ENABLED=false
 set SAFETRACE_MOBILESAM_CHECKPOINT=%APP_ROOT%\checkpoints\mobile_sam.pt
-set SAFETRACE_VLM_ENABLED=auto
+set SAFETRACE_VLM_ENABLED=false
 set SAFETRACE_VLM_PROVIDER=auto
+set SAFETRACE_VLM_PROFILE=rule_based
 set SAFETRACE_VLM_MODEL_PATH=%APP_ROOT%\models\vlm
 set SAFETRACE_VLM_DIR=%APP_ROOT%\models\vlm
 set SAFETRACE_VLM_OLLAMA_BASE_URL=http://127.0.0.1:11434
@@ -62,11 +68,15 @@ SafeTrace/
   frontend/
   .venv/ or packaged Python runtime/
   checkpoints/
+    siglip-base-patch16-224/
+    yolov8s-seg.pt
     mobile_sam.pt
+    yolov9c-seg.pt optional
   models/chat/
     safetrace-assistant-qwen2.5-1.5b-instruct-q4.gguf
   models/vlm/
-    <local/non-Ollama VLM assets>
+    lightweight-256m/
+      <local/non-Ollama VLM assets>
   config/
     safetrace.env
   data/
@@ -101,9 +111,12 @@ The prototype does not build a final backend `.exe`. It can copy an existing
 local `dist/backend/safetrace-backend.exe` into the generated package. It also
 copies approved local release assets when they already exist:
 
+- `checkpoints/siglip-base-patch16-224/`
+- `checkpoints/yolov8s-seg.pt`
+- `checkpoints/yolov9c-seg.pt` when present
 - `checkpoints/mobile_sam.pt`
 - `models/chat/*.gguf`
-- `models/vlm/**`
+- `models/vlm/lightweight-256m/**`
 
 It never copies uploads, generated evidence, reports, or local caches.
 Generated package output remains ignored and must not be committed.
@@ -111,6 +124,12 @@ Generated package output remains ignored and must not be committed.
 The builder writes `OPTIONAL_ASSETS_REPORT.txt` inside the generated package.
 Use `python scripts\build_desktop_prototype.py --dry-run --strict-assets` to
 validate that release assets are present before distribution.
+
+The generated `SafeTraceLauncher.bat` waits up to 90 seconds for backend health,
+prints progress every 5 seconds, avoids starting a duplicate supervisor when a
+healthy backend is already running, and prints startup diagnostics on timeout.
+The supervisor restarts `backend\safetrace-backend.exe` after unexpected exits
+with a short delay and writes logs under `dist\SafeTrace\logs`.
 
 Phase 6 adds a backend executable prototype. The dry-run command is:
 
@@ -124,11 +143,39 @@ Developers with PyInstaller installed can attempt a local build with:
 python scripts\build_backend_exe.py --run
 ```
 
+For assistant runtime support, build with the Python environment that has
+`llama-cpp-python` installed:
+
+```cmd
+.venv\Scripts\python.exe scripts\build_backend_exe.py --run
+```
+
+Using a global Python without `llama_cpp` can produce a backend executable that
+finds the GGUF model file but reports the packaged assistant runtime as
+missing. Chat remains optional; analysis still works with rule-based fallback.
+
 Generated backend executable output belongs under `dist/backend/` and must not
 be committed. If `dist/backend/safetrace-backend.exe` exists, the desktop
 package builder copies it into `dist/SafeTrace/backend/safetrace-backend.exe`.
 If it is missing, the package builder still creates the placeholder backend
 folder.
+
+The generated `SafeTraceLauncher.bat` starts a backend supervisor with
+`--app-root`, writes backend stdout/stderr to
+`logs\backend_launcher_stdout.log` and `logs\backend_launcher_stderr.log`,
+restarts the backend if it exits unexpectedly, and waits for
+`http://127.0.0.1:8000/api/health`. If the backend does not become healthy, the
+launcher exits with an error and prints the latest log lines. Run foreground
+mode when debugging a packaged runtime:
+
+```cmd
+dist\SafeTrace\SafeTraceLauncher.bat --foreground
+```
+
+If a developer runs `backend\safetrace-backend.exe` directly from the package,
+the frozen entrypoint infers the parent `SafeTrace/` folder as its app root. The
+launcher remains preferred because it also sets the release environment,
+captures logs, and performs the health check.
 
 ## Packaged Frontend Serving
 
@@ -208,13 +255,19 @@ folder. The launcher should point the backend to those external paths with
 environment variables so a backend replacement never overwrites user data,
 generated reports, local model files, the GGUF chat model, or local settings.
 
-MobileSAM and VLM assets should be bundled with the no-extra-steps release
-package. MobileSAM refinement uses `checkpoints/mobile_sam.pt` when present and
-otherwise falls back to detector-box evidence. VLM explanations use packaged
-`models/vlm/` assets first, optional local Ollama only when explicitly
-configured/available, and otherwise fall back to rule-based explanation text.
-Ollama is optional and is not required for the release package. The SafeTrace
-Assistant remains a separate chat feature and uses `models/chat/`.
+SigLIP, YOLO, MobileSAM, and lightweight VLM assets should be bundled with the
+no-extra-steps release package. Embedding uses
+`checkpoints/siglip-base-patch16-224/`; detector fallback uses
+`checkpoints/yolov8s-seg.pt`; optional primary detection can use
+`checkpoints/yolov9c-seg.pt` when present. MobileSAM refinement uses
+`checkpoints/mobile_sam.pt` when present and otherwise falls back to
+detector-box evidence. VLM explanations can use packaged
+`models/vlm/lightweight-256m/` assets after explicit activation, optional local
+Ollama only when explicitly configured/available, and otherwise fall back to
+rule-based explanation text. Enhanced VLM assets are not included in the
+prototype package. Ollama is optional and is not required for the release
+package. The SafeTrace Assistant remains a separate chat feature and uses
+`models/chat/`.
 
 A future updater should:
 

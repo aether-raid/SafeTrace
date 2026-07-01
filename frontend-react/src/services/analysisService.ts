@@ -17,6 +17,7 @@ import type {
   SystemStatus,
   Violation,
   ViolationEvent,
+  VlmExplanationProfileId,
 } from '../types/analysis';
 
 const MOCK_DELAY_MS = 150;
@@ -99,7 +100,7 @@ type BackendFrameResult = {
   status: 'violations_detected' | 'no_violations';
   imageUrl?: string | null;
   imageMessage?: string | null;
-  explanationSource?: 'vlm' | 'vlm_local' | 'vlm_ollama' | 'rule_based' | null;
+  explanationSource?: 'vlm' | 'vlm_local' | 'vlm_ollama' | 'vlm_lightweight' | 'vlm_enhanced' | 'rule_based' | null;
   violations: BackendViolation[];
   technicalEvidence: Record<string, unknown>;
 };
@@ -227,6 +228,24 @@ function apiErrorMessage(status: number): string {
   return `SafeTrace API returned ${status}`;
 }
 
+export async function readErrorMessage(response: Response): Promise<string> {
+  const fallback = apiErrorMessage(response.status);
+  const raw = await response.text();
+  if (!raw) return response.statusText ? `${fallback}: ${response.statusText}` : fallback;
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (typeof parsed?.detail === 'string') return parsed.detail;
+    if (typeof parsed?.detail?.message === 'string') return parsed.detail.message;
+    if (typeof parsed?.message === 'string') return parsed.message;
+    if (typeof parsed?.error === 'string') return parsed.error;
+  } catch {
+    return raw;
+  }
+
+  return raw || fallback;
+}
+
 async function apiFetchFromBase<T>(apiBase: string, path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(buildApiUrl(path, apiBase), {
     ...options,
@@ -236,15 +255,7 @@ async function apiFetchFromBase<T>(apiBase: string, path: string, options?: Requ
   });
 
   if (!response.ok) {
-    let message = apiErrorMessage(response.status);
-    try {
-      const body = await response.json();
-      message = body?.detail?.message || body?.message || message;
-    } catch {
-      const text = await response.text();
-      message = text || message;
-    }
-    throw new Error(message);
+    throw new Error(await readErrorMessage(response));
   }
 
   return response.json() as Promise<T>;
@@ -377,6 +388,17 @@ function getDetectionValue(detection: unknown, key: string): unknown {
   return undefined;
 }
 
+function getRecordValue(value: unknown, key: string): unknown {
+  if (typeof value === 'object' && value !== null && key in value) {
+    return (value as Record<string, unknown>)[key];
+  }
+  return undefined;
+}
+
+function optionalString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+}
+
 function mapDetections(frame: BackendFrameResult): Detection[] {
   const rawDetections = frame.technicalEvidence?.detections;
   if (!Array.isArray(rawDetections)) return [];
@@ -429,7 +451,14 @@ function violationReviewLine(violation: Violation): string {
   return `${violation.name}: review this visible finding against the original footage.`;
 }
 
+const VLM_ARTIFACT_PATTERN = /<(?:global-[a-z]+|image|row_[^>\s]*|[^>\s]*(?:img|row_|col_)[^>\s]*)>/i;
+const VLM_ROLE_LABEL_PATTERN = /\b(?:user|assistant)\s*:/i;
+const VLM_PROMPT_ECHO_PATTERN = /describe only visible safety evidence|return only the final explanation|do not repeat the prompt|findings to inspect/i;
+
 function explanationLooksTechnical(value: string): boolean {
+  if (VLM_ARTIFACT_PATTERN.test(value)) return true;
+  if (VLM_ROLE_LABEL_PATTERN.test(value)) return true;
+  if (VLM_PROMPT_ECHO_PATTERN.test(value)) return true;
   return /\b(iou|threshold|overlap|raw|internal|configured|metric|count|minimum|maximum|score|key)\b/i.test(value);
 }
 
@@ -457,9 +486,12 @@ function explanationSourceFor(
   rawSource: unknown,
   rawExplanation: unknown,
   violations: Violation[],
-): 'vlm' | 'vlm_local' | 'vlm_ollama' | 'rule_based' | undefined {
+): 'vlm' | 'vlm_local' | 'vlm_ollama' | 'vlm_lightweight' | 'vlm_enhanced' | 'rule_based' | undefined {
   const source = String(rawSource || '').toLowerCase();
   const explanation = typeof rawExplanation === 'string' ? rawExplanation.trim() : '';
+  if ((source === 'vlm_lightweight' || source === 'vlm_enhanced') && explanation && !explanationLooksTechnical(explanation)) {
+    return source;
+  }
   if ((source === 'vlm_local' || source === 'vlm_ollama') && explanation && !explanationLooksTechnical(explanation)) {
     return source;
   }
@@ -506,6 +538,8 @@ function mapBackendResult(result: BackendAnalysisResult): AnalysisResult {
       uploadedAt: new Date().toISOString(),
       status: 'completed',
       source: 'local',
+      jobId: result.jobId,
+      selectedJobId: result.jobId,
     },
     summary: result.summary,
     violations: result.violations,
@@ -518,6 +552,8 @@ function mapBackendResult(result: BackendAnalysisResult): AnalysisResult {
       const violations = mapViolations(frame.violations);
       const rawExplanation = frame.technicalEvidence?.explanation;
       const rawExplanationSource = frame.explanationSource ?? frame.technicalEvidence?.explanationSource;
+      const searchMetadata = frame.technicalEvidence?.searchMetadata;
+      const rawFrameScore = Number(getRecordValue(searchMetadata, 'frameRankingScore'));
       return {
         id: frame.id,
         frameNumber: frame.frameNumber,
@@ -527,6 +563,9 @@ function mapBackendResult(result: BackendAnalysisResult): AnalysisResult {
         imageUrl: resolveBackendMediaUrl(frame.imageUrl ?? null) ?? undefined,
         imageMessage: frame.imageMessage ?? undefined,
         evidenceImageRequired: Boolean(frame.imageUrl || frame.imageMessage),
+        selectionReason: optionalString(getRecordValue(searchMetadata, 'rankingReason')),
+        selectionCategory: optionalString(getRecordValue(searchMetadata, 'selectedFor')),
+        frameScore: Number.isFinite(rawFrameScore) ? rawFrameScore : undefined,
         explanation: buildVisualExplanation(violations, rawExplanation),
         explanationSource: explanationSourceFor(rawExplanationSource, rawExplanation, violations),
         violations,
@@ -607,6 +646,27 @@ export async function getSystemStatus(): Promise<SystemStatus> {
   return apiFetch<SystemStatus>('system/status');
 }
 
+export async function updateVlmSettings(settings: {
+  selectedProfile: VlmExplanationProfileId;
+  enabled: boolean;
+}): Promise<boolean> {
+  const response = await fetch(buildApiUrl('system/vlm/settings'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(settings),
+  });
+
+  if (response.status === 404 || response.status === 405) return false;
+
+  if (!response.ok) {
+    throw new Error(await readErrorMessage(response));
+  }
+
+  return true;
+}
+
 export async function runBackendAnalysis(request: AnalysisRequest): Promise<AnalysisJob> {
   const formData = new FormData();
   formData.append('file', request.file);
@@ -614,6 +674,8 @@ export async function runBackendAnalysis(request: AnalysisRequest): Promise<Anal
   formData.append('fps', String(request.fps));
   formData.append('topK', String(request.topK));
   formData.append('enableVlm', String(request.enableVlm));
+  if (request.vlmProfile) formData.append('vlmProfile', request.vlmProfile);
+  if (typeof request.vlmEnabled === 'boolean') formData.append('vlmEnabled', String(request.vlmEnabled));
   formData.append('device', deviceToApiMode(request.device));
 
   return apiFetch<AnalysisJob>('analyze', {
@@ -631,6 +693,8 @@ export async function runBackendBatchAnalysis(request: BatchAnalysisRequest): Pr
   formData.append('fps', String(request.fps));
   formData.append('topK', String(request.topK));
   formData.append('enableVlm', String(request.enableVlm));
+  if (request.vlmProfile) formData.append('vlmProfile', request.vlmProfile);
+  if (typeof request.vlmEnabled === 'boolean') formData.append('vlmEnabled', String(request.vlmEnabled));
   formData.append('device', deviceToApiMode(request.device));
 
   return apiFetch<BatchStatus>('batches/analyze', {

@@ -1,14 +1,23 @@
 import { ChevronDown } from 'lucide-react';
 import type { FrameResult } from '../types/analysis';
+import { formatShortJobId } from '../utils/jobIds';
 
 type TechnicalDetailsProps = {
   frame: FrameResult;
+  jobId?: string | null;
 };
 
-export function TechnicalDetails({ frame }: TechnicalDetailsProps) {
+export function TechnicalDetails({ frame, jobId }: TechnicalDetailsProps) {
   const technicalPayload = {
+    jobId,
     internalFilename: frame.internalFilename,
     queryRelevance: frame.queryRelevance,
+    frameScore: frame.frameScore,
+    selectionReason: frame.selectionReason,
+    selectionCategory: frame.selectionCategory,
+    searchMetadata: frame.technicalEvidence?.searchMetadata,
+    mobileSamRefinement: (frame.technicalEvidence?.searchMetadata as Record<string, unknown> | undefined)?.mobileSamRefinement,
+    lightweightVlmExplanation: (frame.technicalEvidence?.searchMetadata as Record<string, unknown> | undefined)?.lightweightVlmExplanation,
     detections: frame.detections,
     violations: frame.violations.map((violation) => ({
       type: violation.type,
@@ -25,6 +34,12 @@ export function TechnicalDetails({ frame }: TechnicalDetailsProps) {
       </summary>
       <div className="border-t border-slate-200 p-3">
         <dl className="grid gap-2 text-xs text-slate-600">
+          {jobId ? (
+            <div>
+              <dt className="font-semibold text-slate-800">Job ID</dt>
+              <dd className="mt-1 break-all font-mono" title={jobId}>{formatShortJobId(jobId)}</dd>
+            </div>
+          ) : null}
           <div>
             <dt className="font-semibold text-slate-800">Internal filename</dt>
             <dd className="mt-1 break-all">{frame.internalFilename}</dd>

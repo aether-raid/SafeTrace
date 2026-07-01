@@ -34,6 +34,9 @@ EXTERNAL_ASSET_RULES = [
     "uploads/",
     "generated/",
     "generated_media/",
+    "checkpoints/siglip-base-patch16-224/",
+    "checkpoints/yolov8s-seg.pt",
+    "checkpoints/yolov9c-seg.pt",
 ]
 
 
@@ -70,9 +73,14 @@ def build_command(
 
 
 def print_plan(repo_root: Path, command: list[str]) -> None:
+    expected_venv_python = repo_root / ".venv" / "Scripts" / "python.exe"
     print("SafeTrace backend executable prototype")
     print(f"Repository root: {repo_root}")
     print(f"Expected executable: {repo_root / DEFAULT_DIST_DIR / BACKEND_EXE_NAME}")
+    if expected_venv_python.is_file() and Path(sys.executable).resolve() != expected_venv_python.resolve():
+        print(f"WARNING: Build is using {sys.executable}")
+        print(f"WARNING: Packaged chat needs llama-cpp-python from {expected_venv_python}")
+        print("WARNING: Re-run with .venv\\Scripts\\python.exe scripts\\build_backend_exe.py --run for chat runtime bundling.")
     print("PyInstaller command:")
     print("  " + " ".join(f'"{part}"' if " " in part else part for part in command))
     print("External assets not embedded in the backend executable:")

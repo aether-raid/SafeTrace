@@ -7,6 +7,7 @@ to the coarse YOLO mask if MobileSAM is unavailable.
 from __future__ import annotations
 
 import logging
+import time
 from pathlib import Path
 from typing import List, Optional
 
@@ -32,6 +33,7 @@ class MobileSamSegmenter:
     ) -> None:
         self.device = resolve_device(device or SETTINGS.device)
         self.checkpoint = Path(checkpoint or SETTINGS.mobile_sam_checkpoint)
+        self.refine_timeout_seconds = max(0.0, float(getattr(SETTINGS, "mobile_sam_timeout_seconds", 20.0) or 0.0))
         self._predictor = None
         self._available = False
 
@@ -77,6 +79,15 @@ class MobileSamSegmenter:
         else:
             img = image
 
+        deadline = (
+            time.perf_counter() + self.refine_timeout_seconds
+            if self.refine_timeout_seconds > 0
+            else None
+        )
+
+        def timed_out() -> bool:
+            return deadline is not None and time.perf_counter() >= deadline
+
         try:
             self._predictor.set_image(img)
         except Exception as exc:  # pragma: no cover
@@ -86,8 +97,21 @@ class MobileSamSegmenter:
                     d.refined_mask = d.coarse_mask
             return detections
 
+        if timed_out():
+            logger.warning("MobileSAM set_image exceeded %.1fs; falling back.", self.refine_timeout_seconds)
+            for d in detections:
+                if d.refined_mask is None and d.coarse_mask is not None:
+                    d.refined_mask = d.coarse_mask
+            return detections
+
         h, w = img.shape[:2]
-        for det in detections:
+        for index, det in enumerate(detections):
+            if timed_out():
+                logger.warning("MobileSAM refine exceeded %.1fs; falling back for remaining detections.", self.refine_timeout_seconds)
+                for remaining in detections[index:]:
+                    if remaining.refined_mask is None and remaining.coarse_mask is not None:
+                        remaining.refined_mask = remaining.coarse_mask
+                break
             box = np.array(det.bbox, dtype=np.float32)
             try:
                 masks, scores, _ = self._predictor.predict(

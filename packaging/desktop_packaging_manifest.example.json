@@ -2,13 +2,17 @@
   "component": "safetrace-desktop-package",
   "version": "0.0.0-dev",
   "build_mode": "release-package-prototype",
+  "release_profile": "SafeTrace_RC_SafeMode_RuleBased",
   "schema_version": 2,
   "release_runtime_layout": {
     "launcher": "SafeTrace.exe or SafeTraceLauncher.exe",
     "backend": "backend/safetrace-backend.exe",
+    "embeddingModel": "checkpoints/siglip-base-patch16-224/",
+    "fallbackDetector": "checkpoints/yolov8s-seg.pt",
+    "primaryDetector": "checkpoints/yolov9c-seg.pt",
     "mobileSamCheckpoint": "checkpoints/mobile_sam.pt",
     "chatModel": "models/chat/safetrace-assistant-qwen2.5-1.5b-instruct-q4.gguf",
-    "vlmAssets": "models/vlm/",
+    "vlmAssets": "models/vlm/lightweight-256m/",
     "config": "config/safetrace.env",
     "data": "data/",
     "logs": "logs/"
@@ -24,10 +28,23 @@
     "manifest": "backend/backend_manifest.json"
   },
   "packaged_assets": {
+    "embeddingModel": "checkpoints/siglip-base-patch16-224/",
+    "fallbackDetector": "checkpoints/yolov8s-seg.pt",
+    "primaryDetector": "checkpoints/yolov9c-seg.pt",
     "mobileSam": "checkpoints/mobile_sam.pt",
     "chat": "models/chat/safetrace-assistant-qwen2.5-1.5b-instruct-q4.gguf",
-    "vlm": "models/vlm/",
+    "vlm": "models/vlm/lightweight-256m/",
+    "enhancedVlmPackaged": false,
     "ollamaRequired": false
+  },
+  "default_runtime": {
+    "safeMode": true,
+    "device": "cpu",
+    "visualExplanations": "rule-based",
+    "mobileSamEnabled": false,
+    "vlmEnabled": false,
+    "vlmProfile": "rule_based",
+    "chatProvider": "packaged_llamacpp"
   },
   "preserve_paths": [
     "config/",
@@ -50,14 +67,20 @@
     "uploads/",
     "generated/",
     "generated_media/",
+    "!dist/SafeTrace/checkpoints/siglip-base-patch16-224/**",
+    "!dist/SafeTrace/checkpoints/yolov8s-seg.pt",
+    "!dist/SafeTrace/checkpoints/yolov9c-seg.pt",
     "!dist/SafeTrace/checkpoints/mobile_sam.pt",
     "!dist/SafeTrace/models/chat/*.gguf",
-    "!dist/SafeTrace/models/vlm/**"
+    "!dist/SafeTrace/models/vlm/lightweight-256m/**"
   ],
   "package_asset_allowlist": [
+    "dist/SafeTrace/checkpoints/siglip-base-patch16-224/**",
+    "dist/SafeTrace/checkpoints/yolov8s-seg.pt",
+    "dist/SafeTrace/checkpoints/yolov9c-seg.pt",
     "dist/SafeTrace/checkpoints/mobile_sam.pt",
     "dist/SafeTrace/models/chat/*.gguf",
-    "dist/SafeTrace/models/vlm/**"
+    "dist/SafeTrace/models/vlm/lightweight-256m/**"
   ],
   "notes": "Generated package output belongs under dist/SafeTrace/ and must not be committed. Ollama is optional, not required for the no-extra-steps release package."
 }

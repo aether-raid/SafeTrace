@@ -122,15 +122,48 @@ class Settings:
         default_factory=lambda: _env("SAFETRACE_VLM_OLLAMA_BASE_URL", "http://127.0.0.1:11434")
     )
     vlm_model: str = field(default_factory=lambda: _env("SAFETRACE_VLM_MODEL", "local-vlm"))
-    vlm_timeout_seconds: float = field(default_factory=lambda: _env_float("SAFETRACE_VLM_TIMEOUT_SECONDS", 30.0))
-    vlm_max_frames: int = field(default_factory=lambda: _env_int("SAFETRACE_VLM_MAX_FRAMES", 3))
+    vlm_profile: str = field(default_factory=lambda: _env("SAFETRACE_VLM_PROFILE", "rule_based"))
+    vlm_lightweight_model_path: Path = field(
+        default_factory=lambda: Path(
+            _env("SAFETRACE_VLM_LIGHTWEIGHT_MODEL_PATH", str(PROJECT_ROOT / "models" / "vlm" / "lightweight-256m"))
+        )
+    )
+    vlm_enhanced_model_path: Path = field(
+        default_factory=lambda: Path(
+            _env("SAFETRACE_VLM_ENHANCED_MODEL_PATH", str(PROJECT_ROOT / "models" / "vlm" / "enhanced-2b"))
+        )
+    )
+    vlm_timeout_seconds: float = field(default_factory=lambda: _env_float("SAFETRACE_VLM_TIMEOUT_SECONDS", 10.0))
+    vlm_max_frames: int = field(default_factory=lambda: _env_int("SAFETRACE_VLM_MAX_FRAMES", 1))
     vlm_max_tokens: int = field(default_factory=lambda: _env_int("SAFETRACE_VLM_MAX_TOKENS", 180))
+    lightweight_vlm_worker_enabled: bool = field(
+        default_factory=lambda: _env_bool("SAFETRACE_LIGHTWEIGHT_VLM_WORKER_ENABLED", False)
+    )
+    lightweight_vlm_worker_timeout_seconds: float = field(
+        default_factory=lambda: _env_float("SAFETRACE_LIGHTWEIGHT_VLM_WORKER_TIMEOUT_SECONDS", 60.0)
+    )
 
     # ---- Runtime ----
     device: str = field(default_factory=lambda: _env("SAFETRACE_DEVICE", "auto"))
     offline: bool = field(default_factory=lambda: _env_bool("SAFETRACE_OFFLINE", True))
+    analysis_safe_mode: bool = field(default_factory=lambda: _env_bool("SAFETRACE_ANALYSIS_SAFE_MODE", False))
+    safe_mode_allow_mobilesam: bool = field(
+        default_factory=lambda: _env_bool("SAFETRACE_SAFE_MODE_ALLOW_MOBILESAM", False)
+    )
+    analysis_job_timeout_seconds: float = field(
+        default_factory=lambda: _env_float("SAFETRACE_ANALYSIS_JOB_TIMEOUT_SECONDS", 600.0)
+    )
     enable_vlm: bool = field(default_factory=lambda: _env_bool("SAFETRACE_ENABLE_VLM", False))
-    mobile_sam_enabled: str = field(default_factory=lambda: _env("SAFETRACE_MOBILESAM_ENABLED", "auto"))
+    mobile_sam_enabled: str = field(default_factory=lambda: _env("SAFETRACE_MOBILESAM_ENABLED", "disabled"))
+    mobile_sam_timeout_seconds: float = field(
+        default_factory=lambda: _env_float("SAFETRACE_MOBILESAM_TIMEOUT_SECONDS", 20.0)
+    )
+    mobile_sam_worker_enabled: bool = field(
+        default_factory=lambda: _env_bool("SAFETRACE_MOBILESAM_WORKER_ENABLED", False)
+    )
+    mobile_sam_worker_timeout_seconds: float = field(
+        default_factory=lambda: _env_float("SAFETRACE_MOBILESAM_WORKER_TIMEOUT_SECONDS", 60.0)
+    )
     vlm_enabled: str = field(default_factory=lambda: _env("SAFETRACE_VLM_ENABLED", "auto"))
     serve_frontend: bool = field(default_factory=lambda: _env_bool("SAFETRACE_SERVE_FRONTEND", False))
     frontend_dist: Path = field(

@@ -5,9 +5,10 @@ type EvidenceFramesProps = {
   frames: FrameResult[];
   showExplanations: boolean;
   highlightedFrameId?: string | null;
+  jobId?: string | null;
 };
 
-export function EvidenceFrames({ frames, showExplanations, highlightedFrameId }: EvidenceFramesProps) {
+export function EvidenceFrames({ frames, showExplanations, highlightedFrameId, jobId }: EvidenceFramesProps) {
   return (
     <section id="evidence-frames">
       <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
@@ -32,6 +33,7 @@ export function EvidenceFrames({ frames, showExplanations, highlightedFrameId }:
             frame={frame}
             showExplanation={showExplanations}
             isHighlighted={frame.id === highlightedFrameId}
+            jobId={jobId}
           />
         ))}
       </div>

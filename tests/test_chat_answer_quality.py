@@ -135,11 +135,71 @@ def test_supporting_frames_template_lists_frames_once(monkeypatch, tmp_path):
 
     assert "The top finding is Missing Helmet." in answer
     assert "Supporting frames:" in answer
-    assert answer.count("Frame 1 - 00:00:46") == 1
-    assert answer.count("Frame 2 - 00:00:16") == 1
+    assert answer.count("Frame 1 at 00:00:46") == 1
+    assert answer.count("Frame 2 at 00:00:16") == 1
     assert answer.count("Supporting frames:") == 1
     assert "technical JSON" not in answer
     assert_no_repeated_blocks(answer)
+
+
+def test_seatbelt_question_returns_grounded_missing_seatbelt_answer(monkeypatch, tmp_path):
+    answer = ask("Was the driver wearing a seatbelt?", tmp_path, monkeypatch)
+
+    assert "Video: site-camera.mp4" in answer
+    assert "Job: job_" in answer
+    assert "SafeTrace flagged Missing Seatbelt." in answer
+    assert "- Severity: Medium" in answer
+    assert "- Confidence: 86%" in answer
+    assert "Frame 1 at 00:00:46" in answer
+    assert "Frame 5 at 00:00:33" in answer
+    assert "seatbelt may not be visible" in answer
+    assert "manual confirmation" in answer
+
+
+def test_helmet_question_returns_grounded_missing_helmet_answer(monkeypatch, tmp_path):
+    answer = ask("Was anyone missing a helmet?", tmp_path, monkeypatch)
+
+    assert "SafeTrace flagged Missing Helmet." in answer
+    assert "- Severity: High" in answer
+    assert "Frame 1 at 00:00:46" in answer
+    assert "Frame 2 at 00:00:16" in answer
+    assert "helmet may not be visible" in answer
+
+
+def test_phone_question_without_phone_finding_does_not_hallucinate(monkeypatch, tmp_path):
+    answer = ask("Is the driver using a phone while driving?", tmp_path, monkeypatch)
+
+    assert "SafeTrace did not detect a phone-use violation in this result." in answer
+    assert "did not detect" in answer
+    assert "may not reliably support phone-use detection" in answer
+    assert "SafeTrace flagged Phone" not in answer
+
+
+def test_timestamp_and_confidence_questions_use_selected_result(monkeypatch, tmp_path):
+    timestamp_answer = ask("What timestamp did the violation occur?", tmp_path, monkeypatch)
+    confidence_answer = ask("What is the confidence?", tmp_path, monkeypatch)
+
+    assert "Frame 1 at 00:00:46" in timestamp_answer
+    assert "Frame 2 at 00:00:16" in timestamp_answer
+    assert "Overall confidence for this result is 92%." in confidence_answer
+    assert "Top finding: Missing Helmet" in confidence_answer
+
+
+def test_no_selected_result_gives_selection_instruction(monkeypatch, tmp_path):
+    answer = ask("Was the driver wearing a seatbelt?", tmp_path, monkeypatch, include_job=False)
+
+    assert "I do not have a selected completed SafeTrace result" in answer
+    assert "pass its job_id to /api/chat" in answer
+    assert "select a completed result" in answer.lower()
+
+
+def test_safe_or_unsafe_question_uses_detected_findings(monkeypatch, tmp_path):
+    answer = ask("Was this video safe or unsafe?", tmp_path, monkeypatch)
+
+    assert "unsafe or requiring review" in answer
+    assert "Missing Helmet" in answer
+    assert "Missing Seatbelt" in answer
+    assert "automated review aid" in answer
 
 
 def test_zip_upload_answer_prioritizes_frontend_before_api(monkeypatch, tmp_path):

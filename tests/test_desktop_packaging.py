@@ -6,9 +6,14 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 import src.api.server as server_module
-from scripts.build_backend_exe import BACKEND_EXE_NAME, DEFAULT_DIST_DIR, build_command
+from scripts.build_backend_exe import BACKEND_EXE_NAME, DEFAULT_DIST_DIR, EXTERNAL_ASSET_RULES, build_command
 from scripts.build_desktop_prototype import (
+    DEFAULT_CHAT_MODEL_NAME,
+    LAUNCHER_TEXT,
+    MAIN_RELEASE_PROFILE_NAME,
     PACKAGE_ASSET_ALLOWLIST,
+    PACKAGE_ENV_DEFAULTS,
+    PACKAGE_RELEASE_PROFILES,
     PROTECTED_ASSET_RULES,
     AssetValidationError,
     build_prototype,
@@ -27,11 +32,106 @@ def test_config_example_exists_with_packaged_defaults():
     assert "SAFETRACE_CHAT_PROVIDER=packaged_llamacpp" in content
     assert "SAFETRACE_SERVE_FRONTEND=true" in content
     assert "SAFETRACE_FRONTEND_DIST=frontend/dist" in content
+    assert "SAFETRACE_SIGLIP_DIR=checkpoints/siglip-base-patch16-224" in content
+    assert "SAFETRACE_YOLO_CKPT=checkpoints/yolov9c-seg.pt" in content
+    assert "SAFETRACE_YOLO_FALLBACK_CKPT=checkpoints/yolov8s-seg.pt" in content
+    assert "SAFETRACE_DEVICE=cpu" in content
+    assert "SAFETRACE_ANALYSIS_SAFE_MODE=true" in content
+    assert "SAFETRACE_SAFE_MODE_ALLOW_MOBILESAM=false" in content
+    assert "SAFETRACE_MOBILESAM_ENABLED=false" in content
     assert "SAFETRACE_MOBILESAM_CHECKPOINT=checkpoints/mobile_sam.pt" in content
+    assert "SAFETRACE_MOBILESAM_TIMEOUT_SECONDS=20" in content
+    assert "SAFETRACE_MOBILESAM_WORKER_ENABLED=false" in content
+    assert "SAFETRACE_MOBILESAM_WORKER_TIMEOUT_SECONDS=60" in content
+    assert "SAFETRACE_VLM_ENABLED=false" in content
     assert "SAFETRACE_VLM_PROVIDER=auto" in content
+    assert "SAFETRACE_VLM_PROFILE=rule_based" in content
     assert "SAFETRACE_VLM_MODEL_PATH=models/vlm" in content
     assert "SAFETRACE_VLM_DIR=models/vlm" in content
+    assert "SAFETRACE_VLM_LIGHTWEIGHT_MODEL_PATH=models/vlm/lightweight-256m" in content
+    assert "SAFETRACE_VLM_ENHANCED_MODEL_PATH=models/vlm/enhanced-2b" in content
     assert "SAFETRACE_VLM_MODEL=local-vlm" in content
+    assert "SAFETRACE_LIGHTWEIGHT_VLM_WORKER_ENABLED=false" in content
+    assert "SAFETRACE_LIGHTWEIGHT_VLM_WORKER_TIMEOUT_SECONDS=60" in content
+    assert "SAFETRACE_ALLOWED_ORIGINS=https://safetrace-iota.vercel.app" in content
+    assert PACKAGE_ENV_DEFAULTS["SAFETRACE_SIGLIP_DIR"] == "checkpoints/siglip-base-patch16-224"
+    assert PACKAGE_ENV_DEFAULTS["SAFETRACE_YOLO_FALLBACK_CKPT"] == "checkpoints/yolov8s-seg.pt"
+    assert PACKAGE_ENV_DEFAULTS["SAFETRACE_CHAT_MODEL_PATH"] == f"models/chat/{DEFAULT_CHAT_MODEL_NAME}"
+    assert PACKAGE_ENV_DEFAULTS["SAFETRACE_ANALYSIS_SAFE_MODE"] == "true"
+    assert PACKAGE_ENV_DEFAULTS["SAFETRACE_SAFE_MODE_ALLOW_MOBILESAM"] == "false"
+    assert PACKAGE_ENV_DEFAULTS["SAFETRACE_MOBILESAM_ENABLED"] == "false"
+    assert PACKAGE_ENV_DEFAULTS["SAFETRACE_MOBILESAM_TIMEOUT_SECONDS"] == "20"
+    assert PACKAGE_ENV_DEFAULTS["SAFETRACE_MOBILESAM_WORKER_ENABLED"] == "false"
+    assert PACKAGE_ENV_DEFAULTS["SAFETRACE_MOBILESAM_WORKER_TIMEOUT_SECONDS"] == "60"
+    assert PACKAGE_ENV_DEFAULTS["SAFETRACE_VLM_ENABLED"] == "false"
+    assert PACKAGE_ENV_DEFAULTS["SAFETRACE_LIGHTWEIGHT_VLM_WORKER_ENABLED"] == "false"
+    assert PACKAGE_ENV_DEFAULTS["SAFETRACE_LIGHTWEIGHT_VLM_WORKER_TIMEOUT_SECONDS"] == "60"
+
+
+def test_release_profiles_prepare_safe_mode_main_and_optional_profiles():
+    main = PACKAGE_RELEASE_PROFILES[MAIN_RELEASE_PROFILE_NAME]
+    rule_based = PACKAGE_RELEASE_PROFILES["SafeTrace_RC_MobileSAM_RuleBased"]
+    mobilesam_only = PACKAGE_RELEASE_PROFILES["SafeTrace_RC_MobileSAM_RuleBased_Experimental"]
+    worker_profile = PACKAGE_RELEASE_PROFILES["SafeTrace_RC_MobileSAM_Worker_RuleBased_Experimental"]
+    experimental = PACKAGE_RELEASE_PROFILES["SafeTrace_RC_MobileSAM_LightweightVLM_Experimental"]
+    combined_worker_profile = PACKAGE_RELEASE_PROFILES[
+        "SafeTrace_RC_MobileSAM_Worker_LightweightVLM_Worker_Experimental"
+    ]
+
+    assert MAIN_RELEASE_PROFILE_NAME == "SafeTrace_RC_SafeMode_RuleBased"
+    assert main["env"]["SAFETRACE_ANALYSIS_SAFE_MODE"] == "true"
+    assert main["env"]["SAFETRACE_DEVICE"] == "cpu"
+    assert main["env"]["SAFETRACE_MOBILESAM_ENABLED"] == "false"
+    assert main["env"]["SAFETRACE_VLM_ENABLED"] == "false"
+    assert main["env"]["SAFETRACE_VLM_PROFILE"] == "rule_based"
+    assert "Enhanced VLM assets are intentionally excluded." in main["notes"]
+
+    assert rule_based["env"]["SAFETRACE_ANALYSIS_SAFE_MODE"] == "true"
+    assert rule_based["env"]["SAFETRACE_SAFE_MODE_ALLOW_MOBILESAM"] == "true"
+    assert rule_based["env"]["SAFETRACE_DEVICE"] == "cpu"
+    assert rule_based["env"]["SAFETRACE_MOBILESAM_ENABLED"] == "auto"
+    assert rule_based["env"]["SAFETRACE_VLM_ENABLED"] == "false"
+    assert rule_based["env"]["SAFETRACE_VLM_PROFILE"] == "rule_based"
+    assert "Improved frame ranking uses detector/rule evidence instead of SigLIP/FAISS." in rule_based["notes"]
+
+    assert mobilesam_only["env"]["SAFETRACE_ANALYSIS_SAFE_MODE"] == "true"
+    assert mobilesam_only["env"]["SAFETRACE_SAFE_MODE_ALLOW_MOBILESAM"] == "true"
+    assert mobilesam_only["env"]["SAFETRACE_MOBILESAM_ENABLED"] == "true"
+    assert mobilesam_only["env"]["SAFETRACE_MOBILESAM_TIMEOUT_SECONDS"] == "20"
+    assert mobilesam_only["env"]["SAFETRACE_VLM_ENABLED"] == "false"
+    assert mobilesam_only["env"]["SAFETRACE_VLM_PROFILE"] == "rule_based"
+    assert mobilesam_only["env"]["SAFETRACE_BUILD_MODE"] == "SafeTrace_RC_MobileSAM_RuleBased_Experimental"
+    assert "Enhanced VLM assets are intentionally excluded." in mobilesam_only["notes"]
+
+    assert worker_profile["env"]["SAFETRACE_ANALYSIS_SAFE_MODE"] == "true"
+    assert worker_profile["env"]["SAFETRACE_SAFE_MODE_ALLOW_MOBILESAM"] == "true"
+    assert worker_profile["env"]["SAFETRACE_MOBILESAM_ENABLED"] == "true"
+    assert worker_profile["env"]["SAFETRACE_MOBILESAM_WORKER_ENABLED"] == "true"
+    assert worker_profile["env"]["SAFETRACE_MOBILESAM_WORKER_TIMEOUT_SECONDS"] == "60"
+    assert worker_profile["env"]["SAFETRACE_VLM_ENABLED"] == "false"
+    assert worker_profile["env"]["SAFETRACE_VLM_PROFILE"] == "rule_based"
+    assert worker_profile["env"]["SAFETRACE_BUILD_MODE"] == "SafeTrace_RC_MobileSAM_Worker_RuleBased_Experimental"
+    assert "separate worker process" in worker_profile["notes"][0]
+
+    assert experimental["env"]["SAFETRACE_ANALYSIS_SAFE_MODE"] == "true"
+    assert experimental["env"]["SAFETRACE_DEVICE"] == "cpu"
+    assert experimental["env"]["SAFETRACE_MOBILESAM_ENABLED"] == "auto"
+    assert experimental["env"]["SAFETRACE_VLM_PROVIDER"] == "auto"
+    assert experimental["env"]["SAFETRACE_VLM_PROFILE"] == "lightweight_256m"
+    assert "Enhanced VLM assets are excluded from this profile." in experimental["notes"]
+    assert PACKAGE_ENV_DEFAULTS["SAFETRACE_VLM_PROFILE"] == "rule_based"
+
+    assert combined_worker_profile["env"]["SAFETRACE_ANALYSIS_SAFE_MODE"] == "true"
+    assert combined_worker_profile["env"]["SAFETRACE_SAFE_MODE_ALLOW_MOBILESAM"] == "true"
+    assert combined_worker_profile["env"]["SAFETRACE_MOBILESAM_ENABLED"] == "true"
+    assert combined_worker_profile["env"]["SAFETRACE_MOBILESAM_WORKER_ENABLED"] == "true"
+    assert combined_worker_profile["env"]["SAFETRACE_VLM_ENABLED"] == "true"
+    assert combined_worker_profile["env"]["SAFETRACE_VLM_PROFILE"] == "lightweight_256m"
+    assert combined_worker_profile["env"]["SAFETRACE_LIGHTWEIGHT_VLM_WORKER_ENABLED"] == "true"
+    assert combined_worker_profile["env"]["SAFETRACE_LIGHTWEIGHT_VLM_WORKER_TIMEOUT_SECONDS"] == "120"
+    assert combined_worker_profile["env"]["SAFETRACE_VLM_MAX_TOKENS"] == "64"
+    assert "Selected/internal testing only" in combined_worker_profile["notes"][0]
+    assert "Enhanced VLM assets are intentionally excluded." in combined_worker_profile["notes"]
 
 
 def test_desktop_manifest_example_shape():
@@ -40,19 +140,34 @@ def test_desktop_manifest_example_shape():
     payload = json.loads(path.read_text(encoding="utf-8"))
     assert payload["component"] == "safetrace-desktop-package"
     assert payload["schema_version"] == 2
+    assert payload["release_profile"] == "SafeTrace_RC_SafeMode_RuleBased"
+    assert payload["default_runtime"]["safeMode"] is True
+    assert payload["default_runtime"]["device"] == "cpu"
+    assert payload["default_runtime"]["mobileSamEnabled"] is False
+    assert payload["default_runtime"]["vlmEnabled"] is False
+    assert payload["default_runtime"]["vlmProfile"] == "rule_based"
+    assert payload["release_runtime_layout"]["embeddingModel"] == "checkpoints/siglip-base-patch16-224/"
+    assert payload["release_runtime_layout"]["fallbackDetector"] == "checkpoints/yolov8s-seg.pt"
+    assert payload["release_runtime_layout"]["primaryDetector"] == "checkpoints/yolov9c-seg.pt"
     assert payload["release_runtime_layout"]["mobileSamCheckpoint"] == "checkpoints/mobile_sam.pt"
-    assert payload["release_runtime_layout"]["vlmAssets"] == "models/vlm/"
+    assert payload["release_runtime_layout"]["vlmAssets"] == "models/vlm/lightweight-256m/"
     assert payload["frontend"]["dist_path"] == "frontend/dist"
     assert payload["frontend"]["live_frontend_supported"] is True
     assert payload["backend"]["entrypoint"] == "safetrace-backend.exe"
     assert payload["packaged_assets"]["ollamaRequired"] is False
+    assert payload["packaged_assets"]["embeddingModel"] == "checkpoints/siglip-base-patch16-224/"
+    assert payload["packaged_assets"]["fallbackDetector"] == "checkpoints/yolov8s-seg.pt"
+    assert payload["packaged_assets"]["primaryDetector"] == "checkpoints/yolov9c-seg.pt"
     assert payload["packaged_assets"]["chat"].startswith("models/chat/")
-    assert payload["packaged_assets"]["vlm"] == "models/vlm/"
+    assert payload["packaged_assets"]["vlm"] == "models/vlm/lightweight-256m/"
+    assert payload["packaged_assets"]["enhancedVlmPackaged"] is False
     assert "config/" in payload["preserve_paths"]
     assert "checkpoints/" in payload["preserve_paths"]
     assert "*.gguf" in payload["excluded_asset_rules"]
     assert "*.onnx" in payload["excluded_asset_rules"]
-    assert "dist/SafeTrace/models/vlm/**" in payload["package_asset_allowlist"]
+    assert "dist/SafeTrace/checkpoints/siglip-base-patch16-224/**" in payload["package_asset_allowlist"]
+    assert "dist/SafeTrace/checkpoints/yolov8s-seg.pt" in payload["package_asset_allowlist"]
+    assert "dist/SafeTrace/models/vlm/lightweight-256m/**" in payload["package_asset_allowlist"]
 
 
 def test_package_script_creates_layout_and_excludes_generated_data(tmp_path):
@@ -65,8 +180,8 @@ def test_package_script_creates_layout_and_excludes_generated_data(tmp_path):
     (repo / "frontend-react" / "dist" / "assets" / "index.js").write_text("console.log('ok');", encoding="utf-8")
     (repo / "models" / "chat").mkdir(parents=True)
     (repo / "models" / "chat" / "model.gguf").write_bytes(b"model")
-    (repo / "models" / "vlm").mkdir(parents=True)
-    (repo / "models" / "vlm" / "config.json").write_text("{}", encoding="utf-8")
+    (repo / "models" / "vlm" / "lightweight-256m").mkdir(parents=True)
+    (repo / "models" / "vlm" / "lightweight-256m" / "config.json").write_text("{}", encoding="utf-8")
     (repo / "data").mkdir()
     (repo / "data" / "upload.mp4").write_bytes(b"video")
 
@@ -78,10 +193,12 @@ def test_package_script_creates_layout_and_excludes_generated_data(tmp_path):
     assert not (package / "backend" / "safetrace-backend.exe").exists()
     assert (package / "frontend" / "dist" / "index.html").is_file()
     assert (package / "config" / "safetrace.env.example").is_file()
+    assert (package / "config" / "safetrace.env").is_file()
     assert (package / "config" / "README.txt").is_file()
     assert (package / "models" / "chat").is_dir()
     assert (package / "models" / "chat" / "model.gguf").read_bytes() == b"model"
-    assert (package / "models" / "vlm" / "config.json").is_file()
+    assert (package / "models" / "vlm" / "lightweight-256m" / "config.json").is_file()
+    assert not (package / "models" / "vlm" / "enhanced-2b").exists()
     assert (package / "checkpoints").is_dir()
     assert (package / "checkpoints" / "README.txt").is_file()
     assert (package / "data").is_dir()
@@ -92,12 +209,91 @@ def test_package_script_creates_layout_and_excludes_generated_data(tmp_path):
     assert not list(package.rglob("*.pt"))
     assert not (package / "data" / "upload.mp4").exists()
     assert summary["backend_exe_copied"] is False
+    assert summary["embedding_model_included"] is False
+    assert summary["fallback_detector_included"] is False
+    assert summary["primary_detector_included"] is False
     assert summary["mobile_sam_checkpoint_included"] is False
     assert summary["chat_models_included"] == ["model.gguf"]
     assert summary["vlm_assets_included"] is True
     assert "*.gguf" in summary["excluded_asset_rules"]
     assert PROTECTED_ASSET_RULES == summary["excluded_asset_rules"]
     assert PACKAGE_ASSET_ALLOWLIST == summary["package_asset_allowlist"]
+    env_content = (package / "config" / "safetrace.env").read_text(encoding="utf-8")
+    assert "SAFETRACE_SIGLIP_DIR=checkpoints/siglip-base-patch16-224" in env_content
+    assert "SAFETRACE_YOLO_FALLBACK_CKPT=checkpoints/yolov8s-seg.pt" in env_content
+    assert "SAFETRACE_ANALYSIS_SAFE_MODE=true" in env_content
+    assert "SAFETRACE_DEVICE=cpu" in env_content
+    assert "SAFETRACE_MOBILESAM_ENABLED=false" in env_content
+    assert "SAFETRACE_MOBILESAM_WORKER_ENABLED=false" in env_content
+    assert "SAFETRACE_MOBILESAM_WORKER_TIMEOUT_SECONDS=60" in env_content
+    assert "SAFETRACE_VLM_ENABLED=false" in env_content
+    assert "SAFETRACE_VLM_PROFILE=rule_based" in env_content
+    assert "SAFETRACE_LIGHTWEIGHT_VLM_WORKER_ENABLED=false" in env_content
+    assert "SAFETRACE_LIGHTWEIGHT_VLM_WORKER_TIMEOUT_SECONDS=60" in env_content
+    assert "SAFETRACE_ALLOWED_ORIGINS=https://safetrace-iota.vercel.app" in env_content
+
+
+def test_package_script_can_generate_mobilesam_worker_profile_config(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+
+    summary = build_prototype(
+        repo,
+        tmp_path / "out",
+        clean=True,
+        release_profile="SafeTrace_RC_MobileSAM_Worker_RuleBased_Experimental",
+    )
+    package = Path(summary["package_root"])
+    env_content = (package / "config" / "safetrace.env").read_text(encoding="utf-8")
+    manifest = json.loads((package / "packaging_manifest.json").read_text(encoding="utf-8"))
+
+    assert summary["release_profile"] == "SafeTrace_RC_MobileSAM_Worker_RuleBased_Experimental"
+    assert "SAFETRACE_ANALYSIS_SAFE_MODE=true" in env_content
+    assert "SAFETRACE_SAFE_MODE_ALLOW_MOBILESAM=true" in env_content
+    assert "SAFETRACE_MOBILESAM_ENABLED=true" in env_content
+    assert "SAFETRACE_MOBILESAM_WORKER_ENABLED=true" in env_content
+    assert "SAFETRACE_MOBILESAM_WORKER_TIMEOUT_SECONDS=60" in env_content
+    assert "SAFETRACE_VLM_ENABLED=false" in env_content
+    assert "SAFETRACE_VLM_PROFILE=rule_based" in env_content
+    assert manifest["release_profile"] == "SafeTrace_RC_MobileSAM_Worker_RuleBased_Experimental"
+    assert manifest["default_runtime"]["mobileSamWorkerEnabled"] is True
+    assert manifest["default_runtime"]["vlmEnabled"] is False
+    assert not (package / "models" / "vlm" / "enhanced-2b").exists()
+
+
+def test_package_script_can_generate_combined_worker_profile_config(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+
+    summary = build_prototype(
+        repo,
+        tmp_path / "out",
+        clean=True,
+        release_profile="SafeTrace_RC_MobileSAM_Worker_LightweightVLM_Worker_Experimental",
+    )
+    package = Path(summary["package_root"])
+    env_content = (package / "config" / "safetrace.env").read_text(encoding="utf-8")
+    manifest = json.loads((package / "packaging_manifest.json").read_text(encoding="utf-8"))
+    launcher = (package / "SafeTraceLauncher.bat").read_text(encoding="utf-8")
+
+    assert summary["release_profile"] == "SafeTrace_RC_MobileSAM_Worker_LightweightVLM_Worker_Experimental"
+    assert "SAFETRACE_ANALYSIS_SAFE_MODE=true" in env_content
+    assert "SAFETRACE_SAFE_MODE_ALLOW_MOBILESAM=true" in env_content
+    assert "SAFETRACE_MOBILESAM_ENABLED=true" in env_content
+    assert "SAFETRACE_MOBILESAM_WORKER_ENABLED=true" in env_content
+    assert "SAFETRACE_VLM_ENABLED=true" in env_content
+    assert "SAFETRACE_VLM_PROFILE=lightweight_256m" in env_content
+    assert "SAFETRACE_VLM_MODEL_PATH=models/vlm/lightweight-256m" in env_content
+    assert "SAFETRACE_LIGHTWEIGHT_VLM_WORKER_ENABLED=true" in env_content
+    assert "SAFETRACE_LIGHTWEIGHT_VLM_WORKER_TIMEOUT_SECONDS=120" in env_content
+    assert "SAFETRACE_VLM_MAX_TOKENS=64" in env_content
+    assert manifest["release_profile"] == "SafeTrace_RC_MobileSAM_Worker_LightweightVLM_Worker_Experimental"
+    assert manifest["default_runtime"]["mobileSamWorkerEnabled"] is True
+    assert manifest["default_runtime"]["vlmEnabled"] is True
+    assert manifest["default_runtime"]["vlmProfile"] == "lightweight_256m"
+    assert manifest["default_runtime"]["lightweightVlmWorkerEnabled"] is True
+    assert "Lightweight VLM worker: %SAFETRACE_LIGHTWEIGHT_VLM_WORKER_ENABLED%" in launcher
+    assert not (package / "models" / "vlm" / "enhanced-2b").exists()
 
 
 def test_package_script_copies_existing_backend_exe_only_when_present(tmp_path):
@@ -134,6 +330,36 @@ def test_package_script_copies_optional_mobilesam_checkpoint_when_present(tmp_pa
     assert not list(package.rglob("*.gguf"))
 
 
+def test_package_script_copies_required_embedding_and_detector_assets_when_present(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    siglip_dir = repo / "checkpoints" / "siglip-base-patch16-224"
+    siglip_dir.mkdir(parents=True)
+    (siglip_dir / "config.json").write_text("{}", encoding="utf-8")
+    (siglip_dir / "model.safetensors").write_bytes(b"siglip weights placeholder")
+    fallback_detector = repo / "checkpoints" / "yolov8s-seg.pt"
+    fallback_detector.write_bytes(b"yolov8 checkpoint placeholder")
+    primary_detector = repo / "checkpoints" / "yolov9c-seg.pt"
+    primary_detector.write_bytes(b"yolov9 checkpoint placeholder")
+
+    summary = build_prototype(repo, tmp_path / "out", clean=True)
+    package = Path(summary["package_root"])
+
+    assert summary["embedding_model_included"] is True
+    assert summary["fallback_detector_included"] is True
+    assert summary["primary_detector_included"] is True
+    assert (package / "checkpoints" / "siglip-base-patch16-224" / "config.json").is_file()
+    assert (package / "checkpoints" / "siglip-base-patch16-224" / "model.safetensors").read_bytes() == (
+        b"siglip weights placeholder"
+    )
+    assert (package / "checkpoints" / "yolov8s-seg.pt").read_bytes() == b"yolov8 checkpoint placeholder"
+    assert (package / "checkpoints" / "yolov9c-seg.pt").read_bytes() == b"yolov9 checkpoint placeholder"
+    report = (package / "OPTIONAL_ASSETS_REPORT.txt").read_text(encoding="utf-8")
+    assert "embedding model: included" in report
+    assert "fallback detector checkpoint: included" in report
+    assert "primary detector checkpoint: included" in report
+
+
 def test_package_script_copies_optional_chat_model_when_present(tmp_path):
     repo = tmp_path / "repo"
     repo.mkdir()
@@ -152,18 +378,26 @@ def test_package_script_copies_optional_chat_model_when_present(tmp_path):
 def test_package_script_copies_optional_vlm_assets_when_present(tmp_path):
     repo = tmp_path / "repo"
     repo.mkdir()
-    vlm_dir = repo / "models" / "vlm"
+    vlm_dir = repo / "models" / "vlm" / "lightweight-256m"
+    enhanced_dir = repo / "models" / "vlm" / "enhanced-2b"
     (vlm_dir / "nested").mkdir(parents=True)
+    enhanced_dir.mkdir(parents=True)
     (vlm_dir / "config.json").write_text("{}", encoding="utf-8")
     (vlm_dir / "nested" / "weights.safetensors").write_bytes(b"vlm weights placeholder")
+    (enhanced_dir / "model.safetensors").write_bytes(b"enhanced placeholder")
 
     summary = build_prototype(repo, tmp_path / "out", clean=True)
     package = Path(summary["package_root"])
 
     assert summary["vlm_assets_included"] is True
-    assert (package / "models" / "vlm" / "config.json").is_file()
-    assert (package / "models" / "vlm" / "nested" / "weights.safetensors").read_bytes() == b"vlm weights placeholder"
-    assert "local VLM assets: included" in (package / "OPTIONAL_ASSETS_REPORT.txt").read_text(encoding="utf-8")
+    assert (package / "models" / "vlm" / "lightweight-256m" / "config.json").is_file()
+    assert (
+        package / "models" / "vlm" / "lightweight-256m" / "nested" / "weights.safetensors"
+    ).read_bytes() == b"vlm weights placeholder"
+    assert not (package / "models" / "vlm" / "enhanced-2b").exists()
+    assert "lightweight VLM assets: included" in (package / "OPTIONAL_ASSETS_REPORT.txt").read_text(
+        encoding="utf-8"
+    )
 
 
 def test_package_script_non_strict_allows_missing_release_assets(tmp_path):
@@ -173,6 +407,9 @@ def test_package_script_non_strict_allows_missing_release_assets(tmp_path):
     summary = build_prototype(repo, tmp_path / "out", clean=True)
 
     assert summary["backend_exe_copied"] is False
+    assert summary["embedding_model_included"] is False
+    assert summary["fallback_detector_included"] is False
+    assert summary["primary_detector_included"] is False
     assert summary["mobile_sam_checkpoint_included"] is False
     assert summary["chat_models_included"] == []
     assert summary["vlm_assets_included"] is False
@@ -192,9 +429,11 @@ def test_package_script_strict_assets_fails_clearly_when_missing(tmp_path):
 
     assert "Backend executable missing" in message
     assert "config/safetrace.env" in message
+    assert "checkpoints/siglip-base-patch16-224" in message
+    assert "checkpoints/yolov8s-seg.pt" in message
     assert "checkpoints/mobile_sam.pt" in message
     assert "models/chat/*.gguf" in message
-    assert "models/vlm/" in message
+    assert "models/vlm/lightweight-256m/" not in message
 
 
 def test_package_script_strict_assets_passes_with_release_assets(tmp_path):
@@ -218,10 +457,14 @@ def test_package_script_strict_assets_passes_with_release_assets(tmp_path):
     mobile_sam = repo / "checkpoints" / "mobile_sam.pt"
     mobile_sam.parent.mkdir(parents=True)
     mobile_sam.write_bytes(b"mobile sam")
+    siglip_dir = repo / "checkpoints" / "siglip-base-patch16-224"
+    siglip_dir.mkdir()
+    (siglip_dir / "config.json").write_text("{}", encoding="utf-8")
+    (repo / "checkpoints" / "yolov8s-seg.pt").write_bytes(b"yolov8")
     chat_model = repo / "models" / "chat" / "assistant.gguf"
     chat_model.parent.mkdir(parents=True)
     chat_model.write_bytes(b"chat")
-    vlm_dir = repo / "models" / "vlm"
+    vlm_dir = repo / "models" / "vlm" / "lightweight-256m"
     vlm_dir.mkdir(parents=True)
     (vlm_dir / "config.json").write_text("{}", encoding="utf-8")
 
@@ -231,9 +474,13 @@ def test_package_script_strict_assets_passes_with_release_assets(tmp_path):
     assert summary["strict_asset_failures"] == []
     assert (package / "backend" / "safetrace-backend.exe").is_file()
     assert (package / "config" / "safetrace.env").is_file()
+    assert (package / "checkpoints" / "siglip-base-patch16-224" / "config.json").is_file()
+    assert (package / "checkpoints" / "yolov8s-seg.pt").is_file()
+    assert not (package / "checkpoints" / "yolov9c-seg.pt").exists()
     assert (package / "checkpoints" / "mobile_sam.pt").is_file()
     assert (package / "models" / "chat" / "assistant.gguf").is_file()
-    assert (package / "models" / "vlm" / "config.json").is_file()
+    assert (package / "models" / "vlm" / "lightweight-256m" / "config.json").is_file()
+    assert not (package / "models" / "vlm" / "enhanced-2b").exists()
     assert (package / "OPTIONAL_ASSETS_REPORT.txt").is_file()
 
 
@@ -263,19 +510,48 @@ def test_backend_entrypoint_imports_and_loads_env(monkeypatch, tmp_path):
     assert backend_entrypoint.DEFAULT_HOST == "127.0.0.1"
 
 
+def test_backend_entrypoint_frozen_default_app_root_uses_package_parent(monkeypatch, tmp_path):
+    from src.api import __main__ as backend_entrypoint
+
+    exe = tmp_path / "SafeTrace" / "backend" / "safetrace-backend.exe"
+    exe.parent.mkdir(parents=True)
+    exe.write_bytes(b"exe")
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    monkeypatch.setattr(sys, "executable", str(exe))
+
+    assert backend_entrypoint.default_app_root() == tmp_path / "SafeTrace"
+
+
 def test_backend_entrypoint_packaged_defaults(monkeypatch, tmp_path):
     from src.api import __main__ as backend_entrypoint
 
     for key in (
+        "SAFETRACE_APP_ROOT",
         "SAFETRACE_PROJECT_ROOT",
         "SAFETRACE_DATA_DIR",
         "SAFETRACE_CHECKPOINTS_DIR",
+        "SAFETRACE_DEVICE",
+        "SAFETRACE_ANALYSIS_SAFE_MODE",
+        "SAFETRACE_SIGLIP_DIR",
+        "SAFETRACE_YOLO_CKPT",
+        "SAFETRACE_YOLO_FALLBACK_CKPT",
         "SAFETRACE_MOBILESAM_CHECKPOINT",
+        "SAFETRACE_MOBILESAM_ENABLED",
+        "SAFETRACE_MOBILESAM_TIMEOUT_SECONDS",
+        "SAFETRACE_MOBILESAM_WORKER_ENABLED",
+        "SAFETRACE_MOBILESAM_WORKER_TIMEOUT_SECONDS",
+        "SAFETRACE_VLM_ENABLED",
         "SAFETRACE_CHAT_MODEL_PATH",
         "SAFETRACE_VLM_PROVIDER",
+        "SAFETRACE_VLM_PROFILE",
         "SAFETRACE_VLM_MODEL_PATH",
         "SAFETRACE_VLM_DIR",
+        "SAFETRACE_VLM_LIGHTWEIGHT_MODEL_PATH",
+        "SAFETRACE_VLM_ENHANCED_MODEL_PATH",
         "SAFETRACE_VLM_MODEL",
+        "SAFETRACE_LIGHTWEIGHT_VLM_WORKER_ENABLED",
+        "SAFETRACE_LIGHTWEIGHT_VLM_WORKER_TIMEOUT_SECONDS",
+        "SAFETRACE_ALLOWED_ORIGINS",
         "SAFETRACE_SERVE_FRONTEND",
         "SAFETRACE_FRONTEND_DIST",
         "SAFETRACE_BUILD_MODE",
@@ -285,21 +561,85 @@ def test_backend_entrypoint_packaged_defaults(monkeypatch, tmp_path):
 
     backend_entrypoint.apply_packaged_defaults(tmp_path)
 
+    assert Path(os.environ["SAFETRACE_APP_ROOT"]) == tmp_path
     assert Path(os.environ["SAFETRACE_PROJECT_ROOT"]) == tmp_path
     assert Path(os.environ["SAFETRACE_DATA_DIR"]) == tmp_path / "data"
     assert Path(os.environ["SAFETRACE_CHECKPOINTS_DIR"]) == tmp_path / "checkpoints"
+    assert os.environ["SAFETRACE_DEVICE"] == "cpu"
+    assert os.environ["SAFETRACE_ANALYSIS_SAFE_MODE"] == "true"
+    assert Path(os.environ["SAFETRACE_SIGLIP_DIR"]) == tmp_path / "checkpoints" / "siglip-base-patch16-224"
+    assert Path(os.environ["SAFETRACE_YOLO_CKPT"]) == tmp_path / "checkpoints" / "yolov9c-seg.pt"
+    assert Path(os.environ["SAFETRACE_YOLO_FALLBACK_CKPT"]) == tmp_path / "checkpoints" / "yolov8s-seg.pt"
     assert Path(os.environ["SAFETRACE_MOBILESAM_CHECKPOINT"]) == tmp_path / "checkpoints" / "mobile_sam.pt"
+    assert os.environ["SAFETRACE_MOBILESAM_ENABLED"] == "false"
+    assert os.environ["SAFETRACE_MOBILESAM_TIMEOUT_SECONDS"] == "20"
+    assert os.environ["SAFETRACE_MOBILESAM_WORKER_ENABLED"] == "false"
+    assert os.environ["SAFETRACE_MOBILESAM_WORKER_TIMEOUT_SECONDS"] == "60"
+    assert os.environ["SAFETRACE_VLM_ENABLED"] == "false"
     assert Path(os.environ["SAFETRACE_CHAT_MODEL_PATH"]) == (
         tmp_path / "models" / "chat" / "safetrace-assistant-qwen2.5-1.5b-instruct-q4.gguf"
     )
     assert os.environ["SAFETRACE_VLM_PROVIDER"] == "auto"
+    assert os.environ["SAFETRACE_VLM_PROFILE"] == "rule_based"
     assert Path(os.environ["SAFETRACE_VLM_MODEL_PATH"]) == tmp_path / "models" / "vlm"
     assert Path(os.environ["SAFETRACE_VLM_DIR"]) == tmp_path / "models" / "vlm"
+    assert Path(os.environ["SAFETRACE_VLM_LIGHTWEIGHT_MODEL_PATH"]) == (
+        tmp_path / "models" / "vlm" / "lightweight-256m"
+    )
+    assert Path(os.environ["SAFETRACE_VLM_ENHANCED_MODEL_PATH"]) == tmp_path / "models" / "vlm" / "enhanced-2b"
     assert os.environ["SAFETRACE_VLM_MODEL"] == "local-vlm"
+    assert os.environ["SAFETRACE_LIGHTWEIGHT_VLM_WORKER_ENABLED"] == "false"
+    assert os.environ["SAFETRACE_LIGHTWEIGHT_VLM_WORKER_TIMEOUT_SECONDS"] == "60"
+    assert "https://safetrace-iota.vercel.app" in os.environ["SAFETRACE_ALLOWED_ORIGINS"]
     assert os.environ["SAFETRACE_SERVE_FRONTEND"] == "true"
     assert Path(os.environ["SAFETRACE_FRONTEND_DIST"]) == tmp_path / "frontend" / "dist"
     assert os.environ["SAFETRACE_BUILD_MODE"] == "release-package"
     assert os.environ["SAFETRACE_RUNTIME_LAYOUT"] == "packaged"
+
+
+def test_packaged_launcher_has_foreground_mode_logs_and_health_check():
+    assert "--foreground" in LAUNCHER_TEXT
+    assert "--app-root \"%APP_ROOT%\"" in LAUNCHER_TEXT
+    assert "backend_launcher_stdout.log" in LAUNCHER_TEXT
+    assert "backend_launcher_stderr.log" in LAUNCHER_TEXT
+    assert "Invoke-WebRequest" in LAUNCHER_TEXT
+    assert "HEALTH_OK" in LAUNCHER_TEXT
+    assert "Run SafeTraceLauncher.bat --foreground" in LAUNCHER_TEXT
+    assert "Last backend stderr lines" in LAUNCHER_TEXT
+    assert 'set "HEALTH_WAIT_SECONDS=90"' in LAUNCHER_TEXT
+    assert 'set "HEALTH_CHECK_INTERVAL=5"' in LAUNCHER_TEXT
+    assert "Waiting for backend health for up to %HEALTH_WAIT_SECONDS% seconds" in LAUNCHER_TEXT
+    assert "Still waiting for backend health" in LAUNCHER_TEXT
+    assert "Startup diagnostics" in LAUNCHER_TEXT
+    assert "Backend process status" in LAUNCHER_TEXT
+    assert "Port 8000 occupant" in LAUNCHER_TEXT
+    assert "Command used" in LAUNCHER_TEXT
+    assert "Get-NetTCPConnection -LocalPort 8000" in LAUNCHER_TEXT
+    assert "SAFETRACE_ANALYSIS_SAFE_MODE=true" in LAUNCHER_TEXT
+    assert "SAFETRACE_SAFE_MODE_ALLOW_MOBILESAM=false" in LAUNCHER_TEXT
+    assert "SAFETRACE_DEVICE=cpu" in LAUNCHER_TEXT
+    assert "SAFETRACE_MOBILESAM_ENABLED=false" in LAUNCHER_TEXT
+    assert "SAFETRACE_MOBILESAM_TIMEOUT_SECONDS=20" in LAUNCHER_TEXT
+    assert "SAFETRACE_MOBILESAM_WORKER_ENABLED=false" in LAUNCHER_TEXT
+    assert "SAFETRACE_MOBILESAM_WORKER_TIMEOUT_SECONDS=60" in LAUNCHER_TEXT
+    assert "MobileSAM worker:" in LAUNCHER_TEXT
+    assert "SAFETRACE_VLM_ENABLED=false" in LAUNCHER_TEXT
+    assert "SAFETRACE_VLM_PROFILE=rule_based" in LAUNCHER_TEXT
+    assert "SAFETRACE_LIGHTWEIGHT_VLM_WORKER_ENABLED=false" in LAUNCHER_TEXT
+    assert "SAFETRACE_LIGHTWEIGHT_VLM_WORKER_TIMEOUT_SECONDS=60" in LAUNCHER_TEXT
+    assert "Lightweight VLM worker:" in LAUNCHER_TEXT
+    assert "exit /b 1" in LAUNCHER_TEXT
+    assert "SafeTrace Backend Supervisor" in LAUNCHER_TEXT
+    assert "backend_supervisor.bat" in LAUNCHER_TEXT
+    assert 'set "SUPERVISOR_SCRIPT=%APP_ROOT%\\logs\\backend_supervisor.bat"' in LAUNCHER_TEXT
+    assert "Existing backend supervisor detected" in LAUNCHER_TEXT
+    assert "No additional backend supervisor was started." in LAUNCHER_TEXT
+    assert "$_.ProcessId -ne $self" in LAUNCHER_TEXT
+    assert "$_.Name -ieq 'cmd.exe'" in LAUNCHER_TEXT
+    assert ":backend_loop" in LAUNCHER_TEXT
+    assert "Restarting in 5 seconds" in LAUNCHER_TEXT
+    assert 'Start-Sleep -Seconds 5' in LAUNCHER_TEXT
+    assert "timeout /t" not in LAUNCHER_TEXT
 
 
 def test_backend_exe_build_command_is_dry_run_friendly(tmp_path):
@@ -309,6 +649,31 @@ def test_backend_exe_build_command_is_dry_run_friendly(tmp_path):
     assert "--distpath" in command
     assert str(tmp_path / "dist" / "backend") in command
     assert str(tmp_path / "packaging" / "backend" / "safetrace_backend.spec") in command
+
+
+def test_backend_exe_plan_keeps_runtime_assets_external_and_llamacpp_hidden_import():
+    assert "checkpoints/siglip-base-patch16-224/" in EXTERNAL_ASSET_RULES
+    assert "checkpoints/yolov8s-seg.pt" in EXTERNAL_ASSET_RULES
+    assert "checkpoints/yolov9c-seg.pt" in EXTERNAL_ASSET_RULES
+    spec = Path("packaging/backend/safetrace_backend.spec").read_text(encoding="utf-8")
+    assert "collect_dynamic_libs" in spec
+    assert 'collect_dynamic_libs("llama_cpp")' in spec
+    assert "binaries=llama_cpp_binaries" in spec
+    assert '"llama_cpp"' in spec
+    assert '"llama_cpp.llama_cpp_ext"' in spec
+    assert '"src.mobile_sam_worker"' in spec
+    assert '"src.mobile_sam_worker_client"' in spec
+    assert '"src.lightweight_vlm_worker"' in spec
+    assert '"src.lightweight_vlm_worker_client"' in spec
+    assert '"src.mask_encoding"' in spec
+    assert '"mobile_sam"' in spec
+
+
+def test_backend_entrypoint_uses_freeze_support_for_pyinstaller_children():
+    content = Path("src/api/__main__.py").read_text(encoding="utf-8")
+
+    assert "import multiprocessing" in content
+    assert "multiprocessing.freeze_support()" in content
 
 
 def test_static_frontend_serving_preserves_api_routes(monkeypatch, tmp_path):

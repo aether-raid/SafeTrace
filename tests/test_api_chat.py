@@ -22,6 +22,23 @@ def reset_packaged_cache(monkeypatch):
     monkeypatch.setattr(chat_service, "_PACKAGED_MODEL_LOADING", False)
 
 
+def llama_diagnostics(*, import_ok: bool, spec_found: bool | None = None, error_type: str | None = None):
+    spec = import_ok if spec_found is None else spec_found
+    return {
+        "backendPythonExecutable": r"C:\Python312\python.exe" if not import_ok else r"C:\repo\.venv\Scripts\python.exe",
+        "expectedVenvPython": r"C:\repo\.venv\Scripts\python.exe",
+        "expectedVenvPythonExists": True,
+        "runningInExpectedVenv": import_ok,
+        "specFound": spec,
+        "importOk": import_ok,
+        "importStatus": "ok" if import_ok else "import_error" if spec else "missing",
+        "importErrorType": error_type,
+        "importErrorMessage": "native DLL load failed" if error_type else None,
+        "setupCommand": r".venv\Scripts\python.exe -m pip install llama-cpp-python",
+        "restartRequired": "Restart the SafeTrace backend after installing llama-cpp-python.",
+    }
+
+
 def test_chat_status_disabled_when_configured(monkeypatch, tmp_path):
     reset_packaged_cache(monkeypatch)
     monkeypatch.setattr(chat_service.SETTINGS, "chat_enabled", "false")
@@ -112,14 +129,8 @@ def test_packaged_provider_reports_missing_runtime(monkeypatch, tmp_path):
     reset_packaged_cache(monkeypatch)
     model_path = tmp_path / "local-model.gguf"
     model_path.write_bytes(b"not a real model")
-    original_find_spec = chat_service.importlib.util.find_spec
 
-    def fake_find_spec(name):
-        if name == "llama_cpp":
-            return None
-        return original_find_spec(name)
-
-    monkeypatch.setattr(chat_service.importlib.util, "find_spec", fake_find_spec)
+    monkeypatch.setattr(chat_service, "_llama_cpp_runtime_diagnostics", lambda: llama_diagnostics(import_ok=False))
     monkeypatch.setattr(chat_service.SETTINGS, "chat_enabled", "auto")
     monkeypatch.setattr(chat_service.SETTINGS, "chat_provider", "packaged_llamacpp")
     monkeypatch.setattr(chat_service.SETTINGS, "chat_model_path", model_path)
@@ -136,9 +147,71 @@ def test_packaged_provider_reports_missing_runtime(monkeypatch, tmp_path):
     assert body["status"] == "missing_runtime"
     assert body["model_exists"] is True
     assert body["runtime_available"] is False
+    assert body["python_executable"] == r"C:\Python312\python.exe"
+    assert body["expected_venv_python"] == r"C:\repo\.venv\Scripts\python.exe"
+    assert body["running_in_expected_venv"] is False
+    assert body["llama_cpp_import_status"] == "missing"
+    assert body["llama_cpp_spec_found"] is False
+    assert body["setup_command"] == r".venv\Scripts\python.exe -m pip install llama-cpp-python"
+    assert "Restart the SafeTrace backend" in body["restart_required"]
+    assert body["runtime_diagnostics"]["backendPythonExecutable"] == r"C:\Python312\python.exe"
+    assert body["fallback_available"] is True
+    assert body["fallback_label"] == "Limited SafeTrace help"
     assert "llama-cpp-python" in body["action_hint"]
-    assert response.status_code == 503
-    assert "runtime" in response.json()["detail"]["message"].lower()
+    assert ".venv\\Scripts\\python.exe -m pip install llama-cpp-python" in body["action_hint"]
+    assert response.status_code == 200
+    response_body = response.json()
+    assert response_body["safeTraceOnly"] is True
+    assert response_body["modelProvider"] == "packaged_llamacpp_deterministic_fallback"
+    assert "Overall confidence" in response_body["answer"]
+    assert "docs" in response_body["sources"]
+
+
+def test_packaged_missing_runtime_generic_help_uses_deterministic_fallback(monkeypatch, tmp_path):
+    reset_packaged_cache(monkeypatch)
+    model_path = tmp_path / "local-model.gguf"
+    model_path.write_bytes(b"not a real model")
+
+    monkeypatch.setattr(chat_service, "_llama_cpp_runtime_diagnostics", lambda: llama_diagnostics(import_ok=False))
+    monkeypatch.setattr(chat_service.SETTINGS, "chat_enabled", "auto")
+    monkeypatch.setattr(chat_service.SETTINGS, "chat_provider", "packaged_llamacpp")
+    monkeypatch.setattr(chat_service.SETTINGS, "chat_model_path", model_path)
+    client, _job_store, _batch_store = make_client(tmp_path)
+
+    response = client.post("/api/chat", json={"message": "Can I use SafeTrace offline?"})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["modelProvider"] == "packaged_llamacpp_deterministic_fallback"
+    assert "Limited SafeTrace help" in body["answer"]
+    assert "llama-cpp-python" in body["answer"]
+
+
+def test_packaged_provider_reports_llama_cpp_import_error(monkeypatch, tmp_path):
+    reset_packaged_cache(monkeypatch)
+    model_path = tmp_path / "local-model.gguf"
+    model_path.write_bytes(b"not a real model")
+
+    monkeypatch.setattr(
+        chat_service,
+        "_llama_cpp_runtime_diagnostics",
+        lambda: llama_diagnostics(import_ok=False, spec_found=True, error_type="OSError"),
+    )
+    monkeypatch.setattr(chat_service.SETTINGS, "chat_enabled", "auto")
+    monkeypatch.setattr(chat_service.SETTINGS, "chat_provider", "packaged_llamacpp")
+    monkeypatch.setattr(chat_service.SETTINGS, "chat_model_path", model_path)
+    client, _job_store, _batch_store = make_client(tmp_path)
+
+    status = client.get("/api/chat/status")
+
+    assert status.status_code == 200
+    body = status.json()
+    assert body["state"] == "missing_runtime"
+    assert body["llama_cpp_import_status"] == "import_error"
+    assert body["llama_cpp_spec_found"] is True
+    assert body["llama_cpp_import_error_type"] == "OSError"
+    assert "native DLL load failed" in body["llama_cpp_import_error_message"]
+    assert "importing llama_cpp failed" in body["reason"]
 
 
 def test_chat_refuses_out_of_scope_question_before_provider(monkeypatch, tmp_path):
@@ -156,6 +229,22 @@ def test_chat_refuses_out_of_scope_question_before_provider(monkeypatch, tmp_pat
     assert body["sources"] == []
     assert "only answer questions about SafeTrace" in body["answer"]
     assert body["modelProvider"] == "packaged_llamacpp"
+
+
+def test_chat_accepts_custom_typed_safetrace_usage_question(monkeypatch, tmp_path):
+    reset_packaged_cache(monkeypatch)
+    monkeypatch.setattr(chat_service.SETTINGS, "chat_enabled", True)
+    monkeypatch.setattr(chat_service.SETTINGS, "chat_provider", "mock")
+    client, _job_store, _batch_store = make_client(tmp_path)
+
+    response = client.post("/api/chat", json={"message": "Can I use this offline?"})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["modelProvider"] == "mock"
+    assert body["safeTraceOnly"] is True
+    assert "SafeTrace Assistant test response" in body["answer"]
+    assert "docs" in body["sources"]
 
 
 def test_chat_mock_provider_uses_job_context(monkeypatch, tmp_path):
@@ -221,6 +310,130 @@ def test_chat_mock_provider_uses_job_context(monkeypatch, tmp_path):
     assert body["modelProvider"] == "mock"
     assert "job_result" in body["sources"]
     assert "docs" in body["sources"]
+
+
+def complete_driver_result(job_store, record):
+    job_store.complete_job(
+        record.job_id,
+        {
+            "jobId": record.job_id,
+            "status": "completed",
+            "media": {"id": "media", "name": "driver-cab.mp4", "type": "video", "sizeBytes": 5},
+            "query": "driver seatbelt and phone use",
+            "summary": {
+                "framesAnalyzed": 5,
+                "framesWithViolations": 1,
+                "uniqueViolationTypes": 2,
+                "summaryText": "Missing seatbelt and helmet evidence need review.",
+                "potentialEventCount": 2,
+                "overallConfidence": 1.0,
+            },
+            "violations": [
+                {
+                    "id": "seatbelt_missing",
+                    "name": "Missing Seatbelt",
+                    "severity": "Medium",
+                    "description": "Driver torso detected without an overlapping seatbelt.",
+                    "affectedFrames": [
+                        {
+                            "frameId": "frame_005",
+                            "frameNumber": 5,
+                            "timestamp": "00:00:04",
+                            "confidence": 1.0,
+                        }
+                    ],
+                    "confidenceMin": 1.0,
+                    "confidenceMax": 1.0,
+                },
+                {
+                    "id": "helmet_missing",
+                    "name": "Missing Helmet",
+                    "severity": "High",
+                    "description": "Person head detected without an overlapping helmet.",
+                    "affectedFrames": [
+                        {
+                            "frameId": "frame_005",
+                            "frameNumber": 5,
+                            "timestamp": "00:00:04",
+                            "confidence": 1.0,
+                        }
+                    ],
+                    "confidenceMin": 1.0,
+                    "confidenceMax": 1.0,
+                },
+            ],
+            "frames": [],
+            "technicalDetails": {},
+        },
+    )
+
+
+def ask_api(client, message: str, job_id: str | None = None):
+    payload = {"message": message, "include_current_result": True}
+    if job_id:
+        payload["job_id"] = job_id
+    return client.post("/api/chat", json=payload)
+
+
+def test_chat_api_seatbelt_question_uses_selected_result(monkeypatch, tmp_path):
+    reset_packaged_cache(monkeypatch)
+    monkeypatch.setattr(chat_service.SETTINGS, "chat_enabled", True)
+    monkeypatch.setattr(chat_service.SETTINGS, "chat_provider", "mock")
+    client, job_store, _batch_store = make_client(tmp_path)
+    record = job_store.create_job(
+        filename="driver-cab.mp4",
+        content=b"video",
+        query="driver seatbelt and phone use",
+        settings=make_settings(),
+    )
+    complete_driver_result(job_store, record)
+
+    response = ask_api(client, "Was the driver wearing a seatbelt?", record.job_id)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert "job_result" in body["sources"]
+    assert "Video: driver-cab.mp4" in body["answer"]
+    assert f"Job: {record.job_id}" in body["answer"]
+    assert "SafeTrace flagged Missing Seatbelt." in body["answer"]
+    assert "Frame 5 at 00:00:04 (100%)" in body["answer"]
+    assert "manual confirmation" in body["answer"]
+
+
+def test_chat_api_phone_question_without_phone_finding_does_not_hallucinate(monkeypatch, tmp_path):
+    reset_packaged_cache(monkeypatch)
+    monkeypatch.setattr(chat_service.SETTINGS, "chat_enabled", True)
+    monkeypatch.setattr(chat_service.SETTINGS, "chat_provider", "mock")
+    client, job_store, _batch_store = make_client(tmp_path)
+    record = job_store.create_job(
+        filename="driver-cab.mp4",
+        content=b"video",
+        query="driver seatbelt and phone use",
+        settings=make_settings(),
+    )
+    complete_driver_result(job_store, record)
+
+    response = ask_api(client, "Is the driver using a phone while driving?", record.job_id)
+
+    assert response.status_code == 200
+    answer = response.json()["answer"]
+    assert "SafeTrace did not detect a phone-use violation in this result." in answer
+    assert "may not reliably support phone-use detection" in answer
+    assert "SafeTrace flagged Phone" not in answer
+
+
+def test_chat_api_no_selected_result_instructs_user(monkeypatch, tmp_path):
+    reset_packaged_cache(monkeypatch)
+    monkeypatch.setattr(chat_service.SETTINGS, "chat_enabled", True)
+    monkeypatch.setattr(chat_service.SETTINGS, "chat_provider", "mock")
+    client, _job_store, _batch_store = make_client(tmp_path)
+
+    response = ask_api(client, "Was the driver wearing a seatbelt?")
+
+    assert response.status_code == 200
+    answer = response.json()["answer"]
+    assert "selected completed SafeTrace result" in answer
+    assert "pass its job_id to /api/chat" in answer
 
 
 def test_chat_ollama_unavailable_is_structured(monkeypatch, tmp_path):

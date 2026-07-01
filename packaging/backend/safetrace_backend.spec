@@ -7,18 +7,26 @@ runtime by the desktop package layout.
 """
 from pathlib import Path
 
+from PyInstaller.utils.hooks import collect_dynamic_libs
+
 
 repo_root = Path(SPECPATH).parents[1]
+llama_cpp_binaries = collect_dynamic_libs("llama_cpp")
 
 block_cipher = None
 
 a = Analysis(
     [str(repo_root / "src" / "api" / "__main__.py")],
     pathex=[str(repo_root)],
-    binaries=[],
+    binaries=llama_cpp_binaries,
     datas=[],
     hiddenimports=[
         "src.api.server",
+        "src.lightweight_vlm_worker",
+        "src.lightweight_vlm_worker_client",
+        "src.mask_encoding",
+        "src.mobile_sam_worker",
+        "src.mobile_sam_worker_client",
         "uvicorn",
         "uvicorn.logging",
         "uvicorn.loops",
@@ -30,6 +38,11 @@ a = Analysis(
         "uvicorn.protocols.websockets.auto",
         "uvicorn.lifespan",
         "uvicorn.lifespan.on",
+        "llama_cpp",
+        "llama_cpp.llama",
+        "llama_cpp.llama_cpp",
+        "llama_cpp.llama_cpp_ext",
+        "mobile_sam",
     ],
     hookspath=[],
     hooksconfig={},

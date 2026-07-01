@@ -10,6 +10,7 @@ DeviceMode = Literal["auto", "cpu", "cuda"]
 JobStatus = Literal["queued", "running", "completed", "failed", "cancelled"]
 BatchStatus = Literal["queued", "running", "completed", "failed", "partial", "cancelled"]
 ChatAvailabilityState = Literal["available", "disabled", "missing_model", "missing_runtime", "loading", "unavailable"]
+VlmProfileId = Literal["rule_based", "lightweight_256m", "enhanced_2b"]
 
 
 class HealthResponse(BaseModel):
@@ -27,11 +28,43 @@ class ModelStatus(BaseModel):
     details: Optional[Dict[str, Any]] = None
 
 
+class VlmProfileStatus(BaseModel):
+    id: VlmProfileId
+    label: str
+    installed: bool
+    available: bool
+    requiresActivation: bool
+    resourceLevel: str
+    path: Optional[str] = None
+    message: Optional[str] = None
+
+
+class VlmSystemStatus(BaseModel):
+    selectedProfile: VlmProfileId
+    enabled: bool
+    active: bool
+    runtimeAvailable: bool
+    profiles: List[VlmProfileStatus]
+    message: str
+    requestedVisualExplanationMode: Optional[str] = None
+    actualExplanationMode: Optional[str] = None
+    vlmAvailability: Optional[str] = None
+    vlmSuppressedReason: Optional[str] = None
+    fallbackReason: Optional[str] = None
+    lightweightModelPathChecked: Optional[str] = None
+    ruleBasedFallbackActive: Optional[bool] = None
+    ruleBasedFallbackAvailable: Optional[bool] = True
+    lightweightVlmWorkerEnabled: Optional[bool] = None
+    lightweightVlmWorkerTimeoutSeconds: Optional[float] = None
+    lightweightVlmExplanationSource: Optional[str] = None
+
+
 class SystemStatusResponse(BaseModel):
     app_version: Optional[str] = None
     backend_version: Optional[str] = None
     build_mode: Optional[str] = None
     runtime_layout: Optional[str] = None
+    safeMode: Optional[bool] = None
     device: str
     gpuAvailable: bool
     models: Dict[str, ModelStatus]
@@ -39,6 +72,16 @@ class SystemStatusResponse(BaseModel):
     queue: Optional[Dict[str, Any]] = None
     runtime: Optional[Dict[str, Any]] = None
     preflight: Optional[Dict[str, Any]] = None
+    vlm: Optional[VlmSystemStatus] = None
+
+
+class VlmSettingsRequest(BaseModel):
+    selectedProfile: VlmProfileId
+    enabled: bool = False
+
+
+class VlmSettingsResponse(VlmSystemStatus):
+    pass
 
 
 class ChatStatusResponse(BaseModel):
@@ -54,6 +97,18 @@ class ChatStatusResponse(BaseModel):
     runtime_available: Optional[bool] = None
     speed_profile: Optional[str] = None
     warmup_on_open: Optional[bool] = None
+    fallback_available: Optional[bool] = None
+    fallback_label: Optional[str] = None
+    runtime_diagnostics: Optional[Dict[str, Any]] = None
+    python_executable: Optional[str] = None
+    expected_venv_python: Optional[str] = None
+    running_in_expected_venv: Optional[bool] = None
+    llama_cpp_import_status: Optional[str] = None
+    llama_cpp_spec_found: Optional[bool] = None
+    llama_cpp_import_error_type: Optional[str] = None
+    llama_cpp_import_error_message: Optional[str] = None
+    setup_command: Optional[str] = None
+    restart_required: Optional[str] = None
     reason: Optional[str] = None
     action_hint: Optional[str] = None
     message: str
@@ -109,9 +164,17 @@ class JobStatusResponse(BaseModel):
     jobId: str
     status: JobStatus
     progress: float = Field(ge=0.0, le=1.0)
+    progressPercent: int = Field(ge=0, le=100)
+    stage: str
+    message: str
     currentStep: str
     error: Optional[str] = None
     metrics: Optional[Dict[str, Any]] = None
+    componentDiagnostics: Optional[Dict[str, Any]] = None
+    updatedAt: Optional[str] = None
+    startedAt: Optional[str] = None
+    finishedAt: Optional[str] = None
+    heartbeatAt: Optional[str] = None
 
 
 class MediaSummary(BaseModel):
@@ -190,7 +253,7 @@ class FrameResult(BaseModel):
     status: Literal["violations_detected", "no_violations"]
     imageUrl: Optional[str] = None
     imageMessage: Optional[str] = None
-    explanationSource: Optional[Literal["vlm", "vlm_local", "vlm_ollama", "rule_based"]] = None
+    explanationSource: Optional[Literal["vlm", "vlm_local", "vlm_ollama", "vlm_lightweight", "vlm_enhanced", "rule_based"]] = None
     violations: List[FrameViolation]
     technicalEvidence: Dict[str, Any]
 

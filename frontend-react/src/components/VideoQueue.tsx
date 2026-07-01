@@ -1,6 +1,7 @@
-import { Archive, Clock, Eye, Edit3, Trash2, HardDrive, Upload, CheckCircle2, LoaderCircle, AlertCircle, FileVideo, FileImage } from 'lucide-react';
+import { Archive, Clock, Copy, Eye, Edit3, Trash2, HardDrive, Upload, CheckCircle2, LoaderCircle, AlertCircle, FileVideo, FileImage } from 'lucide-react';
 import type { MediaItem, MediaStatus } from '../types/analysis';
 import { formatDateTime } from '../utils/formatters';
+import { copyJobIdToClipboard, formatShortJobId } from '../utils/jobIds';
 
 type VideoQueueProps = {
   mediaLibrary: MediaItem[];
@@ -80,6 +81,7 @@ export function VideoQueue({
         {mediaLibrary.map((media) => {
           const isSelected = media.id === selectedMedia?.id;
           const Icon = media.type === 'video' ? FileVideo : media.type === 'image' ? FileImage : Archive;
+          const resultJobId = media.selectedJobId || media.jobId;
 
           return (
             <div
@@ -114,6 +116,29 @@ export function VideoQueue({
                   </div>
                 </div>
               </button>
+
+              {resultJobId ? (
+                <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 px-3 py-2 text-[10px] text-slate-500">
+                  <span className="font-bold uppercase">Job</span>
+                  <code className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-slate-800" title={resultJobId}>
+                    {formatShortJobId(resultJobId)}
+                  </code>
+                  <button
+                    type="button"
+                    onClick={() => void copyJobIdToClipboard(resultJobId)}
+                    className="focus-ring inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-1.5 py-0.5 font-semibold text-slate-600 transition hover:border-safety-blue hover:text-safety-blue"
+                    aria-label="Copy queue job ID"
+                    title={`Copy full job ID ${resultJobId}`}
+                  >
+                    <Copy className="h-3 w-3" aria-hidden="true" />
+                    Copy job ID
+                  </button>
+                </div>
+              ) : media.batchId ? (
+                <p className="border-t border-slate-100 px-3 py-2 text-[10px] font-semibold uppercase text-slate-500">
+                  Batch {media.batchId}
+                </p>
+              ) : null}
 
               <div className="flex items-center gap-1 border-t border-slate-100 px-3 py-2">
                 {onPreviewMedia && media.previewUrl && (

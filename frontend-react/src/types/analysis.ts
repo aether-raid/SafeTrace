@@ -8,11 +8,15 @@ export type DeviceMode = 'Auto' | 'CPU' | 'GPU';
 
 export type BackendConnectionState = 'live' | 'connecting' | 'connected' | 'disconnected' | 'incompatible' | 'error';
 
+export type VlmExplanationProfileId = 'rule_based' | 'lightweight_256m' | 'enhanced_2b';
+
 export type AnalysisSettings = {
   fps: number;
   topK: number;
   visualExplanations: boolean;
-  enhancedVlmExplanations: boolean;
+  vlmProfile: VlmExplanationProfileId;
+  vlmEnabled: boolean;
+  enhancedVlmExplanations?: boolean;
   vlmExplanations?: boolean;
   deviceMode: DeviceMode;
 };
@@ -46,9 +50,12 @@ export type FrameResult = {
   imageUrl?: string;
   imageMessage?: string;
   evidenceImageRequired?: boolean;
+  selectionReason?: string;
+  selectionCategory?: string;
+  frameScore?: number;
   visualVariant?: 'worksite' | 'loading-bay' | 'maintenance';
   explanation?: string;
-  explanationSource?: 'vlm' | 'vlm_local' | 'vlm_ollama' | 'rule_based';
+  explanationSource?: 'vlm' | 'vlm_local' | 'vlm_ollama' | 'vlm_lightweight' | 'vlm_enhanced' | 'rule_based';
   violations: Violation[];
   detections: Detection[];
   technicalEvidence: Record<string, unknown>;
@@ -75,6 +82,9 @@ export type MediaItem = {
   status: MediaStatus;
   source?: 'sample' | 'local';
   previewUrl?: string;
+  jobId?: string;
+  selectedJobId?: string;
+  batchId?: string;
 };
 
 export type BackendHealth = {
@@ -102,6 +112,37 @@ export type RuntimeCheck = {
   details?: Record<string, unknown>;
 };
 
+export type VlmProfileStatus = {
+  id: VlmExplanationProfileId | string;
+  label: string;
+  installed?: boolean;
+  available?: boolean;
+  requiresActivation?: boolean;
+  resourceLevel?: string;
+  path?: string | null;
+  message?: string | null;
+};
+
+export type SystemVlmStatus = {
+  selectedProfile?: VlmExplanationProfileId | string;
+  enabled?: boolean;
+  active?: boolean;
+  runtimeAvailable?: boolean;
+  profiles?: VlmProfileStatus[];
+  message?: string | null;
+  requestedVisualExplanationMode?: string | null;
+  actualExplanationMode?: string | null;
+  vlmAvailability?: string | null;
+  vlmSuppressedReason?: string | null;
+  fallbackReason?: string | null;
+  lightweightModelPathChecked?: string | null;
+  ruleBasedFallbackActive?: boolean | null;
+  ruleBasedFallbackAvailable?: boolean | null;
+  lightweightVlmWorkerEnabled?: boolean | null;
+  lightweightVlmWorkerTimeoutSeconds?: number | null;
+  lightweightVlmExplanationSource?: string | null;
+};
+
 export type SystemRuntimeStatus = {
   backend?: Record<string, unknown>;
   python?: {
@@ -112,6 +153,17 @@ export type SystemRuntimeStatus = {
   device?: {
     configured?: string;
     gpuAvailable?: boolean;
+  };
+  analysis?: {
+    safeMode?: boolean;
+    safeModeMobileSamAllowed?: boolean;
+    mobileSamWorkerEnabled?: boolean;
+    mobileSamWorkerTimeoutSeconds?: number;
+    lightweightVlmWorkerEnabled?: boolean;
+    lightweightVlmWorkerTimeoutSeconds?: number;
+    effectiveDevice?: string;
+    safeModeMessage?: string | null;
+    analysisJobTimeoutSeconds?: number;
   };
   models?: Record<string, BackendModelStatus>;
   chat?: {
@@ -145,6 +197,14 @@ export type SystemRuntimeStatus = {
     fallback?: 'rule_based';
     explanationSource?: 'vlm' | 'rule_based';
     enhancedVlmAvailable?: boolean;
+    requestedVisualExplanationMode?: string | null;
+    actualExplanationMode?: string | null;
+    fallbackReason?: string | null;
+    ruleBasedFallbackActive?: boolean | null;
+    lightweightModelPathChecked?: string | null;
+    lightweightVlmWorkerEnabled?: boolean | null;
+    lightweightVlmWorkerTimeoutSeconds?: number | null;
+    lightweightVlmExplanationSource?: string | null;
   };
 };
 
@@ -161,6 +221,7 @@ export type SystemStatus = {
   backend_version?: string | null;
   build_mode?: string | null;
   runtime_layout?: string | null;
+  safeMode?: boolean | null;
   device: string;
   gpuAvailable: boolean;
   models: Record<string, BackendModelStatus>;
@@ -168,6 +229,7 @@ export type SystemStatus = {
   queue?: Record<string, unknown>;
   runtime?: SystemRuntimeStatus;
   preflight?: SystemPreflightStatus;
+  vlm?: SystemVlmStatus;
 };
 
 export type AnalysisRequest = {
@@ -176,6 +238,8 @@ export type AnalysisRequest = {
   fps: number;
   topK: number;
   enableVlm: boolean;
+  vlmProfile?: VlmExplanationProfileId;
+  vlmEnabled?: boolean;
   device: DeviceMode;
 };
 
@@ -185,6 +249,8 @@ export type BatchAnalysisRequest = {
   fps: number;
   topK: number;
   enableVlm: boolean;
+  vlmProfile?: VlmExplanationProfileId;
+  vlmEnabled?: boolean;
   device: DeviceMode;
 };
 
@@ -195,9 +261,17 @@ export type AnalysisJob = {
 
 export type JobStatus = AnalysisJob & {
   progress: number;
+  progressPercent?: number;
+  stage?: 'queued' | 'preparing' | 'analyzing' | 'normalizing' | 'completed' | 'failed' | 'cancelled' | string;
+  message?: string;
   currentStep: string;
   error?: string | null;
   metrics?: Record<string, unknown>;
+  componentDiagnostics?: Record<string, unknown> | null;
+  updatedAt?: string | null;
+  startedAt?: string | null;
+  finishedAt?: string | null;
+  heartbeatAt?: string | null;
 };
 
 export type BatchAcceptedFile = {

@@ -96,7 +96,18 @@ Endpoints:
 
 The status response also includes diagnostic fields such as `enabled_mode`,
 `provider`, `model_path`, `model_exists`, `runtime_available`, `reason`, and
-`action_hint`. If `SAFETRACE_CHAT_ENABLED=false`, restart the backend with:
+`action_hint`. It also reports local runtime diagnostics:
+
+- `python_executable`: Python executable running the backend.
+- `expected_venv_python`: repo `.venv` Python expected for local development.
+- `running_in_expected_venv`: whether those paths match.
+- `llama_cpp_import_status`: `ok`, `missing`, or `import_error`.
+- `llama_cpp_import_error_type` / `llama_cpp_import_error_message`: native import
+  failure details when the package exists but cannot load.
+- `setup_command`: `.venv\Scripts\python.exe -m pip install llama-cpp-python`.
+- `restart_required`: reminder to restart the backend after installing.
+
+If `SAFETRACE_CHAT_ENABLED=false`, restart the backend with:
 
 ```cmd
 set SAFETRACE_CHAT_ENABLED=auto
@@ -104,9 +115,50 @@ set SAFETRACE_CHAT_PROVIDER=packaged_llamacpp
 set SAFETRACE_CHAT_MODEL_PATH=models/chat/safetrace-assistant-qwen2.5-1.5b-instruct-q4.gguf
 ```
 
-If chat is disabled, unavailable, missing the runtime, or missing the model,
-`POST /api/chat` returns a structured `503` error instead of crashing. Main
-SafeTrace analysis, single-video upload, and ZIP/batch upload continue to work.
+If chat is disabled, unavailable, or missing the model, `POST /api/chat` returns
+a structured `503` error instead of crashing. If the packaged model is present
+but `llama_cpp` is missing, SafeTrace exposes a limited deterministic help mode
+for built-in SafeTrace usage and troubleshooting answers. The status endpoint
+still reports `missing_runtime`, `available=false`, and `fallback_available=true`
+so the frontend can label this mode honestly.
+
+To install the runtime in local development:
+
+```cmd
+.venv\Scripts\python.exe -m pip install llama-cpp-python
+```
+
+Verify the same interpreter before starting the backend:
+
+```cmd
+.venv\Scripts\python.exe -c "import sys; print(sys.executable); import llama_cpp; print('llama_cpp ok')"
+```
+
+Start local development with `.venv` Python, not plain `python`, so the backend
+uses the environment where `llama-cpp-python` is installed:
+
+```cmd
+set KMP_DUPLICATE_LIB_OK=TRUE
+set OMP_NUM_THREADS=1
+.venv\Scripts\python.exe -m uvicorn src.api.server:app --host 127.0.0.1 --port 8000 --log-level info
+```
+
+Restart the backend after installing. Main SafeTrace analysis, single-video
+upload, ZIP/batch upload, and rule-based visual explanation fallback continue
+to work while chat is unavailable or in limited help mode.
+
+For packaged Windows builds, the backend executable must be built with the
+Python environment that has `llama-cpp-python` installed. If the release package
+finds the GGUF model but reports `missing_runtime`, rebuild the backend with:
+
+```cmd
+.venv\Scripts\python.exe scripts\build_backend_exe.py --run
+```
+
+Building with a global Python that lacks `llama_cpp` can produce an executable
+where the assistant model is present but the packaged assistant runtime is not.
+This does not make chat required for analysis; uploads, single-video analysis,
+ZIP/batch analysis, and rule-based visual explanation fallback still work.
 
 ## Optional Warmup On Open
 

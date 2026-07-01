@@ -1,4 +1,4 @@
-import { Cpu, Gauge, Layers3, ShieldCheck, SlidersHorizontal, Sparkles } from 'lucide-react';
+import { Cpu, Gauge, HelpCircle, Layers3, ShieldCheck, SlidersHorizontal, Sparkles } from 'lucide-react';
 import type {
   AnalysisSettings,
   BackendConnectionState,
@@ -6,6 +6,9 @@ import type {
   DeviceMode,
   RuntimeCheck,
   SystemStatus,
+  SystemVlmStatus,
+  VlmExplanationProfileId,
+  VlmProfileStatus,
 } from '../types/analysis';
 import { StatusBadge } from './StatusBadge';
 
@@ -18,6 +21,35 @@ type SidebarProps = {
   backendMessage?: string | null;
   previewMode?: boolean;
 };
+
+type ResolvedVlmProfile = {
+  id: VlmExplanationProfileId;
+  label: string;
+  installed: boolean;
+  available: boolean;
+  requiresActivation: boolean;
+  path?: string | null;
+  message?: string | null;
+};
+
+const VLM_PROFILE_LABELS: Record<VlmExplanationProfileId, string> = {
+  rule_based: 'Rule-based',
+  lightweight_256m: 'Lightweight VLM (256M)',
+  enhanced_2b: 'Enhanced VLM (2B)',
+};
+
+const VLM_PROFILE_ORDER: VlmExplanationProfileId[] = ['rule_based', 'lightweight_256m', 'enhanced_2b'];
+
+const VLM_HELP_LINES = [
+  'Rule-based: Fastest and lowest-resource option. Uses SafeTrace detection results and does not load a VLM. This deterministic fallback is the default.',
+  'Lightweight VLM (256M): Optional compact VLM for lower-spec devices. Uses the local SmolVLM profile for image-aware explanations when generation succeeds; falls back to rule-based explanations if unavailable.',
+  'Enhanced VLM (2B): Optional higher-quality VLM. Uses the larger local SmolVLM profile for richer explanations with more RAM/VRAM; falls back to rule-based explanations if unavailable.',
+];
+
+declare const __SAFETRACE_BUILD_TIME__: string;
+
+const FRONTEND_RELEASE_LABEL = 'SafeTrace RC SafeMode frontend';
+const FRONTEND_BUILD_TIME = __SAFETRACE_BUILD_TIME__;
 
 function getDeviceStatus(deviceMode: DeviceMode) {
   if (deviceMode === 'GPU') {
@@ -93,6 +125,108 @@ function checkAvailable(check?: RuntimeCheck) {
   return status === 'ready' || status === 'available';
 }
 
+function modelAvailable(status?: BackendModelStatus) {
+  return status?.status === 'ready' || status?.status === 'available';
+}
+
+function isVlmProfileId(value: string | undefined): value is VlmExplanationProfileId {
+  return Boolean(value && VLM_PROFILE_ORDER.includes(value as VlmExplanationProfileId));
+}
+
+function resolveProfileStatus(profile: VlmProfileStatus | undefined, fallback: ResolvedVlmProfile): ResolvedVlmProfile {
+  if (!profile) return fallback;
+  return {
+    ...fallback,
+    label: fallback.label,
+    installed: Boolean(profile.installed ?? profile.available ?? fallback.installed),
+    available: Boolean(profile.available ?? profile.installed ?? fallback.available),
+    requiresActivation: Boolean(profile.requiresActivation ?? fallback.requiresActivation),
+    path: profile.path ?? fallback.path,
+    message: profile.message ?? fallback.message,
+  };
+}
+
+function resolveVlmProfiles(systemStatus: SystemStatus | null, legacyVlmAvailable: boolean): ResolvedVlmProfile[] {
+  const backendProfiles = systemStatus?.vlm?.profiles ?? [];
+  const byId = new Map<string, VlmProfileStatus>(backendProfiles.map((profile) => [profile.id, profile]));
+
+  return VLM_PROFILE_ORDER.map((id) => {
+    const fallback: ResolvedVlmProfile = {
+      id,
+      label: VLM_PROFILE_LABELS[id],
+      installed: id === 'rule_based' || (id === 'enhanced_2b' && !backendProfiles.length && legacyVlmAvailable),
+      available: id === 'rule_based' || (id === 'enhanced_2b' && !backendProfiles.length && legacyVlmAvailable),
+      requiresActivation: id !== 'rule_based',
+    };
+
+    return resolveProfileStatus(byId.get(id), fallback);
+  });
+}
+
+function vlmStatusMessage({
+  selectedProfile,
+  selectedProfileStatus,
+  vlmEnabled,
+  backendConnected,
+  vlmGloballyDisabled,
+  backendVlmStatus,
+  lightweightVlmWorkerEnabled,
+}: {
+  selectedProfile: VlmExplanationProfileId;
+  selectedProfileStatus: ResolvedVlmProfile;
+  vlmEnabled: boolean;
+  backendConnected: boolean;
+  vlmGloballyDisabled: boolean;
+  backendVlmStatus?: SystemVlmStatus | null;
+  lightweightVlmWorkerEnabled: boolean;
+}) {
+  if (selectedProfile === 'rule_based') return 'Rule-based explanations active.';
+  if (vlmGloballyDisabled) return 'VLM is disabled by configuration. Rule-based explanations remain active.';
+  if (!backendConnected) return 'Connect to local runtime to activate VLM. Rule-based explanations remain available.';
+
+  const available = selectedProfileStatus.available;
+  const installed = selectedProfileStatus.installed;
+  const backendActualMode = String(backendVlmStatus?.actualExplanationMode || '').toLowerCase();
+  const fallbackReason = backendVlmStatus?.fallbackReason || selectedProfileStatus.message;
+  const label = selectedProfile === 'lightweight_256m' ? 'Lightweight VLM' : 'Enhanced VLM';
+  const evidenceLabel = selectedProfile === 'lightweight_256m'
+    ? 'Lightweight VLM explanation'
+    : 'Enhanced VLM explanation';
+  if (selectedProfile === 'lightweight_256m') {
+    if (!installed) return 'Lightweight VLM not installed. Rule-based explanations remain active.';
+    if (!available) return `Lightweight VLM unavailable. ${fallbackReason || 'Rule-based explanations remain active.'}`;
+    if (lightweightVlmWorkerEnabled && vlmEnabled && backendActualMode === selectedProfile) {
+      return 'Experimental Lightweight VLM worker selected for the next analysis. Evidence cards show "Lightweight VLM explanation" only when the worker succeeds; rule-based fallback remains active.';
+    }
+    if (vlmEnabled && backendActualMode === selectedProfile) {
+      return `${label} selected for the next analysis. Evidence cards show "${evidenceLabel}" only when generation succeeds; otherwise they show rule-based fallback.`;
+    }
+    if (vlmEnabled && backendActualMode === 'rule_based') {
+      return `${label} requested, but backend is using rule-based fallback. ${fallbackReason || 'Check local VLM runtime and assets.'}`;
+    }
+    return 'Lightweight VLM available but inactive.';
+  }
+
+  if (!installed) return 'Enhanced VLM not installed. Rule-based explanations remain active.';
+  if (!available) return `Enhanced VLM unavailable. ${fallbackReason || 'Rule-based explanations remain active.'}`;
+  if (vlmEnabled && backendActualMode === selectedProfile) {
+    return `${label} selected for the next analysis. Evidence cards show "${evidenceLabel}" only when generation succeeds; otherwise they show rule-based fallback.`;
+  }
+  if (vlmEnabled && backendActualMode === 'rule_based') {
+    return `${label} requested, but backend is using rule-based fallback. ${fallbackReason || 'Check local VLM runtime and assets.'}`;
+  }
+  return 'Enhanced VLM available but inactive.';
+}
+
+function vlmStatusTone(message: string) {
+  if (message.includes('using rule-based fallback') || message.includes('unavailable')) return 'warning' as const;
+  if (message.includes('inactive.')) return 'info' as const;
+  if (message.includes('selected for the next analysis')) return 'success' as const;
+  if (message.includes('worker selected')) return 'success' as const;
+  if (message.includes('not installed') || message.includes('Connect to local runtime')) return 'warning' as const;
+  return 'neutral' as const;
+}
+
 export function Sidebar({
   settings,
   onSettingsChange,
@@ -105,13 +239,56 @@ export function Sidebar({
   const processingCost = settings.fps >= 3 ? 'High coverage' : settings.fps >= 1.5 ? 'Balanced coverage' : 'Fast preview';
   const preflightChecks = systemStatus?.preflight?.checks;
   const runtime = systemStatus?.runtime;
+  const safeModeActive = Boolean(
+    systemStatus?.safeMode
+    || runtime?.analysis?.safeMode
+    || systemStatus?.vlm?.vlmSuppressedReason === 'safe_mode',
+  );
   const vlmCheck = preflightChecks?.vlm;
   const visualExplanationCheck = preflightChecks?.visualExplanations ?? runtime?.visual_explanations;
   const mobileSamCheck = preflightChecks?.mobileSam;
-  const enhancedVlmAvailable = Boolean(vlmCheck && checkAvailable(vlmCheck));
-  const enhancedVlmUnavailable = Boolean(vlmCheck && !enhancedVlmAvailable);
+  const mobileSamDetails = systemStatus?.models.mobileSam?.details;
+  const safeModeMobileSamAllowed = Boolean(
+    runtime?.analysis?.safeModeMobileSamAllowed
+    || mobileSamDetails?.safeModeMobileSamAllowed,
+  );
+  const mobileSamWorkerEnabled = Boolean(
+    runtime?.analysis?.mobileSamWorkerEnabled
+    || mobileSamDetails?.mobileSamWorkerEnabled,
+  );
+  const lightweightVlmWorkerEnabled = Boolean(
+    runtime?.analysis?.lightweightVlmWorkerEnabled
+    || systemStatus?.vlm?.lightweightVlmWorkerEnabled
+    || systemStatus?.models.vlm?.details?.lightweightVlmWorkerEnabled,
+  );
+  const combinedWorkerExperiment = Boolean(mobileSamWorkerEnabled && lightweightVlmWorkerEnabled);
   const showVisualExplanations = settings.visualExplanations ?? settings.vlmExplanations ?? true;
-  const useEnhancedVlmExplanations = settings.enhancedVlmExplanations ?? settings.vlmExplanations ?? true;
+  const legacyVlmAvailable = Boolean((vlmCheck && checkAvailable(vlmCheck)) || modelAvailable(systemStatus?.models.vlm));
+  const vlmProfiles = resolveVlmProfiles(systemStatus, legacyVlmAvailable);
+  const selectedProfile = isVlmProfileId(settings.vlmProfile) ? settings.vlmProfile : 'rule_based';
+  const selectedProfileStatus = vlmProfiles.find((profile) => profile.id === selectedProfile) ?? vlmProfiles[0];
+  const backendConnected = backendState === 'connected';
+  const vlmGloballyDisabled = systemStatus?.models.vlm?.status === 'disabled'
+    || String(systemStatus?.vlm?.message || '').includes('disabled by configuration')
+    || (safeModeActive && !lightweightVlmWorkerEnabled);
+  const selectedProfileAvailable = selectedProfileStatus.available;
+  const vlmActivationEnabled = selectedProfile !== 'rule_based' && Boolean(settings.vlmEnabled);
+  const vlmActivationActive = backendConnected
+    && selectedProfileAvailable
+    && vlmActivationEnabled
+    && !vlmGloballyDisabled
+    && Boolean(systemStatus?.vlm?.active)
+    && systemStatus?.vlm?.selectedProfile === selectedProfile;
+  const activationToggleDisabled = selectedProfile === 'rule_based' || !backendConnected || !selectedProfileAvailable || vlmGloballyDisabled;
+  const vlmMessage = vlmStatusMessage({
+    selectedProfile,
+    selectedProfileStatus,
+    vlmEnabled: vlmActivationActive,
+    backendConnected,
+    vlmGloballyDisabled,
+    backendVlmStatus: systemStatus?.vlm,
+    lightweightVlmWorkerEnabled,
+  });
   const diagnosticChecks = [
     ['Assistant', preflightChecks?.assistant],
     ['Assistant model', preflightChecks?.assistantModel],
@@ -119,7 +296,7 @@ export function Sidebar({
     ['OpenMP workaround', preflightChecks?.openmp],
     ['Visual explanations', visualExplanationCheck],
     ['MobileSAM', preflightChecks?.mobileSam],
-    ['Enhanced VLM', preflightChecks?.vlm],
+    ['VLM provider', preflightChecks?.vlm],
   ].filter((item): item is [string, RuntimeCheck] => Boolean(item[1]));
   const systemStatuses = [
     {
@@ -137,6 +314,10 @@ export function Sidebar({
     {
       label: modelLabel('Detector', systemStatus?.models.detector),
       tone: getModelTone(systemStatus?.models.detector),
+    },
+    {
+      label: safeModeActive ? 'Safe local mode active' : 'Standard analysis mode',
+      tone: safeModeActive ? 'warning' as const : 'info' as const,
     },
     {
       label: checkLabel('Assistant', preflightChecks?.assistant),
@@ -163,8 +344,8 @@ export function Sidebar({
       tone: showVisualExplanations ? 'success' as const : 'neutral' as const,
     },
     {
-      label: enhancedVlmAvailable ? 'Enhanced VLM: available' : 'Enhanced VLM: unavailable',
-      tone: enhancedVlmAvailable ? 'success' as const : 'warning' as const,
+      label: `VLM explanation mode: ${VLM_PROFILE_LABELS[selectedProfile]}`,
+      tone: vlmStatusTone(vlmMessage),
     },
   ];
 
@@ -183,6 +364,9 @@ export function Sidebar({
           <p className="text-xs font-medium text-slate-300">
             {previewMode ? 'Developer preview enabled' : 'Backend-required offline intelligence'}
           </p>
+          <p className="mt-1 text-[11px] leading-4 text-slate-400">
+            {FRONTEND_RELEASE_LABEL} · Build {FRONTEND_BUILD_TIME}
+          </p>
         </div>
       </div>
 
@@ -193,6 +377,32 @@ export function Sidebar({
         </div>
 
         <div className="space-y-5">
+          {safeModeActive ? (
+            <div className="rounded-lg border border-amber-300/40 bg-amber-400/10 p-3 text-xs leading-5 text-amber-100">
+              <p className="font-semibold text-amber-50">
+                {combinedWorkerExperiment
+                  ? 'Experimental: MobileSAM worker + Lightweight VLM worker'
+                  : mobileSamWorkerEnabled
+                  ? 'Safe local mode with MobileSAM worker'
+                  : safeModeMobileSamAllowed
+                    ? 'Safe local mode with experimental MobileSAM'
+                    : 'Safe local mode active'}
+              </p>
+              <p className="mt-1">
+                {combinedWorkerExperiment ? 'Rule-based fallback active.' : 'Rule-based explanations only.'}
+              </p>
+              <p>
+                {combinedWorkerExperiment
+                  ? 'MobileSAM worker refinement and Lightweight VLM worker explanations may run on selected evidence frames. Rule-based fallback active.'
+                  : mobileSamWorkerEnabled
+                  ? 'MobileSAM worker refinement enabled. Detector-box fallback used if the worker fails. VLM disabled.'
+                  : safeModeMobileSamAllowed
+                  ? 'Experimental MobileSAM refinement may run on selected evidence frames. Rule-based fallback active; VLM disabled.'
+                  : 'VLM/MobileSAM disabled for stability.'}
+              </p>
+            </div>
+          ) : null}
+
           <label className="block">
             <span className="flex items-center justify-between text-sm font-semibold text-white">
               <span className="inline-flex items-center gap-2">
@@ -252,8 +462,8 @@ export function Sidebar({
                 </p>
                 <p className="mt-1 text-xs leading-5 text-slate-300">
                   {showVisualExplanations
-                    ? 'Visual explanations are on. SafeTrace will use VLM when available, otherwise rule-based explanations.'
-                    : 'Visual explanations are hidden in the report view. Rule-based explanations remain available.'}
+                    ? 'Visual explanations are on. Choose rule-based or an activated local VLM mode.'
+                    : 'Visual explanations are hidden. Turn on to choose rule-based or VLM explanations.'}
                 </p>
               </div>
               <button
@@ -272,53 +482,101 @@ export function Sidebar({
                 />
               </button>
             </div>
-            {visualExplanationCheck?.message ? (
-              <p className="mt-2 rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs leading-5 text-slate-200">
-                {visualExplanationCheck.message}
-              </p>
-            ) : null}
-          </div>
 
-          <div className="rounded-lg border border-white/10 bg-slate-950/30 p-3">
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="inline-flex items-center gap-2 text-sm font-semibold text-white">
-                  <Sparkles className="h-4 w-4 text-slate-300" aria-hidden="true" />
-                  Enhanced VLM
+            {showVisualExplanations ? (
+              <div className="mt-4 space-y-3">
+                <label className="block">
+                  <span className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase text-slate-200">Mode</span>
+                  <span className="sr-only">VLM explanation mode</span>
+                  <select
+                    className="focus-ring w-full rounded-lg border border-white/15 bg-slate-900 px-3 py-2 text-sm text-white"
+                    value={selectedProfile}
+                    onChange={(event) => {
+                      const nextProfile = event.target.value as VlmExplanationProfileId;
+                      updateSettings({
+                        vlmProfile: nextProfile,
+                        vlmEnabled: nextProfile === 'rule_based' ? false : selectedProfile === 'rule_based' ? false : settings.vlmEnabled,
+                      });
+                    }}
+                  >
+                    {vlmProfiles.map((profile) => (
+                      <option key={profile.id} value={profile.id}>
+                        {profile.label}
+                      </option>
+                    ))}
+                  </select>
+                  <details className="mt-2 rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs leading-5 text-slate-200">
+                    <summary className="focus-ring inline-flex cursor-pointer list-none items-center gap-1.5 rounded-md text-xs font-semibold text-slate-100">
+                      <HelpCircle className="h-3.5 w-3.5" aria-hidden="true" />
+                      VLM explanation mode help
+                    </summary>
+                    <div className="mt-2 space-y-2 text-slate-300">
+                      {VLM_HELP_LINES.map((line) => (
+                        <p key={line}>{line}</p>
+                      ))}
+                    </div>
+                  </details>
+                </label>
+
+                {selectedProfile !== 'rule_based' ? (
+                  <div className="space-y-2">
+                    <p className="rounded-lg border border-amber-300/40 bg-amber-400/10 px-2 py-1.5 text-xs leading-5 text-amber-100">
+                      Local VLM explanations are experimental and can be slower. Use Rule-based for the fastest local analysis.
+                    </p>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold uppercase text-slate-200">Activate VLM</p>
+                        <p className="mt-0.5 text-xs leading-5 text-slate-300">
+                          Turn on only when you want local VLM explanations.
+                        </p>
+                      </div>
+                      <button
+                        className="focus-ring relative h-6 w-11 shrink-0 rounded-full border border-white/20 bg-slate-700 transition data-[checked=true]:bg-safety-teal disabled:cursor-not-allowed disabled:opacity-50"
+                        type="button"
+                        role="switch"
+                        aria-checked={vlmActivationEnabled}
+                        aria-label="Activate selected VLM explanation mode"
+                        data-checked={vlmActivationEnabled}
+                        disabled={activationToggleDisabled}
+                        onClick={() => updateSettings({ vlmEnabled: !settings.vlmEnabled })}
+                      >
+                        <span
+                          className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition ${
+                            vlmActivationEnabled ? 'left-5' : 'left-0.5'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+
+                <p className={`rounded-lg border px-2 py-1.5 text-xs leading-5 ${
+                  vlmStatusTone(vlmMessage) === 'success'
+                    ? 'border-emerald-300/40 bg-emerald-400/10 text-emerald-100'
+                    : vlmStatusTone(vlmMessage) === 'warning'
+                      ? 'border-amber-300/40 bg-amber-400/10 text-amber-100'
+                      : 'border-white/10 bg-white/5 text-slate-200'
+                }`}
+                >
+                  {vlmMessage}
                 </p>
-                <p className="mt-1 text-xs leading-5 text-slate-300">
-                  {enhancedVlmUnavailable
-                    ? 'Enhanced VLM unavailable. Rule-based explanations are still active.'
-                    : 'When available, enhanced VLM can generate natural-language evidence wording.'}
-                </p>
+                {visualExplanationCheck?.message ? (
+                  <p className="rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs leading-5 text-slate-200">
+                    {visualExplanationCheck.message}
+                  </p>
+                ) : null}
+                {systemStatus?.vlm?.message ? (
+                  <p className="rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs leading-5 text-slate-200">
+                    {systemStatus.vlm.message}
+                  </p>
+                ) : null}
+                {vlmCheck?.message ? (
+                  <p className="rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs leading-5 text-slate-200">
+                    {vlmCheck.message}
+                    {vlmCheck.actionHint ? <span> {vlmCheck.actionHint}</span> : null}
+                  </p>
+                ) : null}
               </div>
-              <button
-                className="focus-ring relative h-6 w-11 shrink-0 rounded-full border border-white/20 bg-slate-700 transition data-[checked=true]:bg-safety-teal disabled:cursor-not-allowed disabled:opacity-50"
-                type="button"
-                role="switch"
-                aria-checked={useEnhancedVlmExplanations}
-                aria-label="Toggle enhanced VLM explanations"
-                data-checked={useEnhancedVlmExplanations}
-                disabled={enhancedVlmUnavailable}
-                onClick={() => updateSettings({ enhancedVlmExplanations: !useEnhancedVlmExplanations })}
-              >
-                <span
-                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition ${
-                    useEnhancedVlmExplanations ? 'left-5' : 'left-0.5'
-                  }`}
-                />
-              </button>
-            </div>
-            {useEnhancedVlmExplanations && enhancedVlmUnavailable ? (
-              <p className="mt-2 rounded-lg border border-amber-300/40 bg-amber-400/10 px-2 py-1.5 text-xs leading-5 text-amber-100">
-                VLM is not available right now, so SafeTrace is using rule-based explanations.
-              </p>
-            ) : null}
-            {vlmCheck?.message ? (
-              <p className="mt-2 rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs leading-5 text-slate-200">
-                {vlmCheck.message}
-                {vlmCheck.actionHint ? <span> {vlmCheck.actionHint}</span> : null}
-              </p>
             ) : null}
           </div>
 

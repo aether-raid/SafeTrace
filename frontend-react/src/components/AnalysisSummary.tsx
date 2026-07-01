@@ -2,6 +2,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   Clock3,
+  Copy,
   Eye,
   FileVideo,
   Gauge,
@@ -12,6 +13,7 @@ import {
 } from 'lucide-react';
 import type { AnalysisResult, Severity } from '../types/analysis';
 import { formatConfidence, formatDateTime, pluralize } from '../utils/formatters';
+import { copyJobIdToClipboard, formatShortJobId } from '../utils/jobIds';
 import { SeverityBadge } from './SeverityBadge';
 import { StatusBadge } from './StatusBadge';
 
@@ -232,6 +234,8 @@ function buildSummaryModel(result: AnalysisResult): SummaryModel {
 export function AnalysisSummary({ result, showExplanations }: AnalysisSummaryProps) {
   const summary = buildSummaryModel(result);
   const hasViolations = summary.keyFindings.length > 0;
+  const jobId = result.jobId;
+  const shortJobId = formatShortJobId(jobId);
   const evidenceHref = summary.strongestFinding?.firstFrameId
     ? `#frame-${summary.strongestFinding.firstFrameId}`
     : '#evidence-frames';
@@ -257,6 +261,24 @@ export function AnalysisSummary({ result, showExplanations }: AnalysisSummaryPro
               Explanation generated from available visual evidence. {result.summaryText}
             </div>
           ) : null}
+          {jobId ? (
+            <div className="mt-4 flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+              <span className="font-semibold uppercase text-slate-500">Result job</span>
+              <code className="rounded bg-white px-2 py-1 font-mono text-[11px] font-semibold text-slate-900" title={jobId}>
+                {shortJobId}
+              </code>
+              <button
+                type="button"
+                onClick={() => void copyJobIdToClipboard(jobId)}
+                className="focus-ring inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2 py-1 font-semibold text-slate-700 transition hover:border-safety-blue hover:text-safety-blue"
+                aria-label="Copy job ID"
+                title={`Copy full job ID ${jobId}`}
+              >
+                <Copy className="h-3.5 w-3.5" aria-hidden="true" />
+                Copy job ID
+              </button>
+            </div>
+          ) : null}
         </div>
 
         <div className="flex flex-wrap items-center gap-2 lg:justify-end">
@@ -267,6 +289,7 @@ export function AnalysisSummary({ result, showExplanations }: AnalysisSummaryPro
 
       <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <SummaryMetric icon={FileVideo} label="Media analyzed" value={result.media.filename} />
+        {jobId ? <SummaryMetric icon={FileVideo} label="Job ID" value={shortJobId} /> : null}
         <SummaryMetric icon={ShieldAlert} label="Overall confidence" value={summary.confidence === null ? 'Needs review' : formatConfidence(summary.confidence)} />
         <SummaryMetric icon={Layers3} label="Grouped events" value={String(summary.eventCount)} />
         <SummaryMetric icon={Clock3} label="Generated" value={formatDateTime(result.generatedAt)} />
@@ -366,6 +389,7 @@ export function AnalysisSummary({ result, showExplanations }: AnalysisSummaryPro
 
       <div className="mt-4 flex flex-wrap gap-2">
         <StatusBadge label={`Query: ${result.query}`} tone="info" />
+        {jobId ? <StatusBadge label={`Job ${shortJobId}`} tone="neutral" /> : null}
         <StatusBadge label={pluralize(summary.violationTypeCount, 'violation type')} tone={hasViolations ? 'danger' : 'success'} />
         <StatusBadge label={`${summary.supportingFrameCount} supporting frame${summary.supportingFrameCount === 1 ? '' : 's'}`} tone="neutral" />
         {summary.batchId ? <StatusBadge label={`Batch ${summary.batchId}`} tone="neutral" /> : null}

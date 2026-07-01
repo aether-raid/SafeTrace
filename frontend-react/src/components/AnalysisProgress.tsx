@@ -1,15 +1,72 @@
 import { CheckCircle2, LoaderCircle } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 
 type AnalysisProgressProps = {
   steps: string[];
   activeStep: number;
   currentStep?: string;
   progress?: number;
+  progressPercent?: number;
+  stage?: string;
+  message?: string;
   mode?: 'backend' | 'preview' | null;
+  startedAt?: string | null;
+  updatedAt?: string | null;
+  heartbeatAt?: string | null;
 };
 
-export function AnalysisProgress({ steps, activeStep, currentStep, progress, mode }: AnalysisProgressProps) {
-  const progressPercent = typeof progress === 'number' ? Math.round(progress * 100) : null;
+function formatElapsed(ms: number): string {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function parseTime(value?: string | null): number | null {
+  if (!value) return null;
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function heartbeatLabel(now: number, value?: string | null): string {
+  const parsed = parseTime(value);
+  if (!parsed) return 'Waiting for backend heartbeat';
+  const seconds = Math.max(0, Math.floor((now - parsed) / 1000));
+  if (seconds < 3) return 'Backend heartbeat just now';
+  if (seconds < 60) return `Backend heartbeat ${seconds}s ago`;
+  return `Backend heartbeat ${Math.floor(seconds / 60)}m ago`;
+}
+
+export function AnalysisProgress({
+  steps,
+  activeStep,
+  currentStep,
+  progress,
+  progressPercent,
+  stage,
+  message,
+  mode,
+  startedAt,
+  updatedAt,
+  heartbeatAt,
+}: AnalysisProgressProps) {
+  const [now, setNow] = useState(() => Date.now());
+  const [localStartedAt] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const computedPercent = typeof progressPercent === 'number'
+    ? progressPercent
+    : typeof progress === 'number'
+      ? Math.round(progress * 100)
+      : null;
+  const isIndeterminateAnalysis = mode === 'backend' && stage === 'analyzing' && (computedPercent ?? 0) < 85;
+  const statusMessage = message || currentStep || 'Submitting media to the local SafeTrace backend.';
+  const startedMs = useMemo(() => parseTime(startedAt) ?? localStartedAt, [startedAt, localStartedAt]);
+  const elapsed = mode === 'backend' ? formatElapsed(now - startedMs) : null;
+  const heartbeat = mode === 'backend' ? heartbeatLabel(now, heartbeatAt || updatedAt) : null;
 
   return (
     <section className="rounded-lg border border-blue-200 bg-blue-50 p-5 text-blue-950 shadow-soft">
@@ -20,10 +77,33 @@ export function AnalysisProgress({ steps, activeStep, currentStep, progress, mod
             {mode === 'preview' ? 'Preparing developer preview...' : 'Analyzing selected footage...'}
           </h2>
           <p className="mt-1 text-sm leading-6">
-            {currentStep || 'Submitting media to the local SafeTrace backend.'}
-            {progressPercent !== null ? ` ${progressPercent}%` : ''}
+            {statusMessage}
+            {!isIndeterminateAnalysis && computedPercent !== null ? ` ${computedPercent}%` : ''}
           </p>
+          {stage ? <p className="mt-1 text-xs font-semibold uppercase text-blue-700">Stage: {stage}</p> : null}
+          {mode === 'backend' ? (
+            <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-blue-800">
+              <span className="rounded-full border border-blue-200 bg-white/70 px-2.5 py-1">Elapsed {elapsed}</span>
+              <span className="rounded-full border border-blue-200 bg-white/70 px-2.5 py-1">{heartbeat}</span>
+              {isIndeterminateAnalysis ? (
+                <span className="rounded-full border border-blue-200 bg-white/70 px-2.5 py-1">
+                  Still working locally; long videos can spend time in sampling, embedding, detection, and report prep.
+                </span>
+              ) : null}
+            </div>
+          ) : null}
         </div>
+      </div>
+
+      <div className="mt-4 overflow-hidden rounded-full bg-white/80">
+        {isIndeterminateAnalysis ? (
+          <div className="h-2 w-1/2 animate-pulse rounded-full bg-blue-500" />
+        ) : (
+          <div
+            className="h-2 rounded-full bg-blue-600 transition-all duration-500"
+            style={{ width: `${Math.max(4, Math.min(100, computedPercent ?? 10))}%` }}
+          />
+        )}
       </div>
 
       <ol className="mt-5 grid gap-3 md:grid-cols-5">

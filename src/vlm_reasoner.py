@@ -10,6 +10,8 @@ from __future__ import annotations
 import base64
 import io
 import logging
+import re
+import threading
 from importlib import util as importlib_util
 from pathlib import Path
 from typing import Any, Sequence
@@ -32,11 +34,87 @@ RULE_BASED_PROVIDER = "rule_based"
 LOCAL_VLM_HOSTS = {"127.0.0.1", "localhost", "::1"}
 OLLAMA_PROVIDERS = {"ollama", "ollama_vision"}
 TRANSFORMER_PROVIDERS = {"local", "legacy", "existing", "transformers", "local_transformers", "local_dir"}
+VLM_MODEL_FILENAMES = {
+    "config.json",
+    "model.safetensors",
+    "pytorch_model.bin",
+    "tokenizer.json",
+    "preprocessor_config.json",
+    "processor_config.json",
+}
+VLM_MODEL_SUFFIXES = {".safetensors", ".bin"}
 VLM_PROMPT = (
-    "Describe only visible safety evidence in this frame.\n"
-    "Do not make legal conclusions.\n"
-    "Mention uncertainty from camera angle, blur, glare, or occlusion.\n"
-    "Keep answer under 90 words."
+    "You are inspecting one vehicle safety evidence frame.\n"
+    "Return only the final explanation. Do not repeat the prompt.\n"
+    "Do not include User:, Assistant:, XML tags, table tokens, or image tokens.\n"
+    "Describe visible evidence related to the listed SafeTrace findings.\n"
+    "Mention uncertainty from blur, glare, occlusion, or camera angle.\n"
+    "Use 2-4 concise sentences under 90 words."
+)
+VLM_PROMPT_ECHO_PHRASES = (
+    "You are inspecting one vehicle safety evidence frame.",
+    "Return only the final explanation.",
+    "Do not repeat the prompt.",
+    "Do not include User:, Assistant:, XML tags, table tokens, or image tokens.",
+    "Describe visible evidence related to the listed SafeTrace findings.",
+    "Describe only visible safety evidence in this frame.",
+    "Do not make legal conclusions.",
+    "Mention uncertainty from camera angle, blur, glare, or occlusion.",
+    "Mention uncertainty from blur, glare, occlusion, or camera angle.",
+    "Keep answer under 90 words.",
+    "Use 2-4 concise sentences under 90 words.",
+    "Potential SafeTrace findings to inspect:",
+    "Findings to inspect:",
+)
+VLM_GENERIC_RESPONSES = {
+    "unclear",
+    "unclear.",
+    "safety evidence missing",
+    "safety evidence missing.",
+    "no safety evidence",
+    "no safety evidence.",
+    "no visible safety evidence",
+    "no visible safety evidence.",
+    "not enough information",
+    "not enough information.",
+}
+VLM_USEFUL_KEYWORDS = (
+    "visible",
+    "evidence",
+    "safety",
+    "uncertain",
+    "uncertainty",
+    "blur",
+    "glare",
+    "occlusion",
+    "camera",
+    "angle",
+    "helmet",
+    "seatbelt",
+    "seat belt",
+    "phone",
+    "hand",
+    "control",
+    "worker",
+    "driver",
+    "person",
+    "vehicle",
+    "forklift",
+    "restricted",
+    "zone",
+    "vest",
+    "ppe",
+    "appears",
+    "detected",
+)
+VLM_ROLE_LABEL_RE = re.compile(r"\b(?:user|assistant|system)\s*:", re.IGNORECASE)
+VLM_ARTIFACT_RE = re.compile(
+    r"<\s*/?\s*[^>\s]*(?:image|img|row_|col_|global|table)[^>]*>",
+    re.IGNORECASE,
+)
+VLM_ARTIFACT_LEAK_RE = re.compile(
+    r"<\s*/?\s*[^>\s]*(?:image|img|row_|col_|global|table)[^>]*>|\b(?:user|assistant)\s*:",
+    re.IGNORECASE,
 )
 
 
@@ -71,13 +149,121 @@ def _fallback_explanation(violations: Sequence[Violation]) -> str:
     return "\n".join(lines)
 
 
-def _path_has_contents(path: Path) -> bool:
+def _normalize_for_quality(text: str) -> str:
+    return re.sub(r"[\W_]+", " ", text.lower()).strip()
+
+
+def _strip_prompt_echoes(text: str, prompt_text: str) -> str:
+    cleaned = text.replace(prompt_text, " ")
+    cleaned = cleaned.replace(VLM_PROMPT, " ")
+    for phrase in VLM_PROMPT_ECHO_PHRASES:
+        cleaned = re.sub(re.escape(phrase), " ", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\b(?:potential\s+)?safetrace findings to inspect\s*:[^.:\n]*(?:[.\n]|$)", " ", cleaned, flags=re.I)
+    cleaned = re.sub(r"\bfindings to inspect\s*:[^.:\n]*(?:[.\n]|$)", " ", cleaned, flags=re.I)
+    return cleaned
+
+
+def sanitize_vlm_output(raw_text: str, prompt_text: str) -> str:
+    """Remove chat-template echo and vision/table markup before display."""
+    if not raw_text:
+        return ""
+
+    cleaned = str(raw_text).replace("\r", "\n")
+    cleaned = cleaned.replace("\\n", "\n")
+    cleaned = _strip_prompt_echoes(cleaned, prompt_text)
+    cleaned = VLM_ROLE_LABEL_RE.sub("\n", cleaned)
+    cleaned = VLM_ARTIFACT_RE.sub(" ", cleaned)
+    cleaned = re.sub(r"</?s>|<pad>|<unk>", " ", cleaned, flags=re.I)
+
+    lines: list[str] = []
+    for line in cleaned.splitlines():
+        line = line.strip(" \t-")
+        if not line:
+            continue
+        if any(phrase.lower() in line.lower() for phrase in VLM_PROMPT_ECHO_PHRASES):
+            continue
+        if re.match(r"^(?:findings|potential safetrace findings)\s+to\s+inspect\b", line, flags=re.I):
+            continue
+        lines.append(line)
+
+    cleaned = " ".join(lines)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip(" \t\n:-")
+    if len(cleaned) > 650:
+        clipped = cleaned[:650].rsplit(".", 1)[0].strip()
+        cleaned = clipped if len(clipped) >= 40 else cleaned[:650].strip()
+    return cleaned
+
+
+def vlm_output_quality_issue(clean_text: str) -> str | None:
+    text = clean_text.strip()
+    if not text:
+        return "empty output"
+    if VLM_ARTIFACT_LEAK_RE.search(text):
+        return "token or role-label leak"
+    normalized = _normalize_for_quality(text)
+    if normalized in {_normalize_for_quality(value) for value in VLM_GENERIC_RESPONSES}:
+        return "generic output"
+    if len(text) < 20:
+        return "too short"
+    if any(phrase.lower() in text.lower() for phrase in VLM_PROMPT_ECHO_PHRASES):
+        return "prompt echo"
+    if not any(keyword in text.lower() for keyword in VLM_USEFUL_KEYWORDS):
+        return "missing visible safety detail"
+    return None
+
+
+def is_useful_vlm_output(clean_text: str) -> bool:
+    return vlm_output_quality_issue(clean_text) is None
+
+
+def _run_with_timeout(callable_obj, timeout_seconds: float):
+    timeout = max(0.0, float(timeout_seconds or 0.0))
+    if timeout <= 0:
+        return callable_obj()
+
+    outcome: dict[str, Any] = {}
+
+    def target() -> None:
+        try:
+            outcome["value"] = callable_obj()
+        except BaseException as exc:  # pragma: no cover - re-raised in caller thread
+            outcome["error"] = exc
+
+    thread = threading.Thread(target=target, daemon=True)
+    thread.start()
+    thread.join(timeout)
+    if thread.is_alive():
+        raise TimeoutError(f"Local VLM generation exceeded {timeout:.1f}s.")
+    if "error" in outcome:
+        raise outcome["error"]
+    return outcome.get("value")
+
+
+def _is_vlm_model_file(path: Path) -> bool:
+    if not path.is_file():
+        return False
+    name = path.name.lower()
+    return name in VLM_MODEL_FILENAMES or path.suffix.lower() in VLM_MODEL_SUFFIXES
+
+
+def path_has_direct_vlm_model_files(path: Path) -> bool:
     if path.is_file():
-        return True
+        return _is_vlm_model_file(path)
     if not path.is_dir():
         return False
     try:
-        return any(path.iterdir())
+        return any(_is_vlm_model_file(child) for child in path.iterdir())
+    except OSError:
+        return False
+
+
+def path_has_vlm_model_files(path: Path) -> bool:
+    if path.is_file():
+        return _is_vlm_model_file(path)
+    if not path.is_dir():
+        return False
+    try:
+        return any(_is_vlm_model_file(child) for child in path.rglob("*"))
     except OSError:
         return False
 
@@ -87,7 +273,7 @@ def _transformers_runtime_available() -> bool:
 
 
 def _local_transformer_available(model_dir: Path) -> bool:
-    return _transformers_runtime_available() and _path_has_contents(model_dir)
+    return _transformers_runtime_available() and path_has_direct_vlm_model_files(model_dir)
 
 
 def is_local_vlm_base_url(base_url: str) -> bool:
@@ -131,7 +317,10 @@ def _base_details(*, mode: str, requested_provider: str) -> dict[str, Any]:
 def _local_provider_status(base_details: dict[str, Any]) -> dict[str, Any]:
     model_dir = Path(SETTINGS.vlm_model_dir)
     runtime_available = _transformers_runtime_available()
-    model_dir_available = _path_has_contents(model_dir)
+    model_dir_available = path_has_direct_vlm_model_files(model_dir)
+    known_profile_parent = model_dir.is_dir() and any(
+        (model_dir / child).is_dir() for child in ("lightweight-256m", "enhanced-2b")
+    )
     details = {
         **base_details,
         "selectedProvider": LOCAL_PROVIDER,
@@ -139,6 +328,7 @@ def _local_provider_status(base_details: dict[str, Any]) -> dict[str, Any]:
         "modelDir": str(model_dir),
         "runtimeAvailable": runtime_available,
         "modelDirAvailable": model_dir_available,
+        "profileParentDir": known_profile_parent,
     }
     if not runtime_available:
         return {
@@ -149,11 +339,19 @@ def _local_provider_status(base_details: dict[str, Any]) -> dict[str, Any]:
             "details": details,
         }
     if not model_dir_available:
+        message = (
+            "Local transformer VLM path is a profile parent directory, not a direct loadable model folder."
+            if known_profile_parent
+            else "Local transformer VLM model directory is missing required model files."
+        )
         return {
             "status": "unavailable",
             "path": str(model_dir),
-            "message": "Local transformer VLM model directory is missing or empty.",
-            "actionHint": "Place packaged local VLM assets in models/vlm or set SAFETRACE_VLM_MODEL_PATH, or use rule-based fallback.",
+            "message": message,
+            "actionHint": (
+                "Select a packaged VLM profile such as models/vlm/lightweight-256m or models/vlm/enhanced-2b, "
+                "or use rule-based fallback."
+            ),
             "details": details,
         }
     return {
@@ -244,6 +442,20 @@ def _with_auto_summary(
 
 def vlm_status_payload(*, timeout_seconds: float = 1.5) -> dict[str, Any]:  # noqa: ARG001
     """Return a lightweight local VLM status payload without loading a model."""
+    if bool(getattr(SETTINGS, "analysis_safe_mode", False)):
+        return {
+            "status": "disabled",
+            "message": "Safe local mode is active. VLM is not checked or loaded; rule-based explanations remain available.",
+            "actionHint": "Unset SAFETRACE_ANALYSIS_SAFE_MODE to inspect or activate local VLM profiles.",
+            "details": {
+                "mode": "safe_mode",
+                "requestedProvider": _normalized_provider(getattr(SETTINGS, "vlm_provider", AUTO_PROVIDER)),
+                "selectedProvider": RULE_BASED_PROVIDER,
+                "availableProviders": [],
+                "vlmSuppressedReason": "safe_mode",
+            },
+        }
+
     mode = _normalized_mode(getattr(SETTINGS, "vlm_enabled", "auto"))
     requested_provider = _normalized_provider(getattr(SETTINGS, "vlm_provider", AUTO_PROVIDER))
     base_details = _base_details(mode=mode, requested_provider=requested_provider)
@@ -334,13 +546,21 @@ class VlmReasoner:
         self.provider = RULE_BASED_PROVIDER
         self.enabled_mode = _normalized_mode(getattr(SETTINGS, "vlm_enabled", "auto"))
         request_enabled = SETTINGS.enable_vlm if enabled is None else enabled
-        self.enabled = bool(request_enabled) and self.enabled_mode != "disabled"
+        safe_mode = bool(getattr(SETTINGS, "analysis_safe_mode", False))
+        self.enabled = bool(request_enabled) and self.enabled_mode != "disabled" and not safe_mode
         self._model = None
         self._processor = None
         self._loaded = False
         self.last_explanation_source = RULE_BASED_PROVIDER
+        self.last_fallback_reason: str | None = None
+        self.last_raw_vlm_text: str | None = None
+        self.last_clean_vlm_text: str | None = None
+        self.last_quality_issue: str | None = None
 
         if not self.enabled:
+            if safe_mode:
+                logger.info("VLM disabled by SafeTrace safe local mode.")
+                return
             logger.info("VLM disabled by request or configuration.")
             return
 
@@ -379,24 +599,35 @@ class VlmReasoner:
         return RULE_BASED_PROVIDER
 
     def _load_transformer_provider(self) -> None:
-        if not _path_has_contents(self.model_dir):
+        if not path_has_direct_vlm_model_files(self.model_dir):
             logger.warning("VLM model dir empty/missing at %s; disabling.", self.model_dir)
             self.enabled = False
             return
         try:
             import torch
-            from transformers import AutoModelForCausalLM, AutoProcessor
+            import transformers
 
             logger.info("Loading VLM from %s on %s", self.model_dir, self.device)
-            self._processor = AutoProcessor.from_pretrained(
+            self._processor = transformers.AutoProcessor.from_pretrained(
                 str(self.model_dir), trust_remote_code=True, local_files_only=True
             )
-            self._model = AutoModelForCausalLM.from_pretrained(
-                str(self.model_dir),
-                trust_remote_code=True,
-                local_files_only=True,
-                torch_dtype=torch.float16 if self.device == "cuda" else torch.float32,
-            ).to(self.device).eval()
+            model_kwargs = {
+                "trust_remote_code": True,
+                "local_files_only": True,
+                "torch_dtype": torch.float16 if self.device == "cuda" else torch.float32,
+            }
+            errors: list[str] = []
+            for class_name in ("AutoModelForImageTextToText", "AutoModelForVision2Seq", "AutoModelForCausalLM"):
+                model_class = getattr(transformers, class_name, None)
+                if model_class is None:
+                    continue
+                try:
+                    self._model = model_class.from_pretrained(str(self.model_dir), **model_kwargs).to(self.device).eval()
+                    break
+                except Exception as exc:  # pragma: no cover - optional runtime compatibility
+                    errors.append(f"{class_name}: {exc}")
+            if self._model is None:
+                raise RuntimeError("; ".join(errors) or "No compatible transformers AutoModel class is available.")
             self._loaded = True
         except Exception as exc:  # pragma: no cover - optional path
             logger.warning("Failed to load local VLM (%s); falling back to rule-based explanation.", exc)
@@ -405,7 +636,12 @@ class VlmReasoner:
 
     def explain_violation(self, image: np.ndarray, violations: Sequence[Violation]) -> str:
         self.last_explanation_source = RULE_BASED_PROVIDER
+        self.last_fallback_reason = None
+        self.last_raw_vlm_text = None
+        self.last_clean_vlm_text = None
+        self.last_quality_issue = None
         if not self.enabled or not self._loaded:
+            self.last_fallback_reason = "disabled_or_unloaded"
             return _fallback_explanation(violations)
 
         if self.provider == OLLAMA_PROVIDER:
@@ -415,8 +651,11 @@ class VlmReasoner:
         return _fallback_explanation(violations)
 
     def _prompt_for(self, violations: Sequence[Violation]) -> str:
+        profile = str(getattr(SETTINGS, "vlm_profile", "rule_based") or "rule_based").strip().lower()
+        if profile == "lightweight_256m":
+            return "Describe the visible safety evidence in this image in one short sentence."
         names = ", ".join(v.name for v in violations) or "no obvious violations"
-        return f"{VLM_PROMPT}\nPotential SafeTrace findings to inspect: {names}."
+        return f"{VLM_PROMPT}\nFindings to inspect: {names}."
 
     def _image_base64(self, image: np.ndarray) -> str:
         pil = image if isinstance(image, Image.Image) else Image.fromarray(image)
@@ -424,13 +663,108 @@ class VlmReasoner:
             pil.convert("RGB").save(buffer, format="JPEG", quality=88)
             return base64.b64encode(buffer.getvalue()).decode("ascii")
 
+    def _processor_inputs_for_image(self, prompt_text: str, image: Image.Image):
+        apply_chat_template = getattr(self._processor, "apply_chat_template", None)
+        if callable(apply_chat_template):
+            messages = [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "image"},
+                        {"type": "text", "text": prompt_text},
+                    ],
+                }
+            ]
+            try:
+                try:
+                    prompt = apply_chat_template(
+                        messages, add_generation_prompt=True, tokenize=False
+                    )
+                except TypeError:
+                    prompt = apply_chat_template(messages, add_generation_prompt=True)
+                if isinstance(prompt, list):
+                    prompt = prompt[0] if prompt else ""
+                if isinstance(prompt, str) and prompt.strip():
+                    return self._processor(text=prompt, images=[image], return_tensors="pt")
+            except Exception as exc:
+                logger.debug(
+                    "VLM chat-template prompt construction failed (%s); using image-token fallback.",
+                    exc,
+                )
+
+        fallback_prompt = prompt_text if "<image>" in prompt_text else f"<image>\n{prompt_text}"
+        try:
+            return self._processor(text=fallback_prompt, images=[image], return_tensors="pt")
+        except TypeError:
+            return self._processor(text=fallback_prompt, images=image, return_tensors="pt")
+
+    def _inputs_to_device(self, inputs):
+        if hasattr(inputs, "to"):
+            return inputs.to(self.device)
+        if isinstance(inputs, dict):
+            return {
+                key: value.to(self.device) if hasattr(value, "to") else value
+                for key, value in inputs.items()
+            }
+        return inputs
+
+    def _input_token_length(self, inputs) -> int | None:
+        input_ids = inputs.get("input_ids") if isinstance(inputs, dict) else getattr(inputs, "input_ids", None)
+        if input_ids is None:
+            return None
+        shape = getattr(input_ids, "shape", None)
+        if shape is not None and len(shape):
+            return int(shape[-1])
+        if isinstance(input_ids, (list, tuple)):
+            if input_ids and isinstance(input_ids[0], (list, tuple)):
+                return len(input_ids[0])
+            return len(input_ids)
+        return None
+
+    def _generated_tokens_only(self, output_ids, inputs):
+        input_len = self._input_token_length(inputs)
+        if input_len is None:
+            return output_ids
+        try:
+            output_len = int(output_ids.shape[-1])
+            if output_len > input_len:
+                return output_ids[:, input_len:]
+            return output_ids
+        except Exception:
+            pass
+        if isinstance(output_ids, (list, tuple)):
+            if output_ids and isinstance(output_ids[0], (list, tuple)):
+                return [
+                    list(row[input_len:]) if len(row) > input_len else list(row)
+                    for row in output_ids
+                ]
+            return list(output_ids[input_len:]) if len(output_ids) > input_len else output_ids
+        return output_ids
+
+    def _accepted_vlm_text(self, raw_text: str, prompt_text: str, provider_label: str) -> str | None:
+        self.last_raw_vlm_text = raw_text
+        clean_text = sanitize_vlm_output(raw_text, prompt_text)
+        self.last_clean_vlm_text = clean_text
+        quality_issue = vlm_output_quality_issue(clean_text)
+        self.last_quality_issue = quality_issue
+        if quality_issue:
+            self.last_fallback_reason = f"quality:{quality_issue}"
+            logger.warning(
+                "%s VLM output rejected (%s); using rule-based fallback.",
+                provider_label,
+                quality_issue,
+            )
+            return None
+        return clean_text
+
     def _explain_with_ollama(self, image: np.ndarray, violations: Sequence[Violation]) -> str:
         try:
+            prompt_text = self._prompt_for(violations)
             response = httpx.post(
                 _ollama_endpoint("/api/generate"),
                 json={
                     "model": SETTINGS.vlm_model,
-                    "prompt": self._prompt_for(violations),
+                    "prompt": prompt_text,
                     "images": [self._image_base64(image)],
                     "stream": False,
                     "options": {
@@ -441,30 +775,65 @@ class VlmReasoner:
                 timeout=SETTINGS.vlm_timeout_seconds,
             )
             response.raise_for_status()
-            text = str(response.json().get("response") or "").strip()
+            text = self._accepted_vlm_text(
+                str(response.json().get("response") or ""),
+                prompt_text,
+                "Ollama",
+            )
             if text:
+                self.last_fallback_reason = None
                 self.last_explanation_source = "vlm_ollama"
                 return text
         except Exception as exc:  # pragma: no cover - exercised by fallback tests
+            self.last_fallback_reason = f"ollama_error:{type(exc).__name__}"
             logger.warning("Ollama VLM generation failed (%s); using rule-based fallback.", exc)
         return _fallback_explanation(violations)
 
     def _explain_with_transformers(self, image: np.ndarray, violations: Sequence[Violation]) -> str:
         try:
-            import torch
+            def generate_text():
+                import torch
 
-            pil = image if isinstance(image, Image.Image) else Image.fromarray(image)
-            inputs = self._processor(text=self._prompt_for(violations), images=pil, return_tensors="pt").to(self.device)
-            with torch.inference_mode():
-                output_ids = self._model.generate(
-                    **inputs, max_new_tokens=SETTINGS.vlm_max_tokens, do_sample=False
+                pil = image if isinstance(image, Image.Image) else Image.fromarray(image)
+                prompt_text = self._prompt_for(violations)
+                inputs = self._inputs_to_device(
+                    self._processor_inputs_for_image(prompt_text, pil)
                 )
-            text = self._processor.batch_decode(
-                output_ids, skip_special_tokens=True, clean_up_tokenization_spaces=True
-            )[0].strip()
+                with torch.inference_mode():
+                    output_ids = self._model.generate(
+                        **inputs, max_new_tokens=SETTINGS.vlm_max_tokens, do_sample=False
+                    )
+                new_token_ids = self._generated_tokens_only(output_ids, inputs)
+                raw_text = self._processor.batch_decode(
+                    new_token_ids, skip_special_tokens=True, clean_up_tokenization_spaces=True
+                )[0]
+                return raw_text, prompt_text
+
+            text, prompt_text = _run_with_timeout(generate_text, SETTINGS.vlm_timeout_seconds)
+            text = self._accepted_vlm_text(text, prompt_text, "Local")
             if text:
+                self.last_fallback_reason = None
                 self.last_explanation_source = "vlm_local"
                 return text
-        except Exception as exc:  # pragma: no cover
+        except TimeoutError as exc:  # pragma: no cover
+            self.last_fallback_reason = "generation_timeout"
             logger.warning("Local VLM generation failed (%s); using rule-based fallback.", exc)
+        except Exception as exc:  # pragma: no cover
+            self.last_fallback_reason = f"generation_error:{type(exc).__name__}"
+            logger.warning("Local VLM generation failed (%s); using rule-based fallback.", exc)
+        return _fallback_explanation(violations)
+
+
+class RuleBasedReasoner:
+    """Rule-based explanation provider used when VLM is disabled or inactive."""
+
+    provider = RULE_BASED_PROVIDER
+    enabled = False
+    _loaded = False
+
+    def __init__(self) -> None:
+        self.last_explanation_source = RULE_BASED_PROVIDER
+
+    def explain_violation(self, image: np.ndarray, violations: Sequence[Violation]) -> str:  # noqa: ARG002
+        self.last_explanation_source = RULE_BASED_PROVIDER
         return _fallback_explanation(violations)

@@ -1,5 +1,6 @@
-import { Archive, FileImage, FileVideo, HardDrive, Clock, UploadCloud } from 'lucide-react';
+import { Archive, Clock, Copy, FileImage, FileVideo, HardDrive, UploadCloud } from 'lucide-react';
 import type { MediaItem } from '../types/analysis';
+import { copyJobIdToClipboard, formatShortJobId } from '../utils/jobIds';
 import { StatusBadge } from './StatusBadge'; // Make sure this is imported
 
 type SelectedMediaViewerProps = {
@@ -7,6 +8,7 @@ type SelectedMediaViewerProps = {
   disabled?: boolean;
   backendConnected?: boolean;
   previewMode?: boolean;
+  jobId?: string | null;
   onUploadClick?: () => void;
 };
 
@@ -15,6 +17,7 @@ export function SelectedMediaViewer({
   disabled = false,
   backendConnected = false,
   previewMode = false,
+  jobId,
   onUploadClick,
 }: SelectedMediaViewerProps) {
   if (!media) {
@@ -49,6 +52,7 @@ export function SelectedMediaViewer({
   }
 
   const Icon = media.type === 'video' ? FileVideo : media.type === 'image' ? FileImage : Archive;
+  const resultJobId = jobId || media.selectedJobId || media.jobId;
 
   return (
     <div className="mb-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-soft">
@@ -109,6 +113,25 @@ export function SelectedMediaViewer({
                 ? 'Bulk media is ready for local backend batch analysis.'
               : 'Selected media is ready for local backend analysis.'}
           </div>
+
+          {resultJobId ? (
+            <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+              <span className="font-semibold uppercase text-slate-500">Result job</span>
+              <code className="rounded bg-white px-2 py-1 font-mono text-[11px] font-semibold text-slate-900" title={resultJobId}>
+                {formatShortJobId(resultJobId)}
+              </code>
+              <button
+                type="button"
+                onClick={() => void copyJobIdToClipboard(resultJobId)}
+                className="focus-ring inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2 py-1 font-semibold text-slate-700 transition hover:border-safety-blue hover:text-safety-blue"
+                aria-label="Copy selected media job ID"
+                title={`Copy full job ID ${resultJobId}`}
+              >
+                <Copy className="h-3.5 w-3.5" aria-hidden="true" />
+                Copy job ID
+              </button>
+            </div>
+          ) : null}
         </div>
 
       </div>

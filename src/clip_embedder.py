@@ -25,6 +25,22 @@ def _l2_normalize(x: np.ndarray) -> np.ndarray:
     return x / np.clip(norm, 1e-12, None)
 
 
+def _feature_tensor(output):
+    """Extract a tensor from common HuggingFace feature output shapes."""
+    if isinstance(output, torch.Tensor):
+        return output
+    for attr in ("image_embeds", "text_embeds", "pooler_output"):
+        value = getattr(output, attr, None)
+        if isinstance(value, torch.Tensor):
+            return value
+    value = getattr(output, "last_hidden_state", None)
+    if isinstance(value, torch.Tensor):
+        return value.mean(dim=1)
+    if isinstance(output, (tuple, list)) and output and isinstance(output[0], torch.Tensor):
+        return output[0]
+    raise TypeError(f"Unsupported embedding output type: {type(output)}")
+
+
 class ClipEmbedder:
     """Wraps a local SigLIP (default) or CLIP model.
 
@@ -69,7 +85,7 @@ class ClipEmbedder:
             pil_batch = [self._to_pil(x) for x in batch]
             inputs = self.processor(images=pil_batch, return_tensors="pt")
             inputs = {k: v.to(self.device) for k, v in inputs.items()}
-            feats = self.model.get_image_features(**inputs)
+            feats = _feature_tensor(self.model.get_image_features(**inputs))
             out.append(feats.detach().cpu().float().numpy())
         arr = np.concatenate(out, axis=0)
         return _l2_normalize(arr).astype(np.float32)
@@ -92,7 +108,7 @@ class ClipEmbedder:
                 text=texts, return_tensors="pt", padding=True, truncation=True
             )
         inputs = {k: v.to(self.device) for k, v in inputs.items()}
-        feats = self.model.get_text_features(**inputs)
+        feats = _feature_tensor(self.model.get_text_features(**inputs))
         arr = feats.detach().cpu().float().numpy()
         return _l2_normalize(arr).astype(np.float32)
 

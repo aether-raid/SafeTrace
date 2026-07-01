@@ -1,4 +1,4 @@
-import { AlertTriangle, ClipboardCheck, Database, RefreshCcw, Server, Trash2, UploadCloud } from 'lucide-react';
+import { AlertTriangle, BarChart3, ClipboardCheck, Copy, Database, RefreshCcw, Server, Trash2, UploadCloud } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnalysisProgress } from './components/AnalysisProgress';
 import { AnalysisSummary } from './components/AnalysisSummary';
@@ -9,6 +9,7 @@ import { MediaLibraryPanel } from './components/MediaLibraryPanel';
 import { QueryTabs } from './components/QueryTabs';
 import { ReportActions } from './components/ReportActions';
 import { SafeTraceAssistant } from './components/SafeTraceAssistant';
+import { SafetyInsightsDashboard } from './components/SafetyInsightsDashboard';
 import { Sidebar } from './components/Sidebar';
 import { StatisticsPanel } from './components/StatisticsPanel';
 import { TimelineVisualization } from './components/TimelineVisualization';
@@ -22,6 +23,7 @@ import {
   SAFETRACE_ENABLE_PREVIEW_MODE,
   SAFETRACE_REQUIRE_BACKEND,
   BackendDiscoveryError,
+  checkBackendHealth,
   discoverBackendRuntime,
   getBatchStatus,
   getActiveApiBase,
@@ -31,6 +33,7 @@ import {
   runBackendAnalysis,
   runBackendBatchAnalysis,
   runMockAnalysis,
+  updateVlmSettings,
 } from './services/analysisService';
 import {
   type CachedResultEntry,
@@ -50,8 +53,10 @@ import type {
   JobStatus,
   MediaItem,
   SystemStatus,
+  VlmExplanationProfileId,
 } from './types/analysis';
 import { formatFileSize } from './utils/formatters';
+import { copyJobIdToClipboard, formatShortJobId } from './utils/jobIds';
 import { SelectedMediaViewer } from './components/SelectedMediaViewer';
 
 const DEFAULT_QUERY = 'worker without helmet';
@@ -67,11 +72,94 @@ const SAMPLE_QUERY_BY_MEDIA_ID: Record<string, string> = {
   'media-sample-loading-bay': 'worker inside restricted loading bay',
   'media-sample-maintenance': 'worker without helmet',
 };
+const VLM_SELECTED_PROFILE_STORAGE_KEY = 'safetrace:vlm:selectedProfile';
+const VLM_ENABLED_STORAGE_KEY = 'safetrace:vlm:enabled';
+const VLM_PROFILE_IDS: VlmExplanationProfileId[] = ['rule_based', 'lightweight_256m', 'enhanced_2b'];
+const JOB_POLL_TIMEOUT_MS = 5 * 60 * 1000;
+const BATCH_POLL_TIMEOUT_MS = 10 * 60 * 1000;
+const FRESH_BACKEND_HEARTBEAT_MS = 45 * 1000;
 
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => {
     window.setTimeout(resolve, ms);
   });
+}
+
+function isVlmProfileId(value: string | null | undefined): value is VlmExplanationProfileId {
+  return Boolean(value && VLM_PROFILE_IDS.includes(value as VlmExplanationProfileId));
+}
+
+function readLocalStorageValue(key: string): string | null {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeLocalStorageValue(key: string, value: string): void {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // The UI still works if localStorage is unavailable in this browser context.
+  }
+}
+
+function getInitialVlmSettings(): Pick<AnalysisSettings, 'vlmProfile' | 'vlmEnabled'> {
+  const storedProfile = readLocalStorageValue(VLM_SELECTED_PROFILE_STORAGE_KEY);
+  const vlmProfile = isVlmProfileId(storedProfile) ? storedProfile : 'rule_based';
+  const vlmEnabled = readLocalStorageValue(VLM_ENABLED_STORAGE_KEY) === 'true' && vlmProfile !== 'rule_based';
+  return { vlmProfile, vlmEnabled };
+}
+
+function shouldRequestVlm(settings: AnalysisSettings): boolean {
+  return settings.visualExplanations && settings.vlmProfile !== 'rule_based' && settings.vlmEnabled;
+}
+
+function parseTimestampMs(value?: string | null): number | null {
+  if (!value) return null;
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function isBackendHeartbeatFresh(status: Pick<JobStatus, 'heartbeatAt' | 'updatedAt'>, now = Date.now()): boolean {
+  const timestamp = parseTimestampMs(status.heartbeatAt || status.updatedAt);
+  return timestamp !== null && now - timestamp <= FRESH_BACKEND_HEARTBEAT_MS;
+}
+
+function isBatchUpdateFresh(status: Pick<BatchStatus, 'updatedAt'>, now = Date.now()): boolean {
+  const timestamp = parseTimestampMs(status.updatedAt);
+  return timestamp !== null && now - timestamp <= FRESH_BACKEND_HEARTBEAT_MS;
+}
+
+class BackendJobFailureError extends Error {
+  debugDetails: string;
+
+  constructor(message: string, debugDetails: string) {
+    super(message);
+    this.name = 'BackendJobFailureError';
+    this.debugDetails = debugDetails;
+  }
+}
+
+function metricString(metrics: JobStatus['metrics'] | undefined, key: string): string | null {
+  const value = metrics?.[key];
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
+function jobFailureDebugDetails(status: JobStatus): string {
+  return (
+    metricString(status.metrics, 'errorType')
+    || metricString(status.metrics, 'errorMessage')
+    || status.error
+    || status.currentStep
+    || 'Backend job failed without additional diagnostics.'
+  );
+}
+
+function persistVlmSettings(settings: AnalysisSettings): void {
+  writeLocalStorageValue(VLM_SELECTED_PROFILE_STORAGE_KEY, settings.vlmProfile);
+  writeLocalStorageValue(VLM_ENABLED_STORAGE_KEY, String(settings.vlmProfile !== 'rule_based' && settings.vlmEnabled));
 }
 
 function isZipFile(file: File): boolean {
@@ -104,18 +192,24 @@ function App() {
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(previewMode ? sampleMedia : null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [settings, setSettings] = useState<AnalysisSettings>({
-    fps: 1,
-    topK: 5,
-    visualExplanations: true,
-    enhancedVlmExplanations: true,
-    deviceMode: 'Auto',
+  const [settings, setSettings] = useState<AnalysisSettings>(() => {
+    const vlmSettings = getInitialVlmSettings();
+    return {
+      fps: 1,
+      topK: 5,
+      visualExplanations: true,
+      vlmProfile: vlmSettings.vlmProfile,
+      vlmEnabled: vlmSettings.vlmEnabled,
+      enhancedVlmExplanations: vlmSettings.vlmEnabled,
+      deviceMode: 'Auto',
+    };
   });
   const [isLoading, setIsLoading] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
   const [highlightedFrameId, setHighlightedFrameId] = useState<string | null>(null);
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [errorDetails, setErrorDetails] = useState<string | null>(null);
   const [showAnnotation, setShowAnnotation] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [hoveredFrameId, setHoveredFrameId] = useState<string | null>(null);
@@ -130,6 +224,7 @@ function App() {
   const [analysisMode, setAnalysisMode] = useState<'backend' | 'preview' | null>(null);
   const [cachedEntries, setCachedEntries] = useState<Record<string, CachedResultEntry>>({});
   const [cacheMessage, setCacheMessage] = useState<string | null>(null);
+  const [activeView, setActiveView] = useState<'analysis' | 'insights'>('analysis');
   const localFilesRef = useRef<Record<string, File>>({});
   const localFileGroupsRef = useRef<Record<string, File[]>>({});
   const selectedMediaIdRef = useRef<string | null>(selectedMedia?.id ?? null);
@@ -178,6 +273,18 @@ function App() {
     )));
     setSelectedMedia((current) => (
       current?.id === mediaId ? { ...current, status } : current
+    ));
+  }
+
+  function updateMediaJobReference(
+    mediaId: string,
+    refs: Pick<MediaItem, 'jobId' | 'selectedJobId' | 'batchId'>,
+  ) {
+    setMediaLibrary((current) => current.map((item) => (
+      item.id === mediaId ? { ...item, ...refs } : item
+    )));
+    setSelectedMedia((current) => (
+      current?.id === mediaId ? { ...current, ...refs } : current
     ));
   }
 
@@ -235,6 +342,42 @@ function App() {
     return true;
   }
 
+  function handleOpenDashboardEntry(entry: CachedResultEntry) {
+    if (!entry.result) return;
+    setError(null);
+    setErrorDetails(null);
+    setCacheMessage(null);
+    setAnalysisResult(entry.result);
+    setJobStatus(entry.jobStatus ?? null);
+    setBatchStatus(entry.batchStatus ?? null);
+    setSelectedBatchJobId(entry.selectedJobId ?? entry.jobId ?? null);
+    setAnalysisMode(entry.source);
+    setActiveStep(ANALYSIS_STEPS.length);
+    setActiveView('analysis');
+    const knownMedia = mediaLibrary.find((media) => media.id === entry.mediaId);
+    if (knownMedia) {
+      setSelectedMedia({
+        ...knownMedia,
+        jobId: entry.jobId ?? entry.result.jobId ?? knownMedia.jobId,
+        selectedJobId: entry.selectedJobId ?? knownMedia.selectedJobId,
+        batchId: entry.batchId ?? knownMedia.batchId,
+      });
+      return;
+    }
+    setSelectedMedia({
+      id: entry.mediaId,
+      filename: entry.mediaName,
+      type: entry.result.media.type,
+      sizeLabel: entry.result.media.sizeLabel,
+      uploadedAt: entry.savedAt,
+      status: entry.status === 'completed' ? 'completed' : 'ready',
+      source: 'local',
+      jobId: entry.jobId ?? entry.result.jobId,
+      selectedJobId: entry.selectedJobId,
+      batchId: entry.batchId,
+    });
+  }
+
   async function refreshCachedResultFromBackend(media: MediaItem) {
     const entry = cachedEntries[mediaCacheKey(media.id)];
     const jobId = entry?.selectedJobId ?? entry?.jobId;
@@ -243,6 +386,7 @@ function App() {
       const status = await getJobStatus(jobId);
       const nextEntry = buildCacheEntry({ media, jobStatus: status, status: status.status });
       rememberCachedEntry(nextEntry);
+      updateMediaJobReference(media.id, { jobId, selectedJobId: jobId });
       if (selectedMediaIdRef.current === media.id) setJobStatus(status);
       if (status.status !== 'completed') return;
 
@@ -311,6 +455,31 @@ function App() {
   }, [refreshBackendConnection]);
 
   useEffect(() => {
+    if (!backendConnected) return;
+    const backendProfile = systemStatus?.vlm?.selectedProfile;
+    if (!isVlmProfileId(backendProfile) || backendProfile === 'rule_based' || !systemStatus?.vlm?.active) return;
+    if (settings.vlmProfile === backendProfile && settings.vlmEnabled) return;
+    const nextSettings = {
+      ...settings,
+      vlmProfile: backendProfile,
+      vlmEnabled: true,
+      enhancedVlmExplanations: true,
+    };
+    persistVlmSettings(nextSettings);
+    setSettings(nextSettings);
+  }, [backendConnected, settings, systemStatus?.vlm?.active, systemStatus?.vlm?.selectedProfile]);
+
+  useEffect(() => {
+    if (!backendConnected) return;
+    void updateVlmSettings({
+      selectedProfile: settings.vlmProfile,
+      enabled: shouldRequestVlm(settings),
+    }).catch(() => {
+      // Older local runtimes do not expose VLM settings yet; local UI state remains authoritative.
+    });
+  }, [backendConnected, settings.visualExplanations, settings.vlmEnabled, settings.vlmProfile]);
+
+  useEffect(() => {
     if (!previewMode) return undefined;
     let isMounted = true;
     getMockMediaLibrary()
@@ -341,12 +510,14 @@ function App() {
     const suggestedQuery = SAMPLE_QUERY_BY_MEDIA_ID[media.id];
     clearLocalPreview();
     setSelectedMedia(media);
+    setActiveView('analysis');
     const fileGroup = localFileGroupsRef.current[media.id] ?? (
       localFilesRef.current[media.id] ? [localFilesRef.current[media.id]] : []
     );
     setSelectedFiles(fileGroup);
     setSelectedFile(fileGroup.length === 1 ? fileGroup[0] : null);
     setError(null);
+    setErrorDetails(null);
     setCacheMessage(null);
     const restored = restoreCachedMedia(media);
     if (!restored) {
@@ -393,7 +564,13 @@ function App() {
   }
 
   function handleSettingsChange(nextSettings: AnalysisSettings) {
-    setSettings(nextSettings);
+    const normalizedSettings = {
+      ...nextSettings,
+      vlmEnabled: nextSettings.vlmProfile === 'rule_based' ? false : nextSettings.vlmEnabled,
+      enhancedVlmExplanations: shouldRequestVlm(nextSettings),
+    };
+    persistVlmSettings(normalizedSettings);
+    setSettings(normalizedSettings);
   }
 
   function handleFilesSelected(files: File[]) {
@@ -427,6 +604,7 @@ function App() {
     setMediaLibrary((prev) => [media, ...prev.filter((item) => item.id !== media.id)]);
     setAnalysisResult(null);
     setError(null);
+    setErrorDetails(null);
     setJobStatus(null);
     setBatchStatus(null);
     setSelectedBatchJobId(null);
@@ -448,10 +626,26 @@ function App() {
 
   async function pollBackendJob(jobId: string, media?: MediaItem): Promise<JobStatus> {
     const startedAt = Date.now();
-    const timeoutMs = 5 * 60 * 1000;
 
-    while (Date.now() - startedAt < timeoutMs) {
-      const status = await getJobStatus(jobId);
+    while (true) {
+      let status: JobStatus;
+      try {
+        status = await getJobStatus(jobId);
+      } catch (err) {
+        try {
+          await checkBackendHealth();
+        } catch {
+          await refreshBackendConnection();
+          throw new BackendJobFailureError(
+            'SafeTrace Local Runtime disconnected during analysis. Reconnect and retry this analysis.',
+            err instanceof Error ? err.message : 'Job status could not be refreshed.',
+          );
+        }
+        throw new BackendJobFailureError(
+          'Analysis failed.',
+          err instanceof Error ? err.message : 'Job status could not be refreshed while the backend was still healthy.',
+        );
+      }
       if (!media || selectedMediaIdRef.current === media.id) {
         setJobStatus(status);
         setActiveStep(progressToStep(status.progress));
@@ -462,21 +656,41 @@ function App() {
 
       if (status.status === 'completed') return status;
       if (status.status === 'failed' || status.status === 'cancelled') {
-        throw new Error(status.error || 'Analysis could not be completed.');
+        throw new BackendJobFailureError(
+          status.status === 'cancelled' ? 'Analysis cancelled.' : 'Analysis failed.',
+          jobFailureDebugDetails(status),
+        );
+      }
+      if (Date.now() - startedAt >= JOB_POLL_TIMEOUT_MS && !isBackendHeartbeatFresh(status)) {
+        throw new Error('Analysis timed out because the backend heartbeat became stale. Check the local runtime logs, then retry.');
       }
 
       await wait(1200);
     }
-
-    throw new Error('Analysis timed out while waiting for the backend job to finish.');
   }
 
   async function pollBackendBatch(batchId: string, media?: MediaItem): Promise<BatchStatus> {
     const startedAt = Date.now();
-    const timeoutMs = 10 * 60 * 1000;
 
-    while (Date.now() - startedAt < timeoutMs) {
-      const status = await getBatchStatus(batchId);
+    while (true) {
+      let status: BatchStatus;
+      try {
+        status = await getBatchStatus(batchId);
+      } catch (err) {
+        try {
+          await checkBackendHealth();
+        } catch {
+          await refreshBackendConnection();
+          throw new BackendJobFailureError(
+            'SafeTrace Local Runtime disconnected during batch analysis. Reconnect and retry this batch.',
+            err instanceof Error ? err.message : 'Batch status could not be refreshed.',
+          );
+        }
+        throw new BackendJobFailureError(
+          'Batch analysis failed.',
+          err instanceof Error ? err.message : 'Batch status could not be refreshed while the backend was still healthy.',
+        );
+      }
       if (!media || selectedMediaIdRef.current === media.id) {
         setBatchStatus(status);
       }
@@ -488,6 +702,9 @@ function App() {
         jobId: batchId,
         status: status.status === 'running' ? 'running' : status.status === 'queued' ? 'queued' : 'completed',
         progress: completedJobs / totalJobs,
+        progressPercent: Math.round((completedJobs / totalJobs) * 100),
+        stage: status.status === 'running' ? 'analyzing' : status.status,
+        message: `Batch analysis ${status.status}`,
         currentStep: `Batch analysis ${status.status}`,
         error: status.status === 'failed' ? 'No videos completed successfully.' : null,
       };
@@ -508,11 +725,12 @@ function App() {
       if (status.status === 'failed' || status.status === 'cancelled') {
         throw new Error('Batch analysis could not be completed.');
       }
+      if (Date.now() - startedAt >= BATCH_POLL_TIMEOUT_MS && !isBatchUpdateFresh(status)) {
+        throw new Error('Batch analysis timed out because the backend status stopped updating. Check the local runtime logs, then retry.');
+      }
 
       await wait(1500);
     }
-
-    throw new Error('Batch analysis timed out while waiting for the backend jobs to finish.');
   }
 
   async function handleAnalyze() {
@@ -527,6 +745,7 @@ function App() {
     setAnalysisResult(null);
     setHighlightedFrameId(null);
     setJobStatus(null);
+    setErrorDetails(null);
     setBatchStatus(null);
     setSelectedBatchJobId(null);
 
@@ -544,10 +763,13 @@ function App() {
             query: trimmedQuery,
             fps: settings.fps,
             topK: settings.topK,
-            enableVlm: settings.enhancedVlmExplanations,
+            enableVlm: shouldRequestVlm(settings),
+            vlmProfile: settings.vlmProfile,
+            vlmEnabled: shouldRequestVlm(settings),
             device: settings.deviceMode,
           });
           setBatchStatus(batch);
+          if (activeMedia) updateMediaJobReference(activeMedia.id, { batchId: batch.batchId });
           if (activeMedia) {
             rememberCachedEntry(buildCacheEntry({
               media: activeMedia,
@@ -586,6 +808,11 @@ function App() {
               selectedJobId: completedFile.jobId,
               status: finalBatch.status,
             }));
+            updateMediaJobReference(activeMedia.id, {
+              batchId: finalBatch.batchId,
+              selectedJobId: completedFile.jobId,
+              jobId: completedFile.jobId,
+            });
             updateMediaStatus(activeMedia.id, 'completed');
           }
           if (!activeMedia || selectedMediaIdRef.current === activeMedia.id) {
@@ -601,12 +828,18 @@ function App() {
           query: trimmedQuery,
           fps: settings.fps,
           topK: settings.topK,
-          enableVlm: settings.enhancedVlmExplanations,
+          enableVlm: shouldRequestVlm(settings),
+          vlmProfile: settings.vlmProfile,
+          vlmEnabled: shouldRequestVlm(settings),
           device: settings.deviceMode,
         });
+        if (activeMedia) updateMediaJobReference(activeMedia.id, { jobId: job.jobId, selectedJobId: job.jobId });
         const queuedStatus: JobStatus = {
           ...job,
           progress: 0,
+          progressPercent: 0,
+          stage: 'queued',
+          message: 'Queued for analysis',
           currentStep: 'Queued for analysis',
           error: null,
         };
@@ -664,6 +897,13 @@ function App() {
       setAnalysisMode(null);
       setSelectedMedia((current) => current?.status === 'processing' ? { ...current, status: 'error' } : current);
       setError(err instanceof Error ? err.message : 'Analysis could not be completed. Please try again.');
+      setErrorDetails(
+        err instanceof BackendJobFailureError
+          ? err.debugDetails
+          : err instanceof Error
+            ? err.message
+            : 'Analysis could not be completed. Please try again.',
+      );
     } finally {
       setIsLoading(false);
     }
@@ -672,6 +912,7 @@ function App() {
   function handleReset() {
     setAnalysisResult(null);
     setError(null);
+    setErrorDetails(null);
     setQuery(DEFAULT_QUERY);
     setHighlightedFrameId(null);
     setJobStatus(null);
@@ -684,6 +925,7 @@ function App() {
     if (batchResultLoadingJobId === jobId) return;
     setBatchResultLoadingJobId(jobId);
     setError(null);
+    setErrorDetails(null);
     const cached = cachedEntries[jobCacheKey(jobId)];
     if (cached?.result) {
       setSelectedBatchJobId(jobId);
@@ -815,6 +1057,32 @@ function App() {
               </p>
             ) : null}
           </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveView('analysis')}
+              className={`focus-ring inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition ${
+                activeView === 'analysis'
+                  ? 'border-safety-blue bg-blue-50 text-safety-blue'
+                  : 'border-slate-300 bg-white text-slate-700 hover:border-safety-blue hover:text-safety-blue'
+              }`}
+            >
+              <ClipboardCheck className="h-4 w-4" aria-hidden="true" />
+              Analysis
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveView('insights')}
+              className={`focus-ring inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition ${
+                activeView === 'insights'
+                  ? 'border-safety-blue bg-blue-50 text-safety-blue'
+                  : 'border-slate-300 bg-white text-slate-700 hover:border-safety-blue hover:text-safety-blue'
+              }`}
+            >
+              <BarChart3 className="h-4 w-4" aria-hidden="true" />
+              Safety Insights
+            </button>
+          </div>
         </div>
       </header>
 
@@ -837,11 +1105,22 @@ function App() {
         onClearSelected={() => void handleClearSelectedResultCache()}
       />
 
+      {activeView === 'insights' ? (
+        <SafetyInsightsDashboard
+          entries={Object.values(cachedEntries)}
+          currentResult={analysisResult}
+          backendConnected={backendConnected}
+          onOpenResult={handleOpenDashboardEntry}
+          onBackToAnalysis={() => setActiveView('analysis')}
+        />
+      ) : (
+        <>
       <SelectedMediaViewer
         media={selectedMedia}
         disabled={controlsLocked}
         backendConnected={backendConnected}
         previewMode={previewMode}
+        jobId={analysisResult?.jobId ?? selectedBatchJobId ?? jobStatus?.jobId}
         onUploadClick={() => setIsUploadModalOpen(true)}
       />
 
@@ -863,7 +1142,13 @@ function App() {
           activeStep={activeStep}
           currentStep={jobStatus?.currentStep}
           progress={jobStatus?.progress}
+          progressPercent={jobStatus?.progressPercent}
+          stage={jobStatus?.stage}
+          message={jobStatus?.message}
           mode={analysisMode}
+          startedAt={jobStatus?.startedAt}
+          updatedAt={jobStatus?.updatedAt}
+          heartbeatAt={jobStatus?.heartbeatAt}
         />
       ) : null}
       {batchStatus ? (
@@ -874,7 +1159,7 @@ function App() {
           onSelectJob={handleSelectBatchResult}
         />
       ) : null}
-      {error ? <ErrorState message={error} details={jobStatus?.error || backendMessage} /> : null}
+      {error ? <ErrorState message={error} details={errorDetails || jobStatus?.error || backendMessage} /> : null}
 
       {!analysisResult && !isLoading && !error && (backendConnected || previewMode) ? (
         <PreAnalysisState hasMedia={Boolean(selectedFiles.length || selectedFile || canUsePreview)} previewMode={canUsePreview} />
@@ -903,6 +1188,7 @@ function App() {
             frames={analysisResult.frames}
             showExplanations={settings.visualExplanations}
             highlightedFrameId={highlightedFrameId}
+            jobId={analysisResult.jobId}
           />
           
           {showAnnotation && (
@@ -916,6 +1202,8 @@ function App() {
           <ReportActions result={analysisResult} />
         </>
       ) : null}
+        </>
+      )}
 
       {isUploadModalOpen && (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
@@ -1063,6 +1351,22 @@ function BatchStatusPanel({
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-slate-900">{file.filename}</p>
                   <p className="text-xs text-slate-500">{formatFileSize(file.sizeBytes)}</p>
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
+                    <span className="font-semibold uppercase">Job</span>
+                    <code className="rounded bg-white px-1.5 py-0.5 font-mono text-slate-800" title={file.jobId}>
+                      {formatShortJobId(file.jobId)}
+                    </code>
+                    <button
+                      type="button"
+                      onClick={() => void copyJobIdToClipboard(file.jobId)}
+                      className="focus-ring inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-1.5 py-0.5 font-semibold text-slate-600 transition hover:border-safety-blue hover:text-safety-blue"
+                      aria-label="Copy batch job ID"
+                      title={`Copy full job ID ${file.jobId}`}
+                    >
+                      <Copy className="h-3 w-3" aria-hidden="true" />
+                      Copy job ID
+                    </button>
+                  </div>
                   {file.status === 'failed' ? (
                     <p className="mt-1 text-xs font-medium text-red-700">
                       {file.error || 'Analysis failed for this video.'}
